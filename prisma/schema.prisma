@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // Required for Neon pooler compatibility
+}
+
+// ---------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------
+
+enum Categoria {
+  POLLO_ENTERO
+  PRESAS
+  MENUDENCIAS
+  EMBUTIDOS
+  HUEVOS
+  OTROS
+}
+
+enum TipoVenta {
+  UNIDAD // Precio por unidad cerrada
+  PESO   // Precio por kilogramo
+}
+
+// ---------------------------------------------------------------
+// Modelos
+// ---------------------------------------------------------------
+
+model Producto {
+  id          String    @id @default(cuid())
+  nombre      String
+  descripcion String?
+  precio      Float
+  categoria   Categoria
+  tipoVenta   TipoVenta @default(UNIDAD)
+  imagenUrl   String?
+  activo      Boolean   @default(true) // "Pausado Rápido": false = Inactivo/Sin Stock
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("productos")
+  @@index([categoria])
+  @@index([activo])
+}
+
+// ---------------------------------------------------------------
+// Administradores (para autenticación básica del panel /admin)
+// ---------------------------------------------------------------
+
+model Administrador {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Hash bcrypt
+  nombre    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("administradores")
+}
