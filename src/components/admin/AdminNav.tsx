@@ -5,8 +5,12 @@ import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 
 const navLinks = [
-  { href: '/admin/productos', label: '📋 Productos' },
-  { href: '/admin/productos/nuevo', label: '➕ Nuevo Producto' },
+  { href: '/admin',                 label: '📊 Dashboard',     exact: true  },
+  { href: '/admin/productos',       label: '📋 Productos',     exact: false },
+  { href: '/admin/productos/nuevo', label: '➕ Nuevo',         exact: true  },
+  { href: '/admin/categorias',      label: '🏷️ Categorías',    exact: false },
+  { href: '/admin/orden',           label: '↕️ Orden',         exact: false },
+  { href: '/admin/configuracion',   label: '⚙️ Config',        exact: false },
 ];
 
 export default function AdminNav() {
@@ -25,19 +29,22 @@ export default function AdminNav() {
 
         {/* Links */}
         <div className="flex items-center gap-1">
-          {navLinks.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                pathname === href
-                  ? 'bg-brand-500 text-white shadow-sm'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              {label}
-            </Link>
-          ))}
+          {navLinks.map(({ href, label, exact }) => {
+            const isActive = exact ? pathname === href : pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive
+                    ? 'bg-brand-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {label}
+              </Link>
+            );
+          })}
 
           <Link
             href="/"

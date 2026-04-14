@@ -1,30 +1,33 @@
 'use client';
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { useCallback, useTransition } from 'react';
-import { Categoria } from '@prisma/client';
-import { CATEGORIA_LABELS } from '@/lib/constants';
-
-const categorias = Object.entries(CATEGORIA_LABELS) as [Categoria, string][];
+import { useCallback, useEffect, useState, useTransition } from 'react';
+import { CategoriaConfigType } from '@/lib/constants';
 
 export default function SearchFilters() {
-  const router = useRouter();
-  const pathname = usePathname();
+  const router       = useRouter();
+  const pathname     = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [categorias, setCategorias]  = useState<CategoriaConfigType[]>([]);
 
-  const currentQuery  = searchParams.get('q') ?? '';
-  const currentCat    = searchParams.get('categoria') ?? '';
+  const currentQuery = searchParams.get('q')         ?? '';
+  const currentCat   = searchParams.get('categoria') ?? '';
+
+  // Load active categories from DB
+  useEffect(() => {
+    fetch('/api/public/categorias')
+      .then((r) => r.json())
+      .then(setCategorias)
+      .catch(() => {});
+  }, []);
 
   const createQueryString = useCallback(
     (updates: Record<string, string>) => {
       const params = new URLSearchParams(searchParams.toString());
       Object.entries(updates).forEach(([key, value]) => {
-        if (value) {
-          params.set(key, value);
-        } else {
-          params.delete(key);
-        }
+        if (value) params.set(key, value);
+        else params.delete(key);
       });
       return params.toString();
     },
@@ -64,9 +67,7 @@ export default function SearchFilters() {
           aria-label="Buscar productos"
         />
         {isPending && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-400 animate-spin">
-            ⟳
-          </span>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-400 animate-spin">⟳</span>
         )}
       </div>
 
@@ -82,19 +83,24 @@ export default function SearchFilters() {
         >
           Todos
         </button>
-        {categorias.map(([value, label]) => (
-          <button
-            key={value}
-            onClick={() => handleCategory(value)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border ${
-              currentCat === value
-                ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
-                : 'bg-white text-gray-600 border-gray-200 hover:border-brand-300'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+
+        {categorias.map((cat) => {
+          const active = currentCat === cat.slug;
+          return (
+            <button
+              key={cat.slug}
+              onClick={() => handleCategory(cat.slug)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border ${
+                active
+                  ? 'text-white border-transparent shadow-sm'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+              }`}
+              style={active ? { backgroundColor: cat.color, borderColor: cat.color } : {}}
+            >
+              {cat.emoji} {cat.nombre}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

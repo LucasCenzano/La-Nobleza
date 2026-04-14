@@ -5,56 +5,137 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import AdminNav from '@/components/admin/AdminNav';
 import ProductTable from '@/components/admin/ProductTable';
+import ProductFilters from '@/components/admin/ProductFilters';
+import { Suspense } from 'react';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminProductosPage() {
+interface PageProps {
+  searchParams: {
+    q?:         string;
+    estado?:    string;
+    categoria?: string;
+    etiqueta?:  string;
+    sort?:      string;
+  };
+}
+
+function buildOrderBy(sort?: string) {
+  switch (sort) {
+    case 'nombre_asc':  return [{ nombre: 'asc'  as const }];
+    case 'nombre_desc': return [{ nombre: 'desc' as const }];
+    case 'precio_asc':  return [{ precio: 'asc'  as const }];
+    case 'precio_desc': return [{ precio: 'desc' as const }];
+    case 'fecha_asc':   return [{ updatedAt: 'asc'  as const }];
+    case 'fecha_desc':  return [{ updatedAt: 'desc' as const }];
+    default:            return [{ activo: 'desc' as const }, { categoria: 'asc' as const }, { nombre: 'asc' as const }];
+  }
+}
+
+function buildTitle(estado?: string, categoria?: string, etiqueta?: string): string {
+  if (estado === 'activos')   return 'Productos Activos';
+  if (estado === 'pausados')  return 'Productos Pausados';
+  if (estado === 'sin_foto')  return 'Productos Sin Foto';
+  if (estado === 'en_oferta') return 'Productos en Oferta';
+  if (categoria)              return `Categoría: ${categoria}`;
+  if (etiqueta)               return `Etiqueta: ${etiqueta}`;
+  return 'Gestión de Productos';
+}
+
+export default async function AdminProductosPage({ searchParams }: PageProps) {
   const session = await getServerSession(authOptions);
   if (!session) redirect('/admin/login');
 
-  const productos = await prisma.producto.findMany({
-    orderBy: [{ activo: 'desc' }, { categoria: 'asc' }, { nombre: 'asc' }],
-  });
+  const { q, estado, categoria, etiqueta, sort } = searchParams;
 
-  const activos  = productos.filter((p) => p.activo).length;
-  const pausados = productos.length - activos;
+  // ─── Build Prisma WHERE ────────────────────────────────────────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const where: any = {};
+
+  if (q)         where.nombre    = { contains: q, mode: 'insensitive' };
+  if (categoria) where.categoria = categoria;
+  if (etiqueta)  where.etiquetas = { has: etiqueta };
+
+  if (estado === 'activos')   where.activo = true;
+  if (estado === 'pausados')  where.activo = false;
+  if (estado === 'en_oferta') where.precioOferta = { not: null };
+  // 'sin_foto' is handled post-fetch (array filter)
+
+  const [todosProductos, categorias] = await Promise.all([
+    prisma.producto.findMany({
+      where,
+      orderBy: buildOrderBy(sort),
+    }),
+    prisma.categoriaConfig.findMany({ orderBy: [{ orden: 'asc' }] }),
+  ]);
+
+  // Post-fetch filter for sin_foto (can't express empty array easily in Prisma where)
+  const productos = estado === 'sin_foto'
+    ? todosProductos.filter(
+        (p) => !p.imagenUrl && (!(p as any).imagenesUrls?.length),
+      )
+    : todosProductos;
+
+  // Global counts (always from full DB, not filtered)
+  const allProductos = await prisma.producto.findMany({ select: { activo: true, imagenUrl: true, imagenesUrls: true, precioOferta: true } });
+  const totalAll  = allProductos.length;
+  const activos   = allProductos.filter((p) => p.activo).length;
+  const pausados  = allProductos.filter((p) => !p.activo).length;
+  const sinFoto   = allProductos.filter((p) => !p.imagenUrl && (!(p as any).imagenesUrls?.length)).length;
+  const enOferta  = allProductos.filter((p) => !!(p as any).precioOferta).length;
+
+  const isFiltered = !!(q || estado || categoria || etiqueta);
+  const pageTitle  = buildTitle(estado, categoria, etiqueta);
 
   return (
     <>
       <AdminNav />
       <main className="max-w-6xl mx-auto px-4 py-8">
-        {/* Page header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+
+        {/* ── Page header ─────────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="font-display text-2xl font-bold text-gray-900">Gestión de Productos</h1>
-            <p className="text-sm text-gray-500 mt-0.5">
-              {productos.length} productos ·{' '}
-              <span className="text-green-600 font-medium">{activos} activos</span>
-              {pausados > 0 && (
-                <> · <span className="text-amber-600 font-medium">{pausados} pausados</span></>
-              )}
-            </p>
+            <h1 className="font-display text-2xl font-bold text-gray-900">{pageTitle}</h1>
+            {isFiltered && (
+              <p className="text-sm text-gray-500 mt-0.5">
+                Mostrando {productos.length} de {totalAll} productos
+              </p>
+            )}
           </div>
           <Link href="/admin/productos/nuevo" className="btn-primary">
             ➕ Nuevo Producto
           </Link>
         </div>
 
-        {/* Stats chips */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        {/* ── Mini stat chips (always visible) ────────────────── */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-6">
           {[
-            { label: 'Total', value: productos.length, color: 'bg-gray-100 text-gray-700' },
-            { label: 'Activos', value: activos, color: 'bg-green-100 text-green-700' },
-            { label: 'Pausados', value: pausados, color: 'bg-amber-100 text-amber-700' },
-          ].map(({ label, value, color }) => (
-            <div key={label} className={`${color} rounded-xl px-4 py-3 text-center`}>
-              <p className="text-2xl font-bold">{value}</p>
-              <p className="text-xs font-medium mt-0.5">{label}</p>
-            </div>
+            { label: 'Total',     value: totalAll, href: '/admin/productos',                 color: 'bg-gray-100 text-gray-700',   active: !isFiltered && !estado },
+            { label: 'Activos',   value: activos,  href: '/admin/productos?estado=activos',  color: 'bg-green-100 text-green-700', active: estado === 'activos'  },
+            { label: 'Pausados',  value: pausados, href: '/admin/productos?estado=pausados', color: 'bg-amber-100 text-amber-700', active: estado === 'pausados' },
+            { label: 'Sin foto',  value: sinFoto,  href: '/admin/productos?estado=sin_foto', color: 'bg-blue-100 text-blue-700',   active: estado === 'sin_foto' },
+            { label: 'En oferta', value: enOferta, href: '/admin/productos?estado=en_oferta',color: 'bg-red-100 text-red-700',     active: estado === 'en_oferta'},
+          ].map((chip) => (
+            <Link
+              key={chip.label}
+              href={chip.href}
+              className={`${chip.color} rounded-xl px-3 py-2 text-center transition-all hover:shadow-sm hover:-translate-y-0.5 ${
+                chip.active ? 'ring-2 ring-offset-1 ring-current shadow-sm' : ''
+              }`}
+            >
+              <p className="text-xl font-bold tabular-nums">{chip.value}</p>
+              <p className="text-[10px] font-semibold opacity-80">{chip.label}</p>
+            </Link>
           ))}
         </div>
 
-        <ProductTable productos={productos} />
+        {/* ── Filters bar ─────────────────────────────────────── */}
+        <Suspense fallback={<div className="h-28 rounded-2xl bg-gray-50 animate-pulse mb-6" />}>
+          <ProductFilters categorias={categorias} totalCount={productos.length} />
+        </Suspense>
+
+        {/* ── Table ───────────────────────────────────────────── */}
+        <ProductTable productos={productos as any} categorias={categorias} />
       </main>
     </>
   );

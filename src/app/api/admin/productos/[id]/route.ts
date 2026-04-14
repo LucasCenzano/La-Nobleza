@@ -3,40 +3,41 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-interface Params {
-  params: { id: string };
-}
+interface Params { params: { id: string } }
 
-// GET /api/admin/productos/[id]
 export async function GET(_req: NextRequest, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
 
   const producto = await prisma.producto.findUnique({ where: { id: params.id } });
   if (!producto) return NextResponse.json({ message: 'No encontrado' }, { status: 404 });
-
   return NextResponse.json(producto);
 }
 
-// PUT /api/admin/productos/[id]  — full update
 export async function PUT(req: NextRequest, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
 
   try {
-    const { nombre, descripcion, precio, categoria, tipoVenta, imagenUrl, activo } =
-      await req.json();
+    const {
+      nombre, descripcion, precio, precioOferta,
+      categoria, tipoVenta, imagenUrl, imagenesUrls,
+      etiquetas, activo,
+    } = await req.json();
 
     const producto = await prisma.producto.update({
       where: { id: params.id },
       data: {
         nombre,
-        descripcion: descripcion || null,
-        precio: Number(precio),
+        descripcion:  descripcion  || null,
+        precio:       Number(precio),
+        precioOferta: precioOferta ? Number(precioOferta) : null,
         categoria,
         tipoVenta,
-        imagenUrl: imagenUrl || null,
-        activo: Boolean(activo),
+        imagenUrl:    imagenUrl    || null,
+        imagenesUrls: imagenesUrls ?? [],
+        etiquetas:    etiquetas    ?? [],
+        activo:       Boolean(activo),
       },
     });
 
@@ -47,7 +48,6 @@ export async function PUT(req: NextRequest, { params }: Params) {
   }
 }
 
-// PATCH /api/admin/productos/[id]  — partial update (e.g. toggle activo)
 export async function PATCH(req: NextRequest, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
@@ -65,7 +65,6 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 }
 
-// DELETE /api/admin/productos/[id]
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });

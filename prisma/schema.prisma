@@ -8,21 +8,12 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DATABASE_URL_UNPOOLED") // Set automatically by Neon Vercel integration
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 // ---------------------------------------------------------------
 // Enums
 // ---------------------------------------------------------------
-
-enum Categoria {
-  POLLO_ENTERO
-  PRESAS
-  MENUDENCIAS
-  EMBUTIDOS
-  HUEVOS
-  OTROS
-}
 
 enum TipoVenta {
   UNIDAD // Precio por unidad cerrada
@@ -34,20 +25,62 @@ enum TipoVenta {
 // ---------------------------------------------------------------
 
 model Producto {
-  id          String    @id @default(cuid())
-  nombre      String
-  descripcion String?
-  precio      Float
-  categoria   Categoria
-  tipoVenta   TipoVenta @default(UNIDAD)
-  imagenUrl   String?
-  activo      Boolean   @default(true) // "Pausado Rápido": false = Inactivo/Sin Stock
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  nombre       String
+  descripcion  String?
+  precio       Float
+  precioOferta Float?             // null = sin oferta activa
+  categoria    String             // slug dinámico — ref a CategoriaConfig.slug
+  tipoVenta    TipoVenta @default(UNIDAD)
+  imagenUrl    String?            // legado — portada (primer elemento de imagenesUrls)
+  imagenesUrls String[]           // array ordenado: [0]=portada, [1..]=adicionales
+  etiquetas    String[]           // "NUEVO" | "DESTACADO" | "OFERTA" | "SIN_STOCK"
+  activo       Boolean   @default(true)
+  orden        Int       @default(0)  // posición en el catálogo (0 = primero)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@map("productos")
   @@index([categoria])
   @@index([activo])
+}
+
+// ---------------------------------------------------------------
+// Categorías dinámicas (reemplaza el enum Categoria)
+// ---------------------------------------------------------------
+
+model CategoriaConfig {
+  id        String   @id @default(cuid())
+  nombre    String   // "Pollo Entero"
+  slug      String   @unique // "POLLO_ENTERO" — coincide con Producto.categoria
+  emoji     String   @default("🐔")
+  color     String   @default("#f97316") // hex para badge
+  orden     Int      @default(0)
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("categorias_config")
+  @@index([orden])
+}
+
+// ---------------------------------------------------------------
+// Configuración global de la tienda (banner + horarios)
+// ---------------------------------------------------------------
+
+model ConfiguracionTienda {
+  id              String   @id @default("singleton")
+  // Banner del catálogo
+  bannerActivo    Boolean  @default(false)
+  bannerTipo      String   @default("INFO")   // INFO | PROMO | ALERTA | CERRADO
+  bannerTexto     String   @default("")
+  bannerColor     String   @default("#f97316")
+  // Horarios de atención
+  horariosActivos Boolean  @default(true)
+  horarios        Json?    // { lunes: {activo, abre, cierra}, ... }
+  updatedAt       DateTime @updatedAt
+
+  @@map("configuracion_tienda")
 }
 
 // ---------------------------------------------------------------

@@ -4,13 +4,17 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'utfs.io', // UploadThing CDN
+        hostname: 'utfs.io',
         port: '',
         pathname: '/f/**',
       },
       {
         protocol: 'https',
-        hostname: 'res.cloudinary.com', // Cloudinary (alternativa)
+        hostname: 'res.cloudinary.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
       },
     ],
   },
