@@ -289,7 +289,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
             <div className="border-t border-gray-100 bg-white p-4 pb-safe flex items-center justify-between shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-10 shrink-0">
               <div className="flex items-center gap-3">
                 <button 
-                  onClick={() => setQuantity(q => {
+                  onClick={() => setQuantity((q: number) => {
                     const next = Math.round((q - parsedStep) * 1000) / 1000;
                     return next < parsedStep ? parsedStep : next;
                   })}
@@ -304,7 +304,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                   <span className="text-[10px] text-gray-500 font-medium ml-0.5 block">{isPeso ? 'kg' : 'un.'}</span>
                 </div>
                 <button 
-                  onClick={() => setQuantity(q => {
+                  onClick={() => setQuantity((q: number) => {
                     const next = Math.round((q + parsedStep) * 1000) / 1000;
                     if (stock !== null && stock !== undefined && next > stock) return Math.max(stock, parsedStep);
                     return next;
