@@ -151,7 +151,7 @@ async function processImage(file: File): Promise<File> {
   const bitmap = await createImageBitmap(work);
   const canvas = document.createElement('canvas');
 
-  const MAX = 800;
+  const MAX = 1920;
   let { width, height } = bitmap;
   if (width > MAX || height > MAX) {
     if (width > height) {
@@ -168,7 +168,7 @@ async function processImage(file: File): Promise<File> {
   bitmap.close();
 
   const blob = await new Promise<Blob>((res) =>
-    canvas.toBlob((b) => res(b!), 'image/webp', 0.70),
+    canvas.toBlob((b) => res(b!), 'image/webp', 0.95),
   );
 
   return new File(

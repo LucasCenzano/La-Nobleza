@@ -57,7 +57,7 @@
 
   /* ── Inputs ── */
   .input-search {
-    @apply w-full px-10 py-3 rounded-xl text-sm font-medium transition duration-200;
+    @apply w-full px-10 py-3 rounded-xl text-[16px] font-medium transition duration-200;
     background-color: #F5F5F5;
     color: var(--black-charcoal);
     border: 1px solid transparent;
