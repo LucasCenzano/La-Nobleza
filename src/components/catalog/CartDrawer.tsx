@@ -12,7 +12,13 @@ export default function CartDrawer() {
     
     items.forEach(item => {
       const isPeso = item.tipoVenta === 'PESO';
-      const cant = isPeso ? `${item.cantidad} Kg` : `${item.cantidad}x`;
+      let cantStr = `${item.cantidad}x`;
+      if (isPeso) {
+        cantStr = item.cantidad < 1 
+          ? `${Math.round(item.cantidad * 1000)} gr` 
+          : `${item.cantidad.toFixed(3).replace(/\.?0+$/, '') || '0'} Kg`;
+      }
+      const cant = cantStr;
       const sub = item.cantidad * item.precioFinal;
       let line = `• ${cant} *${item.nombre}*`;
       if (item.instrucciones) line += `\n  _📌 Nota: ${item.instrucciones}_`;
@@ -87,8 +93,10 @@ export default function CartDrawer() {
                           }}
                           className="w-7 h-7 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 active:scale-95"
                         >-</button>
-                        <span className="text-[13px] font-bold w-12 text-center">
-                          {item.tipoVenta === 'PESO' ? item.cantidad.toFixed(3).replace(/\.?0+$/, '') || '0' : item.cantidad}{item.tipoVenta === 'PESO' ? 'kg' : ''}
+                        <span className="text-[13px] font-bold w-[52px] text-center shrink-0">
+                          {item.tipoVenta === 'PESO' 
+                            ? (item.cantidad < 1 ? `${Math.round(item.cantidad * 1000)}gr` : `${item.cantidad.toFixed(3).replace(/\.?0+$/, '') || '0'}kg`) 
+                            : item.cantidad}
                         </span>
                         <button 
                           onClick={() => {

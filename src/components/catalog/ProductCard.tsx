@@ -350,9 +350,9 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                 </button>
                 <div className="w-14 text-center">
                   <span className="font-bold text-[18px] text-[var(--black-charcoal)] leading-none">
-                    {isPeso ? quantity.toFixed(3).replace(/\.?0+$/, '') || '0' : quantity}
+                    {isPeso ? (quantity < 1 ? Math.round(quantity * 1000) : quantity.toFixed(3).replace(/\.?0+$/, '') || '0') : quantity}
                   </span>
-                  <span className="text-[10px] text-gray-500 font-medium ml-0.5 block">{isPeso ? 'kg' : 'un.'}</span>
+                  <span className="text-[10px] text-gray-500 font-medium ml-0.5 block">{isPeso ? (quantity < 1 ? 'gr' : 'kg') : 'un.'}</span>
                 </div>
                 <button 
                   onClick={() => setQuantity((q: number) => {
