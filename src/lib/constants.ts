@@ -26,7 +26,7 @@ export function formatPrecioSolo(precio: number): string {
 }
 
 // ─── Etiquetas ─────────────────────────────────────────────────
-export type EtiquetaSlug = 'NUEVO' | 'DESTACADO' | 'OFERTA' | 'SIN_STOCK' | 'OPCION_PECHUGAS' | 'OPCION_POLLO_ENTERO';
+export type EtiquetaSlug = 'NUEVO' | 'DESTACADO' | 'OFERTA' | 'SIN_STOCK';
 
 export interface EtiquetaConfig {
   slug:  EtiquetaSlug;
@@ -41,8 +41,6 @@ export const ETIQUETAS: EtiquetaConfig[] = [
   { slug: 'DESTACADO',           label: 'Destacado',             emoji: '⭐', bg: 'bg-purple-100',  text: 'text-purple-700'  },
   { slug: 'OFERTA',              label: 'Oferta',                emoji: '🔥', bg: 'bg-red-100',     text: 'text-red-700'     },
   { slug: 'SIN_STOCK',           label: 'Sin Stock',             emoji: '⛔', bg: 'bg-gray-100',    text: 'text-gray-500'    },
-  { slug: 'OPCION_PECHUGAS',     label: 'Opción: Pechugas',      emoji: '🍗', bg: 'bg-emerald-100', text: 'text-emerald-700' },
-  { slug: 'OPCION_POLLO_ENTERO', label: 'Opción: Pollo Entero',  emoji: '🐔', bg: 'bg-emerald-100', text: 'text-emerald-700' },
 ];
 
 export const ETIQUETA_MAP = Object.fromEntries(

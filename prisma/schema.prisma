@@ -37,6 +37,12 @@ model Producto {
   imagenUrl    String?            // legado — portada (primer elemento de imagenesUrls)
   imagenesUrls String[]           // array ordenado: [0]=portada, [1..]=adicionales
   etiquetas    String[]           // "NUEVO" | "DESTACADO" | "OFERTA" | "SIN_STOCK"
+  
+  // Opciones de Pedido Personalizadas
+  solicitaInstrucciones Boolean @default(false)
+  opcionesTitulo        String? // ej: "¿Cómo las preferís?"
+  opcionesValores       String[] // ej: ["Enteras", "Fileteadas", "En dados"]
+  
   activo       Boolean   @default(true)
   orden        Int       @default(0)  // posición en el catálogo (0 = primero)
   createdAt    DateTime  @default(now())

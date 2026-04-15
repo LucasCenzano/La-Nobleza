@@ -33,6 +33,9 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     incrementoPeso: (initialData as any)?.incrementoPeso?.toString() ?? (initialData?.tipoVenta === 'PESO' ? '0.100' : ''),
     categoria:    (initialData as any)?.categoria       ?? '',
     tipoVenta:    initialData?.tipoVenta    ?? 'UNIDAD',
+    solicitaInstrucciones: (initialData as any)?.solicitaInstrucciones ?? false,
+    opcionesTitulo: (initialData as any)?.opcionesTitulo ?? '',
+    opcionesValoresStr: (initialData as any)?.opcionesValores?.join(', ') ?? '',
     activo:       initialData?.activo       ?? true,
   });
 
@@ -107,6 +110,9 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
       imagenesUrls,
       imagenUrl:    imagenesUrls[0] ?? null,
       etiquetas:    finalEtiquetas,
+      solicitaInstrucciones: form.solicitaInstrucciones,
+      opcionesTitulo: form.opcionesTitulo.trim() || null,
+      opcionesValores: form.opcionesValoresStr.split(',').map(s => s.trim()).filter(Boolean),
     };
 
     const url =
@@ -245,6 +251,46 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
             <p className="text-xs text-gray-400 mt-1">
               Incremento del selector. Ej: 0.100 permite pedir de a 100 gramos.
             </p>
+          </div>
+        )}
+      </div>
+
+      {/* ── Opciones de Personalización ───────────────────────── */}
+      <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <label className="toggle" aria-label="Solicitar Instrucciones">
+            <input type="checkbox" name="solicitaInstrucciones"
+              checked={form.solicitaInstrucciones} onChange={handleChange} />
+            <span className="toggle-track"><span className="toggle-thumb" /></span>
+          </label>
+          <div>
+            <span className="text-sm font-bold text-emerald-900 block">
+              📝 Opciones de Pedido Personalizadas
+            </span>
+            <span className="text-xs text-emerald-700 font-medium">Permite al cliente agregar instrucciones de preparado.</span>
+          </div>
+        </div>
+
+        {form.solicitaInstrucciones && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in pl-2 border-l-2 border-emerald-300">
+            <div>
+              <label htmlFor="opcionesTitulo" className="label !text-emerald-800">Pregunta o Título</label>
+              <input id="opcionesTitulo" name="opcionesTitulo" type="text"
+                value={form.opcionesTitulo} onChange={handleChange}
+                className="input border-emerald-200 focus:ring-emerald-400" placeholder="Ej: ¿Cómo querés las pechugas?" />
+              <p className="text-[11px] text-emerald-600 mt-1">
+                La pregunta que verá el cliente.
+              </p>
+            </div>
+            <div>
+              <label htmlFor="opcionesValoresStr" className="label !text-emerald-800">Opciones Predefinidas (opcional)</label>
+              <input id="opcionesValoresStr" name="opcionesValoresStr" type="text"
+                value={form.opcionesValoresStr} onChange={handleChange}
+                className="input border-emerald-200 focus:ring-emerald-400" placeholder="Ej: Enteras, Fileteadas, En cubitos" />
+              <p className="text-[11px] text-emerald-600 mt-1">
+                Separadas por coma. Si lo dejás vacío, el cliente podrá escribir libremente. Si ponés opciones, será un desplegable.
+              </p>
+            </div>
           </div>
         )}
       </div>

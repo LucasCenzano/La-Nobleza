@@ -32,7 +32,8 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
 
   const {
     nombre, descripcion, precio, precioOferta,
-    tipoVenta, categoria, imagenUrl, imagenesUrls, etiquetas, stock, incrementoPeso
+    tipoVenta, categoria, imagenUrl, imagenesUrls, etiquetas, stock, incrementoPeso,
+    solicitaInstrucciones, opcionesTitulo, opcionesValores
   } = producto as any;
 
   const isPeso        = tipoVenta === 'PESO';
@@ -50,8 +51,6 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
   const catBg         = CAT_BG[categoria as string] ?? CAT_BG.OTROS;
   const etiquetasList = (etiquetas as string[]) ?? [];
   const hasOfertaTag  = etiquetasList.includes('OFERTA') || hasOferta;
-  const hasOpcionPechugas = etiquetasList.includes('OPCION_PECHUGAS');
-  const hasOpcionPolloEntero = etiquetasList.includes('OPCION_POLLO_ENTERO');
 
   // Auto deslizador de imágenes en el detalle
   useEffect(() => {
@@ -277,36 +276,36 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
               </div>
 
               {/* Opciones Especiales */}
-              {(hasOpcionPechugas || hasOpcionPolloEntero) && (
+              {solicitaInstrucciones && (
                 <div className="px-5 pb-4">
                   <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-4">
-                    {hasOpcionPechugas && (
+                    {opcionesValores && opcionesValores.length > 0 ? (
                       <>
                         <label className="block text-sm font-bold text-emerald-800 mb-2">
-                          🍗 ¿Cómo las preferís?
+                          {opcionesTitulo || 'Opciones de Preparación'}
                         </label>
                         <select 
                           value={instrucciones}
                           onChange={(e) => setInstrucciones(e.target.value)}
                           className="w-full bg-white border border-emerald-200 text-emerald-900 text-[16px] sm:text-sm rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
                         >
-                          <option value="">(Enteras por defecto)</option>
-                          <option value="Fileteadas para milanesa">Fileteadas para milanesa</option>
-                          <option value="En tiritas">En tiritas</option>
+                          <option value="">(Sin especificar)</option>
+                          {opcionesValores.map((opcion: string, i: number) => (
+                            <option key={i} value={opcion}>{opcion}</option>
+                          ))}
                         </select>
                       </>
-                    )}
-                    {hasOpcionPolloEntero && (
+                    ) : (
                       <>
                         <label className="block text-sm font-bold text-emerald-800 mb-2">
-                          🐔 Instrucciones especiales
+                          {opcionesTitulo || 'Instrucciones Especiales'}
                         </label>
                         <input 
                           type="text"
                           value={instrucciones}
                           onChange={(e) => setInstrucciones(e.target.value)}
                           maxLength={100}
-                          placeholder="Ej: Sin menudos, en 8 piezas..."
+                          placeholder="Ej: Sin menudos..."
                           className="w-full bg-white border border-emerald-200 text-emerald-900 text-[16px] sm:text-sm rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-emerald-300 shadow-sm"
                         />
                       </>
