@@ -256,22 +256,22 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
                 <span className="text-2xl">💰</span> Precios y Venta
               </h2>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
-                <div className="relative">
+              <div className="flex flex-col xl:flex-row gap-6 items-start">
+                <div className="relative flex-1 w-full">
                   <label htmlFor="precio" className="label font-bold">Precio Normal (ARS) *</label>
                   <div className="relative mt-1.5">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
                     <input id="precio" name="precio" type="number" required min={0} step={0.01}
                       value={form.precio} onChange={handleChange}
-                      className="input pl-8 font-bold text-lg group-[.submitted]:invalid:border-red-500 group-[.submitted]:invalid:bg-red-50 focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] placeholder-gray-400 transition-all" 
+                      className="input pl-8 font-bold text-lg group-[.submitted]:invalid:border-red-500 group-[.submitted]:invalid:bg-red-50 focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] placeholder-gray-400 transition-all w-full" 
                       placeholder="0.00" />
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <label className="label font-bold mt-1.5 mb-1.5">¿Tiene oferta o descuento?</label>
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
-                    <label className="toggle" aria-label="En Oferta">
+                <div className="flex flex-col gap-2 w-full xl:w-auto shrink-0">
+                  <label className="label font-bold mt-1.5 mb-1.5 text-balance md:whitespace-nowrap break-words">¿Tiene oferta o descuento?</label>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200 w-full">
+                    <label className="toggle shrink-0" aria-label="En Oferta">
                       <input type="checkbox" checked={enOferta} onChange={(e) => {
                         setEnOferta(e.target.checked);
                         if (!e.target.checked) setForm(p => ({ ...p, precioOferta: '' }));

@@ -55,7 +55,18 @@
     background-color: var(--black-charcoal);
   }
 
-  /* ── Inputs ── */
+  /* ── Form Inputs ── */
+  .label {
+    @apply block text-[13px] text-gray-700 tracking-wide;
+  }
+  .input {
+    @apply w-full border border-gray-200 rounded-xl px-4 py-3 bg-white text-[15px] font-medium text-[var(--black-charcoal)] transition border-gray-200 outline-none;
+  }
+  .input:focus {
+    border-color: var(--gold-dark);
+    box-shadow: 0 0 0 3px rgba(212,175,55,0.15);
+  }
+
   .input-search {
     @apply w-full px-10 py-3 rounded-xl text-[16px] font-medium transition duration-200;
     background-color: #F5F5F5;
