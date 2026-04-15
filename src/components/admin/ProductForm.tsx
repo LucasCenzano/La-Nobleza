@@ -112,7 +112,7 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
       etiquetas:    finalEtiquetas,
       solicitaInstrucciones: form.solicitaInstrucciones,
       opcionesTitulo: form.opcionesTitulo.trim() || null,
-      opcionesValores: form.opcionesValoresStr.split(',').map(s => s.trim()).filter(Boolean),
+      opcionesValores: form.opcionesValoresStr.split(',').map((s: string) => s.trim()).filter(Boolean),
     };
 
     const url =
