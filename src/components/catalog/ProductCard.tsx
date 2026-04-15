@@ -38,9 +38,18 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
 
   const isPeso        = tipoVenta === 'PESO';
   const parsedStep    = isPeso ? (incrementoPeso || 0.100) : 1;
+  
+  const initialQuantity = (() => {
+    if (!isPeso) return 1;
+    let fallback = 1;
+    if (stock !== null && stock !== undefined && fallback > stock) {
+      fallback = Math.max(stock, parsedStep);
+    }
+    return fallback;
+  })();
+  
   const precioFinal   = precioOferta && precioOferta > 0 ? precioOferta : precio;
-  const [quantity, setQuantity] = useState(isPeso ? parsedStep : 1);
-  // Reúne todas las imágenes (imagenesUrls o imagenUrl)
+  const [quantity, setQuantity] = useState(initialQuantity);
   const allImages     = (imagenesUrls?.length ? imagenesUrls : (imagenUrl ? [imagenUrl] : [])) as string[];
   const cardImage     = allImages[0];
   const detailImage   = allImages[currentImageIndex] || cardImage;

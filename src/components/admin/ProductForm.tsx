@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Producto, TipoVenta } from '@prisma/client';
 import { TIPO_VENTA_LABELS, ETIQUETAS, EtiquetaSlug, CategoriaConfigType } from '@/lib/constants';
 import ImageUploader, { UploadedImage } from '@/components/admin/ImageUploader';
+import ProductCard from '@/components/catalog/ProductCard';
 
 interface ProductFormProps {
   initialData?: Partial<Producto & { imagenesUrls?: string[]; etiquetas?: string[] }>;
@@ -144,8 +145,34 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     ? Math.round((1 - Number(form.precioOferta) / Number(form.precio)) * 100)
     : 0;
 
+  // ─── Live Preview Object ──────────────
+  const finalPreviewEtiquetas = hasOferta
+    ? Array.from(new Set([...etiquetas, 'OFERTA']))
+    : etiquetas.filter(e => e !== 'OFERTA');
+
+  const previewProduct = {
+    id: initialData?.id || 'preview-id',
+    nombre: form.nombre || 'Título del producto...',
+    descripcion: form.descripcion,
+    precio: parseFloat(form.precio) || 0,
+    precioOferta: form.precioOferta ? parseFloat(form.precioOferta) : null,
+    categoria: form.categoria || 'OTROS',
+    tipoVenta: form.tipoVenta,
+    stock: form.stock ? parseFloat(form.stock) : null,
+    incrementoPeso: form.incrementoPeso ? parseFloat(form.incrementoPeso) : null,
+    solicitaInstrucciones: form.solicitaInstrucciones,
+    opcionesTitulo: form.opcionesTitulo.trim() || null,
+    opcionesValores: form.opcionesValoresStr.split(',').map((s) => s.trim()).filter(Boolean),
+    activo: form.activo,
+    etiquetas: finalPreviewEtiquetas,
+    imagenUrl: images[0]?.url || null,
+    imagenesUrls: images.map(i => i.url),
+  } as null | any;
+
   return (
-    <form onSubmit={handleSubmit} className={`flex flex-col gap-6 max-w-2xl transition-opacity duration-300 ${loading ? 'opacity-60 pointer-events-none' : ''}`}>
+    <div className="flex flex-col lg:flex-row gap-8 items-start relative max-w-6xl">
+      {/* ── COL 1: FORMLARIO ──────────────────────────────── */}
+      <form onSubmit={handleSubmit} className={`flex-1 w-full flex flex-col gap-6 transition-opacity duration-300 ${loading ? 'opacity-60 pointer-events-none' : ''}`}>
 
       {/* ── Nombre + Precio ───────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -404,5 +431,23 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
         </button>
       </div>
     </form>
+
+      {/* ── COL 2: LIVE PREVIEW ────────────────────────────── */}
+      <div className="hidden lg:flex w-80 shrink-0 sticky top-24 flex-col gap-2">
+        <h3 className="font-bold text-gray-400 uppercase tracking-widest text-xs flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          Vista Previa en Vivo
+        </h3>
+        <div className="bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] overflow-hidden border border-gray-100 transform origin-top hover:scale-[1.02] transition-transform duration-300 disabled-links">
+          {/* We wrap it in a div that kills pointer events for links but allows clicking the card itself if needed, or just keep it purely visual */}
+          <div className="">
+            <ProductCard producto={previewProduct} categorias={categorias} />
+          </div>
+        </div>
+        <p className="text-xs text-gray-400 mt-2 text-center">
+          Así lucirá en el catálogo.
+        </p>
+      </div>
+    </div>
   );
 }
