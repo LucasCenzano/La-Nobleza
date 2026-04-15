@@ -90,7 +90,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
       >
         {/* ── Product Image ── */}
         <div
-          className="relative overflow-hidden w-full flex items-center justify-center p-3"
+          className="relative overflow-hidden w-full flex items-center justify-center"
           style={{ aspectRatio: '1 / 1', backgroundColor: catBg }}
         >
           {cardImage ? (
@@ -100,7 +100,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
               fill
               loading="lazy"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-contain p-2 transition-transform duration-500 hover:scale-105 pointer-events-none"
+              className="object-cover transition-transform duration-500 hover:scale-105 pointer-events-none"
             />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center opacity-40">
@@ -182,7 +182,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
             <div className="overflow-y-auto w-full pb-safe">
               {/* Imagen destacada en el detalle */}
               <div 
-                className="w-full relative cursor-magnify"
+                className="w-full relative cursor-magnify overflow-hidden"
                 style={{ aspectRatio: '1 / 1', backgroundColor: catBg }}
                 onClick={() => {
                   if (allImages.length > 0) setIsGalleryOpen(true);
@@ -197,7 +197,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                       fill
                       loading="lazy"
                       sizes="(max-width: 640px) 100vw, 400px"
-                      className="object-contain p-6 transition-opacity duration-300 animate-fade-in"
+                      className="object-cover transition-opacity duration-300 animate-fade-in"
                     />
                     
                     {allImages.length > 1 && (

@@ -280,7 +280,14 @@ export default function ImageUploader({ images, onChange, maxImages = 8 }: Props
   const canAddMore = images.length < maxImages;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div 
+      className={`flex flex-col gap-4 p-2 rounded-2xl transition-all ${
+        dragOver ? 'bg-brand-50 border-2 border-dashed border-brand-400 scale-[1.01] shadow-inner' : 'border-2 border-transparent'
+      }`}
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={handleDrop}
+    >
       {/* ── Grid of uploaded / uploading images ─────────────────────── */}
       {images.length > 0 && (
         <DndContext
@@ -321,29 +328,22 @@ export default function ImageUploader({ images, onChange, maxImages = 8 }: Props
       {/* ── Drop zone (empty state) ─────────────────────────────────── */}
       {images.length === 0 && (
         <div
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
-          className={`border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all ${
-            dragOver
-              ? 'border-brand-500 bg-brand-50 scale-[1.01]'
-              : 'border-gray-300 hover:border-brand-400 hover:bg-gray-50'
-          }`}
+          className="border-2 border-dashed border-gray-300 rounded-3xl p-12 flex flex-col items-center justify-center gap-4 cursor-pointer hover:border-brand-400 hover:bg-brand-50/50 transition-all group"
         >
-          <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center text-4xl">
-            📷
+          <div className="w-20 h-20 rounded-[2rem] bg-gray-50 flex items-center justify-center text-5xl shadow-sm group-hover:scale-110 group-hover:bg-white transition-transform">
+            📸
           </div>
           <div className="text-center">
-            <p className="font-semibold text-gray-700">Arrastrá fotos aquí o hacé clic</p>
-            <p className="text-xs text-gray-400 mt-1">
-              JPG · PNG · WebP · HEIC — se convierten a WebP automáticamente
+            <h3 className="text-lg font-black text-gray-800">Arrastrá fotos aquí o hacé clic</h3>
+            <p className="text-sm text-gray-400 mt-1 font-medium">
+              JPG, PNG, WebP o HEIC. Se optimizarán automáticamente.
             </p>
-            <p className="text-xs text-gray-400">Máximo {maxImages} fotos por producto</p>
+            <div className="mt-4 inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm group-hover:border-brand-300 group-hover:text-brand-600 transition-colors">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+              Elegir Archivos
+            </div>
           </div>
-          <span className="text-sm text-brand-600 font-semibold underline underline-offset-2">
-            Elegir archivos
-          </span>
         </div>
       )}
 

@@ -40,12 +40,17 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     activo:       initialData?.activo       ?? true,
   });
 
+  const [enOferta, setEnOferta] = useState(
+    !!(initialData as any)?.precioOferta && Number((initialData as any)?.precioOferta) > 0
+  );
+
   const [etiquetas, setEtiquetas] = useState<string[]>(
     (initialData as any)?.etiquetas ?? [],
   );
   const [images, setImages]   = useState<UploadedImage[]>(urlsToImages(seedUrls));
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [categorias, setCategorias] = useState<CategoriaConfigType[]>([]);
 
   // Load dynamic categories
@@ -68,6 +73,8 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
   ) {
     const { name, value, type } = e.target;
+    // Real time validation for negative prices/stock
+    if (type === 'number' && Number(value) < 0) return;
     const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
     setForm((prev) => ({ ...prev, [name]: val }));
   }
@@ -84,7 +91,14 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setIsSubmitted(true);
     setError('');
+
+    // Pre-validations
+    if (!form.nombre || !form.precio || !form.categoria || !form.tipoVenta) {
+      setError('Por favor, completá los campos obligatorios.');
+      return;
+    }
 
     if (images.some((img) => !img.uploaded)) {
       setError('Esperá a que terminen de subirse todas las fotos.');
@@ -94,9 +108,9 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     setLoading(true);
     const imagenesUrls = images.map((img) => img.url);
 
-    // Auto-add OFERTA etiqueta if sale price is set, auto-remove if not
+    // Auto-add OFERTA etiqueta
     let finalEtiquetas = [...etiquetas];
-    if (form.precioOferta && Number(form.precioOferta) > 0) {
+    if (enOferta && form.precioOferta && Number(form.precioOferta) > 0) {
       if (!finalEtiquetas.includes('OFERTA')) finalEtiquetas.push('OFERTA');
     } else {
       finalEtiquetas = finalEtiquetas.filter((e) => e !== 'OFERTA');
@@ -105,7 +119,7 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     const payload = {
       ...form,
       precio:       parseFloat(form.precio),
-      precioOferta: form.precioOferta ? parseFloat(form.precioOferta) : null,
+      precioOferta: (enOferta && form.precioOferta) ? parseFloat(form.precioOferta) : null,
       stock:        form.stock ? parseFloat(form.stock) : null,
       incrementoPeso: form.incrementoPeso ? parseFloat(form.incrementoPeso) : null,
       imagenesUrls,
@@ -140,7 +154,7 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
   }
 
   const pendingUploads = images.filter((i) => !i.uploaded).length;
-  const hasOferta = !!form.precioOferta && Number(form.precioOferta) > 0;
+  const hasOferta = enOferta && !!form.precioOferta && Number(form.precioOferta) > 0;
   const descuento = hasOferta && form.precio
     ? Math.round((1 - Number(form.precioOferta) / Number(form.precio)) * 100)
     : 0;
@@ -155,7 +169,7 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     nombre: form.nombre || 'Título del producto...',
     descripcion: form.descripcion,
     precio: parseFloat(form.precio) || 0,
-    precioOferta: form.precioOferta ? parseFloat(form.precioOferta) : null,
+    precioOferta: hasOferta ? parseFloat(form.precioOferta) : null,
     categoria: form.categoria || 'OTROS',
     tipoVenta: form.tipoVenta,
     stock: form.stock ? parseFloat(form.stock) : null,
@@ -169,285 +183,387 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     imagenesUrls: images.map(i => i.url),
   } as null | any;
 
+  const SECTIONS = [
+    { id: 'basicos', title: 'Datos Básicos', emoji: '📝' },
+    { id: 'precios', title: 'Precios', emoji: '💰' },
+    { id: 'inventario', title: 'Inventario', emoji: '📦' },
+    { id: 'visual', title: 'Visual', emoji: '🖼️' },
+    { id: 'config', title: 'Ajustes', emoji: '⚙️' },
+  ];
+
   return (
-    <div className="flex flex-col lg:flex-row gap-8 items-start relative max-w-6xl">
-      {/* ── COL 1: FORMLARIO ──────────────────────────────── */}
-      <form onSubmit={handleSubmit} className={`flex-1 w-full flex flex-col gap-6 transition-opacity duration-300 ${loading ? 'opacity-60 pointer-events-none' : ''}`}>
+    <div className="flex flex-col pb-24 relative min-h-screen">
+      <div className="flex flex-col lg:flex-row gap-8 items-start max-w-7xl mx-auto w-full">
+        
+        {/* ── COL 1: FORMULARIO ──────────────────────────────── */}
+        <div className="flex-1 w-full flex flex-col gap-6">
 
-      {/* ── Nombre + Precio ───────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="nombre" className="label">Nombre del producto *</label>
-          <input id="nombre" name="nombre" type="text" required
-            value={form.nombre} onChange={handleChange}
-            className="input" placeholder="Ej: Pollo Entero" />
-        </div>
-        <div>
-          <label htmlFor="precio" className="label">Precio normal (ARS) *</label>
-          <input id="precio" name="precio" type="number" required
-            min={0} step={0.01}
-            value={form.precio} onChange={handleChange}
-            className="input" placeholder="0.00" />
-        </div>
-      </div>
+          {/* ── Tabs Navegación ── */}
+          <div className="sticky top-0 z-40 bg-gray-50/90 backdrop-blur-md pb-3 pt-3 flex gap-2 overflow-x-auto snap-x hidden-scrollbar border-b border-gray-200/50 mb-2">
+            {SECTIONS.map(s => (
+              <a key={s.id} href={`#${s.id}`} className="shrink-0 px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 text-sm font-bold shadow-sm hover:border-gray-300 hover:bg-gray-50 transition-all focus:ring-2 focus:ring-brand-500 outline-none">
+                {s.emoji} {s.title}
+              </a>
+            ))}
+          </div>
 
-      {/* ── Precio de Oferta ─────────────────────────────────── */}
-      <div className="p-4 bg-red-50 border border-red-200 rounded-2xl">
-        <label htmlFor="precioOferta" className="label text-red-700">
-          🔥 Precio de Oferta (ARS)
-          <span className="ml-1 font-normal text-red-500 text-xs">— dejá vacío si no hay oferta</span>
-        </label>
-        <div className="flex items-center gap-3 mt-1">
-          <input
-            id="precioOferta" name="precioOferta" type="number"
-            min={0} step={0.01}
-            value={form.precioOferta} onChange={handleChange}
-            className="input flex-1"
-            placeholder="0.00"
-          />
-          {hasOferta && descuento > 0 && (
-            <span className="shrink-0 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl">
-              -{descuento}% OFF
-            </span>
-          )}
-        </div>
-        {hasOferta && (
-          <p className="text-xs text-red-600 mt-1.5">
-            ✅ Se mostrará tachado el precio original con el precio de oferta resaltado.
-            La etiqueta <strong>OFERTA</strong> se agrega automáticamente.
-          </p>
-        )}
-      </div>
+          <form id="product-form" onSubmit={handleSubmit} className={`flex flex-col gap-12 transition-opacity duration-300 group ${isSubmitted ? 'submitted' : ''} ${loading ? 'opacity-60 pointer-events-none' : ''}`}>
 
-      {/* ── Categoría + Tipo de Venta ─────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="categoria" className="label">Categoría *</label>
-          <select id="categoria" name="categoria"
-            value={form.categoria} onChange={handleChange} className="input">
-            {categorias.length === 0 && (
-              <option value="">Cargando categorías…</option>
+            {/* ERROR GLOBAL */}
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-700 font-medium">
+                <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                {error}
+              </div>
             )}
-            {categorias.map((cat) => (
-              <option key={cat.slug} value={cat.slug}>
-                {cat.emoji} {cat.nombre}
-              </option>
-            ))}
-          </select>
+
+            {/* ── MÓDULO 1: DATOS BÁSICOS ────────────────────────── */}
+            <section id="basicos" className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-8 flex flex-col gap-6 scroll-mt-24">
+              <h2 className="text-xl font-bold text-[var(--black-charcoal)] flex items-center gap-3 border-b border-gray-50 pb-4">
+                <span className="text-2xl">📝</span> Datos Básicos
+              </h2>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="relative">
+                  <label htmlFor="nombre" className="label font-bold">Nombre del producto *</label>
+                  <input id="nombre" name="nombre" type="text" required
+                    value={form.nombre} onChange={handleChange}
+                    className="input group-[.submitted]:invalid:border-red-500 group-[.submitted]:invalid:bg-red-50 group-[.submitted]:invalid:ring-red-200 focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] placeholder-gray-400 transition-all mt-1.5" 
+                    placeholder="Ej: Pollo Entero" />
+                  <div className="hidden group-[.submitted]:input-invalid:flex absolute right-3 top-[42px] items-center text-red-500">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </div>
+                </div>
+                
+                <div className="relative">
+                  <label htmlFor="categoria" className="label font-bold">Categoría *</label>
+                  <select id="categoria" name="categoria" required
+                    value={form.categoria} onChange={handleChange} 
+                    className="input group-[.submitted]:invalid:border-red-500 group-[.submitted]:invalid:bg-red-50 focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] transition-all mt-1.5">
+                    {categorias.length === 0 && <option value="">Cargando categorías…</option>}
+                    {categorias.map((cat) => (
+                      <option key={cat.slug} value={cat.slug}>{cat.emoji} {cat.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            {/* ── MÓDULO 2: PRECIOS Y VENTA ──────────────────────── */}
+            <section id="precios" className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-8 flex flex-col gap-6 scroll-mt-24">
+              <h2 className="text-xl font-bold text-[var(--black-charcoal)] flex items-center gap-3 border-b border-gray-50 pb-4">
+                <span className="text-2xl">💰</span> Precios y Venta
+              </h2>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
+                <div className="relative">
+                  <label htmlFor="precio" className="label font-bold">Precio Normal (ARS) *</label>
+                  <div className="relative mt-1.5">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
+                    <input id="precio" name="precio" type="number" required min={0} step={0.01}
+                      value={form.precio} onChange={handleChange}
+                      className="input pl-8 font-bold text-lg group-[.submitted]:invalid:border-red-500 group-[.submitted]:invalid:bg-red-50 focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] placeholder-gray-400 transition-all" 
+                      placeholder="0.00" />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="label font-bold mt-1.5 mb-1.5">¿Tiene oferta o descuento?</label>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <label className="toggle" aria-label="En Oferta">
+                      <input type="checkbox" checked={enOferta} onChange={(e) => {
+                        setEnOferta(e.target.checked);
+                        if (!e.target.checked) setForm(p => ({ ...p, precioOferta: '' }));
+                      }} />
+                      <span className="toggle-track"><span className="toggle-thumb" /></span>
+                    </label>
+                    <span className="text-sm font-bold text-gray-700">Sí, destacar en oferta 🔥</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Precio Oferta input */}
+              <div className={`overflow-hidden transition-all duration-300 ${enOferta ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="p-5 bg-red-50/50 border border-red-200 rounded-2xl">
+                  <label htmlFor="precioOferta" className="label font-bold text-red-800">
+                    Precio de Oferta (ARS) *
+                  </label>
+                  <div className="flex items-center gap-4 mt-2">
+                    <div className="relative flex-1">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-red-500 font-bold">$</span>
+                      <input id="precioOferta" name="precioOferta" type="number" 
+                        required={enOferta} min={0} step={0.01}
+                        value={form.precioOferta} onChange={handleChange}
+                        className="input pl-8 font-bold text-lg border-red-200 focus:ring-red-400 group-[.submitted]:invalid:border-red-500 group-[.submitted]:invalid:ring-red-300 text-red-900" 
+                        placeholder="0.00" />
+                    </div>
+                    {hasOferta && descuento > 0 && (
+                      <div className="shrink-0 bg-red-600 text-white font-black px-4 py-3 rounded-xl shadow-sm animate-fade-in flex flex-col items-center leading-none">
+                        <span className="text-[10px] opacity-80 mb-0.5">DESCUENTO</span>
+                        <span className="text-lg">-{descuento}%</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-gray-100">
+                <div>
+                  <label htmlFor="tipoVenta" className="label font-bold">Tipo de Venta *</label>
+                  <select id="tipoVenta" name="tipoVenta" required
+                    value={form.tipoVenta} onChange={(e) => {
+                      handleChange(e);
+                      if (e.target.value === 'PESO' && !form.incrementoPeso) {
+                        setForm(p => ({ ...p, incrementoPeso: '0.100' }));
+                      }
+                    }} className="input mt-1.5 focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] transition-all">
+                    {TIPOS_VENTA.map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {form.tipoVenta === 'PESO' && (
+                  <div className="animate-fade-in bg-amber-50/50 p-4 rounded-xl border border-amber-200/50 -mt-2">
+                    <label htmlFor="incrementoPeso" className="label font-bold text-amber-900">Paso de Venta (Kg) *</label>
+                    <input id="incrementoPeso" name="incrementoPeso" type="number"
+                      min={0.05} step={0.001} required
+                      value={form.incrementoPeso} onChange={handleChange}
+                      className="input mt-1.5 bg-white border-amber-200 focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] placeholder-gray-400" placeholder="Ej: 0.100" />
+                    <p className="text-[11px] text-amber-700 font-medium mt-2 leading-tight">
+                      Incremento que puede elegir el cliente al agregar al carrito.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* ── MÓDULO 3: INVENTARIO ──────────────────────────── */}
+            <section id="inventario" className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-8 flex flex-col gap-6 scroll-mt-24">
+              <h2 className="text-xl font-bold text-[var(--black-charcoal)] flex items-center gap-3 border-b border-gray-50 pb-4">
+                <span className="text-2xl">📦</span> Inventario
+              </h2>
+              
+              <div className="max-w-md">
+                <label htmlFor="stock" className="label font-bold">Stock Disponible</label>
+                <div className="flex items-center gap-3 mt-1.5">
+                  <input id="stock" name="stock" type="number"
+                    min={0} step={form.tipoVenta === 'PESO' ? 0.001 : 1}
+                    value={form.stock} onChange={handleChange}
+                    className="input focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] placeholder-gray-400" placeholder="Ej: ilimitado si lo dejás vacío" />
+                  <span className="shrink-0 bg-gray-100 text-gray-500 font-bold px-4 py-3 rounded-xl border border-gray-200">
+                    {form.tipoVenta === 'PESO' ? 'KG' : 'UNID.'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 font-medium mt-2">
+                  Tip: Dejá el campo vacío si el stock es ilimitado.
+                </p>
+              </div>
+            </section>
+
+            {/* ── MÓDULO 4: PRESENTACIÓN VISUAL ─────────────────── */}
+            <section id="visual" className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-8 flex flex-col gap-6 scroll-mt-24">
+              <h2 className="text-xl font-bold text-[var(--black-charcoal)] flex items-center gap-3 border-b border-gray-50 pb-4">
+                <span className="text-2xl">🖼️</span> Presentación Visual
+              </h2>
+              
+              {/* Fotos Dropzone */}
+              <div>
+                <label className="label font-bold flex items-center justify-between mb-3">
+                  Fotos del Producto
+                  {pendingUploads > 0 && (
+                    <span className="text-xs bg-amber-100 text-amber-800 font-bold px-2 py-1 rounded-full animate-pulse flex items-center gap-1.5">
+                      <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle className="opacity-25" cx="12" cy="12" r="10" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      Subiendo {pendingUploads}...
+                    </span>
+                  )}
+                </label>
+                <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                  <ImageUploader images={images} onChange={handleImagesChange} maxImages={8} />
+                </div>
+              </div>
+
+              {/* Descripción */}
+              <div className="pt-2">
+                <label htmlFor="descripcion" className="label font-bold">Descripción Corta</label>
+                <textarea id="descripcion" name="descripcion" rows={3}
+                  value={form.descripcion} 
+                  onChange={(e) => {
+                     e.target.style.height = 'auto';
+                     e.target.style.height = `${e.target.scrollHeight}px`;
+                     handleChange(e);
+                  }}
+                  className="input mt-1.5 min-h-[80px] overflow-hidden focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] placeholder-gray-400 transition-all"
+                  placeholder="Detalles sobre el origen, calidad, ingredientes..." />
+              </div>
+
+              {/* Etiquetas */}
+              <div className="pt-2">
+                <label className="label font-bold block mb-3">Etiquetas / Badges Promocionales</label>
+                <div className="flex flex-wrap gap-3">
+                  {ETIQUETAS.map((et) => {
+                    const active = etiquetas.includes(et.slug);
+                    const isAutoOferta = et.slug === 'OFERTA' && hasOferta;
+                    return (
+                      <button
+                        key={et.slug}
+                        type="button"
+                        disabled={isAutoOferta}
+                        onClick={() => toggleEtiqueta(et.slug as EtiquetaSlug)}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-bold transition-all active:scale-95 ${
+                          active
+                            ? `${et.bg} ${et.text} border-current shadow-sm scale-105`
+                            : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        } ${isAutoOferta ? 'opacity-50 cursor-not-allowed scale-100' : 'cursor-pointer'}`}
+                      >
+                        <span className="text-lg">{et.emoji}</span>
+                        {et.label}
+                        {isAutoOferta && <span className="text-[10px] uppercase font-black tracking-wider opacity-70 ml-1">(Auto)</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+
+            {/* ── MÓDULO 5: CONFIGURACIÓN ───────────────────────── */}
+            <section id="config" className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-8 flex flex-col gap-6 scroll-mt-24">
+              <h2 className="text-xl font-bold text-[var(--black-charcoal)] flex items-center gap-3 border-b border-gray-50 pb-4">
+                <span className="text-2xl">⚙️</span> Configuración y Estado
+              </h2>
+              
+              <div className="flex flex-col gap-5">
+                {/* Switch Estado Activo */}
+                <div className="flex items-center gap-4 p-4 border border-gray-200 rounded-2xl bg-white hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => setForm(f => ({ ...f, activo: !f.activo }))}>
+                  <label className="toggle pointer-events-none" aria-label="Estado del producto">
+                    <input type="checkbox" name="activo" checked={form.activo} readOnly />
+                    <span className="toggle-track"><span className="toggle-thumb" /></span>
+                  </label>
+                  <div className="flex flex-col">
+                    <span className={`text-sm font-black ${form.activo ? 'text-gray-900' : 'text-gray-400'}`}>
+                      {form.activo ? '✅ Visible en el Catálogo' : '⏸️ Oculto (Pausado)'}
+                    </span>
+                    <span className="text-xs text-gray-500 font-medium">
+                      Activá esto para que los clientes puedan comprarlo.
+                    </span>
+                  </div>
+                </div>
+
+                {/* Switch Opciones de Pedido */}
+                <div className={`p-5 rounded-2xl transition-colors border ${form.solicitaInstrucciones ? 'bg-emerald-50/50 border-emerald-200' : 'bg-white border-gray-200 hover:bg-gray-50'}`}>
+                  <div className="flex items-start gap-4 cursor-pointer" onClick={() => setForm(f => ({ ...f, solicitaInstrucciones: !f.solicitaInstrucciones }))}>
+                    <label className="toggle mt-1 pointer-events-none" aria-label="Solicitar Instrucciones">
+                      <input type="checkbox" name="solicitaInstrucciones" checked={form.solicitaInstrucciones} readOnly />
+                      <span className="toggle-track bg-emerald-500"><span className="toggle-thumb" /></span>
+                    </label>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-black text-emerald-950">
+                        Opciones de Pedido Personalizadas
+                      </span>
+                      <span className="text-xs text-emerald-700 font-medium mt-0.5">
+                        Preguntale al cliente cómo quiere la preparación (ej: fileteado, sin hueso).
+                      </span>
+                    </div>
+                  </div>
+
+                  {form.solicitaInstrucciones && (
+                    <div className="flex flex-col gap-6 mt-5 pt-5 border-t border-emerald-200/50 animate-fade-in pl-2 lg:pl-12">
+                      <div className="flex flex-col">
+                        <label htmlFor="opcionesTitulo" className="label font-bold text-emerald-900 mb-2">Pregunta Formulario</label>
+                        <input id="opcionesTitulo" name="opcionesTitulo" type="text"
+                          value={form.opcionesTitulo} onChange={handleChange} onClick={e => e.stopPropagation()}
+                          className="input border-emerald-200 bg-white focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] placeholder-gray-400 mt-1" placeholder="Ej: ¿Cómo querés la carne?" />
+                      </div>
+                      <div className="flex flex-col">
+                        <label htmlFor="opcionesValoresStr" className="label font-bold text-emerald-900 mb-2">Opciones Predefinidas</label>
+                        <textarea id="opcionesValoresStr" name="opcionesValoresStr" rows={2}
+                          value={form.opcionesValoresStr} onChange={handleChange} onClick={e => e.stopPropagation()}
+                          className="input border-emerald-200 bg-white focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] placeholder-gray-400 mt-1 resize-none" placeholder="Entero, Mitades, Picado" />
+                        <p className="text-[11px] text-emerald-700 font-medium mt-1.5">
+                          Escribí las opciones separadas por coma. Si lo dejás vacío, será un campo de texto libre.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+
+          </form>
         </div>
-        <div>
-          <label htmlFor="tipoVenta" className="label">Tipo de venta *</label>
-          <select id="tipoVenta" name="tipoVenta"
-            value={form.tipoVenta} onChange={(e) => {
-              handleChange(e);
-              if (e.target.value === 'PESO' && !form.incrementoPeso) {
-                setForm(p => ({ ...p, incrementoPeso: '0.100' }));
-              }
-            }} className="input">
-            {TIPOS_VENTA.map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-          <p className="text-xs text-gray-400 mt-1">
-            {form.tipoVenta === 'PESO'
-              ? '⚖️ Precio se muestra como "por Kg"'
-              : '📦 Precio se muestra como "por Unidad"'}
+
+        {/* ── COL 2: LIVE PREVIEW (STICKY) ─────────────────────── */}
+        <div className="hidden lg:flex w-[350px] shrink-0 sticky top-24 flex-col gap-3">
+          <div className="flex justify-between items-end px-2">
+            <h3 className="font-black text-gray-400 uppercase tracking-widest text-[11px] flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse"></span>
+              Vista Previa en Vivo
+            </h3>
+          </div>
+          
+          <div className="bg-white rounded-[2rem] p-1.5 shadow-2xl shadow-black/10 border border-gray-100 relative group overflow-hidden">
+            {/* The actual product card preview */}
+            <div className="pointer-events-none">
+              <ProductCard producto={previewProduct} categorias={categorias} />
+            </div>
+            
+            {/* Overlay hint */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-6">
+              <span className="text-white text-xs font-bold tracking-widest bg-black/40 backdrop-blur-md px-4 py-2 rounded-full shadow-lg">
+                VISTA DEL CLIENTE
+              </span>
+            </div>
+          </div>
+          
+          <p className="text-[11px] font-bold text-gray-400 text-center uppercase tracking-widest mt-1">
+            Replicación Exacta del Catálogo
           </p>
         </div>
       </div>
 
-      {/* ── Stock y Pesaje ─────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="stock" className="label">Stock Disponible</label>
-          <input id="stock" name="stock" type="number"
-            min={0} step={form.tipoVenta === 'PESO' ? 0.001 : 1}
-            value={form.stock} onChange={handleChange}
-            className="input" placeholder={form.tipoVenta === 'PESO' ? 'Ej: 50 (kg)' : 'Ej: 10'} />
-          <p className="text-xs text-gray-400 mt-1">
-            Vacío = ilimitado. {form.tipoVenta === 'PESO' ? 'Introduzca los kg. totales.' : 'Introduzca el nro. de unidades.'}
-          </p>
-        </div>
-        {form.tipoVenta === 'PESO' && (
-          <div>
-            <label htmlFor="incrementoPeso" className="label">Paso de Venta (Kg) *</label>
-            <input id="incrementoPeso" name="incrementoPeso" type="number"
-              min={0.05} step={0.001} required
-              value={form.incrementoPeso} onChange={handleChange}
-              className="input" placeholder="Ej: 0.100 (100gr)" />
-            <p className="text-xs text-gray-400 mt-1">
-              Incremento del selector. Ej: 0.100 permite pedir de a 100 gramos.
-            </p>
+      {/* ── GLOBAL ACTIONS BAR (STICKY BOTTOM) ────────────────── */}
+      <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-gray-200/60 p-4 z-50 shadow-[0_-15px_40px_rgba(0,0,0,0.04)]">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 px-2 sm:px-4">
+          <div className="hidden sm:flex items-center gap-3">
+             <span className="text-2xl opacity-50">✍️</span>
+             <div className="flex flex-col">
+               <span className="text-xs font-black text-gray-400 uppercase tracking-widest">{mode === 'create' ? 'Creando:' : 'Editando:'}</span>
+               <span className="text-sm font-bold text-gray-800 line-clamp-1">{form.nombre || 'Nuevo Producto'}</span>
+             </div>
           </div>
-        )}
-      </div>
-
-      {/* ── Opciones de Personalización ───────────────────────── */}
-      <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex flex-col gap-4">
-        <div className="flex items-center gap-3">
-          <label className="toggle" aria-label="Solicitar Instrucciones">
-            <input type="checkbox" name="solicitaInstrucciones"
-              checked={form.solicitaInstrucciones} onChange={handleChange} />
-            <span className="toggle-track"><span className="toggle-thumb" /></span>
-          </label>
-          <div>
-            <span className="text-sm font-bold text-emerald-900 block">
-              📝 Opciones de Pedido Personalizadas
-            </span>
-            <span className="text-xs text-emerald-700 font-medium">Permite al cliente agregar instrucciones de preparado.</span>
-          </div>
-        </div>
-
-        {form.solicitaInstrucciones && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in pl-2 border-l-2 border-emerald-300">
-            <div>
-              <label htmlFor="opcionesTitulo" className="label !text-emerald-800">Pregunta o Título</label>
-              <input id="opcionesTitulo" name="opcionesTitulo" type="text"
-                value={form.opcionesTitulo} onChange={handleChange}
-                className="input border-emerald-200 focus:ring-emerald-400" placeholder="Ej: ¿Cómo querés las pechugas?" />
-              <p className="text-[11px] text-emerald-600 mt-1">
-                La pregunta que verá el cliente.
-              </p>
-            </div>
-            <div>
-              <label htmlFor="opcionesValoresStr" className="label !text-emerald-800">Opciones Predefinidas (opcional)</label>
-              <input id="opcionesValoresStr" name="opcionesValoresStr" type="text"
-                value={form.opcionesValoresStr} onChange={handleChange}
-                className="input border-emerald-200 focus:ring-emerald-400" placeholder="Ej: Enteras, Fileteadas, En cubitos" />
-              <p className="text-[11px] text-emerald-600 mt-1">
-                Separadas por coma. Si lo dejás vacío, el cliente podrá escribir libremente. Si ponés opciones, será un desplegable.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-
-
-      {/* ── Descripción ───────────────────────────────────────── */}
-      <div>
-        <label htmlFor="descripcion" className="label">Descripción corta</label>
-        <textarea id="descripcion" name="descripcion" rows={3}
-          value={form.descripcion} 
-          onChange={(e) => {
-             e.target.style.height = 'auto';
-             e.target.style.height = `${e.target.scrollHeight}px`;
-             handleChange(e);
-          }}
-          className="input min-h-[50px] overflow-hidden"
-          placeholder="Descripción opcional del producto..." />
-      </div>
-
-      {/* ── Etiquetas ─────────────────────────────────────────── */}
-      <div>
-        <label className="label mb-2 block">Etiquetas</label>
-        <div className="flex flex-wrap gap-3">
-          {ETIQUETAS.map((et) => {
-            const active = etiquetas.includes(et.slug);
-            const isAutoOferta = et.slug === 'OFERTA' && hasOferta;
-            return (
-              <button
-                key={et.slug}
-                type="button"
-                disabled={isAutoOferta}
-                onClick={() => toggleEtiqueta(et.slug as EtiquetaSlug)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border-2 text-sm font-semibold transition-all ${
-                  active
-                    ? `${et.bg} ${et.text} border-current shadow-sm`
-                    : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300'
-                } ${isAutoOferta ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
-              >
-                <span>{et.emoji}</span>
-                {et.label}
-                {isAutoOferta && <span className="text-[10px] opacity-70">(auto)</span>}
-              </button>
-            );
-          })}
-        </div>
-        <p className="text-xs text-gray-400 mt-2">
-          Las etiquetas se muestran como badges en el catálogo público.
-          <strong> OFERTA</strong> se activa automáticamente al poner precio de oferta.
-        </p>
-      </div>
-
-      {/* ── Fotos ─────────────────────────────────────────────── */}
-      <div>
-        <label className="label mb-2 block">
-          Fotos del producto
-          {pendingUploads > 0 && (
-            <span className="ml-2 text-xs text-amber-600 font-normal animate-pulse">
-              ⏳ Subiendo {pendingUploads} foto{pendingUploads > 1 ? 's' : ''}…
-            </span>
-          )}
-        </label>
-        <ImageUploader images={images} onChange={handleImagesChange} maxImages={8} />
-      </div>
-
-      {/* ── Estado (activo) ───────────────────────────────────── */}
-      <div className="flex items-center gap-3">
-        <label className="toggle" aria-label="Estado del producto">
-          <input type="checkbox" name="activo"
-            checked={form.activo} onChange={handleChange} />
-          <span className="toggle-track"><span className="toggle-thumb" /></span>
-        </label>
-        <span className="text-sm font-medium text-gray-700">
-          {form.activo ? '✅ Activo (visible en catálogo)' : '⏸️ Pausado (oculto del catálogo)'}
-        </span>
-      </div>
-
-      {/* ── Error ─────────────────────────────────────────────── */}
-      {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-          {error}
-        </p>
-      )}
-
-      {/* ── Acciones ──────────────────────────────────────────── */}
-      <div className="flex gap-3 pt-2">
-        <button
-          type="submit"
-          disabled={loading || pendingUploads > 0}
-          className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed min-h-[48px] flex items-center justify-center transition-all bg-[var(--gold-dark)]"
-        >
-          {loading ? (
-            <span className="flex items-center gap-2">
-              <svg className="animate-spin -ml-1 w-5 h-5 text-white" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Guardando producto...
-            </span>
-          ) : pendingUploads > 0 ? (
-            `⏳ Esperando ${pendingUploads} foto${pendingUploads > 1 ? 's' : ''}…`
-          ) : mode === 'create' ? (
-            '✅ Crear Producto'
-          ) : (
-            '💾 Guardar Cambios'
-          )}
-        </button>
-        <button type="button"
-          onClick={() => router.push('/admin/productos')}
-          className="btn-secondary">
-          Cancelar
-        </button>
-      </div>
-    </form>
-
-      {/* ── COL 2: LIVE PREVIEW ────────────────────────────── */}
-      <div className="hidden lg:flex w-80 shrink-0 sticky top-24 flex-col gap-2">
-        <h3 className="font-bold text-gray-400 uppercase tracking-widest text-xs flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          Vista Previa en Vivo
-        </h3>
-        <div className="bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] overflow-hidden border border-gray-100 transform origin-top hover:scale-[1.02] transition-transform duration-300 disabled-links">
-          {/* We wrap it in a div that kills pointer events for links but allows clicking the card itself if needed, or just keep it purely visual */}
-          <div className="">
-            <ProductCard producto={previewProduct} categorias={categorias} />
+          
+          <div className="flex gap-3 w-full sm:w-auto justify-end">
+            <button type="button"
+              onClick={() => router.push('/admin/productos')}
+              className="px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 active:scale-95 transition-all text-sm">
+              Cancelar
+            </button>
+            <button
+              form="product-form"
+              type="submit"
+              disabled={loading || pendingUploads > 0}
+              className="flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-white bg-[var(--gold-dark)] shadow-lg shadow-[var(--gold-dark)]/30 hover:shadow-xl hover:shadow-[var(--gold-dark)]/40 hover:-translate-y-0.5 active:scale-95 disabled:scale-100 disabled:opacity-60 disabled:cursor-not-allowed transition-all text-sm flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin -ml-1 w-5 h-5 text-white/70" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Guardando...
+                </>
+              ) : pendingUploads > 0 ? (
+                `⏳ Subiendo ${pendingUploads}...`
+              ) : mode === 'create' ? (
+                '✅ Crear Producto'
+              ) : (
+                '💾 Guardar Cambios'
+              )}
+            </button>
           </div>
         </div>
-        <p className="text-xs text-gray-400 mt-2 text-center">
-          Así lucirá en el catálogo.
-        </p>
       </div>
+      
     </div>
   );
 }
