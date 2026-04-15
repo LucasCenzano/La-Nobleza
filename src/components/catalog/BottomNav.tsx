@@ -1,24 +1,44 @@
 'use client';
 
 import { useState } from 'react';
+import { useCart } from './CartContext';
 
 export default function BottomNav() {
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const { totalItems, setIsCartOpen } = useCart();
 
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.02)] z-50">
-        <div className="flex justify-around items-center h-16">
+        <div className="flex justify-around items-center h-16 px-2">
           {/* Inicio */}
           <button 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex flex-col items-center justify-center w-full h-full text-[#C5A059]"
+            className="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-[#C5A059] transition-colors"
           >
             <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
             <span className="text-[10px] font-medium">Inicio</span>
+          </button>
+
+          {/* Carrito */}
+          <button 
+            onClick={() => setIsCartOpen(true)}
+            className="flex flex-col items-center justify-center w-full h-full text-[#C5A059] relative transition-colors"
+          >
+            <div className="relative">
+              <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              {totalItems > 0 && (
+                <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                  {totalItems}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] font-medium">Mi Pedido</span>
           </button>
 
           {/* Ubicación */}
@@ -33,7 +53,7 @@ export default function BottomNav() {
             <span className="text-[10px] font-medium">Ubicación</span>
           </button>
 
-          {/* Contacto / Perfil */}
+          {/* Contacto */}
           <button 
             onClick={() => setIsContactOpen(true)}
             className="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-[#C5A059] transition-colors"

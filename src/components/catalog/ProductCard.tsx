@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Producto, TipoVenta } from '@prisma/client';
 import { formatPrecio, formatPrecioSolo, CategoriaConfigType } from '@/lib/constants';
+import { useCart } from './CartContext';
 
 interface ProductCardProps {
   producto: Producto & { imagenesUrls?: string[]; etiquetas?: string[] };
@@ -28,6 +29,7 @@ const CAT_BG: Record<string, string> = {
 };
 
 export default function ProductCard({ producto, categorias }: ProductCardProps) {
+  const { addItem, setIsCartOpen } = useCart();
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -38,6 +40,8 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
   } = producto as any;
 
   const isPeso        = tipoVenta === 'PESO';
+  const precioFinal   = precioOferta && precioOferta > 0 ? precioOferta : precio;
+  const [quantity, setQuantity] = useState(isPeso ? 1 : 1);
   // Reúne todas las imágenes (imagenesUrls o imagenUrl)
   const allImages     = (imagenesUrls?.length ? imagenesUrls : (imagenUrl ? [imagenUrl] : [])) as string[];
   const cardImage     = allImages[0];
@@ -264,12 +268,54 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                 </div>
 
                 {descripcion && (
-                  <div className="text-sm text-gray-600 leading-relaxed pb-6">
+                  <div className="text-sm text-gray-600 leading-relaxed pb-4">
                     <p className="font-bold text-gray-800 text-xs uppercase tracking-wider mb-2">Descripción</p>
                     {descripcion}
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Fila Pegajosa Inferior - Agregar al Carrito */}
+            <div className="border-t border-gray-100 bg-white p-4 pb-safe flex items-center justify-between shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-10 shrink-0">
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setQuantity(q => Math.max(isPeso ? 0.5 : 1, q - (isPeso ? 0.5 : 1)))}
+                  className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700 active:bg-gray-200 transition-colors shadow-sm"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14"/></svg>
+                </button>
+                <div className="w-14 text-center">
+                  <span className="font-bold text-[18px] text-[var(--black-charcoal)] leading-none">{quantity}</span>
+                  <span className="text-xs text-gray-500 font-medium ml-0.5 block">{isPeso ? 'kg' : 'un.'}</span>
+                </div>
+                <button 
+                  onClick={() => setQuantity(q => q + (isPeso ? 0.5 : 1))}
+                  className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700 active:bg-gray-200 transition-colors shadow-sm"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                </button>
+              </div>
+
+              <button 
+                onClick={() => {
+                  addItem({
+                    productoId: producto.id,
+                    nombre,
+                    precioFinal,
+                    tipoVenta,
+                    cantidad: quantity,
+                    imagenUrl: cardImage,
+                  });
+                  setIsDetailOpen(false);
+                  setIsCartOpen(true);
+                }}
+                className="flex-1 ml-4 bg-[var(--black-charcoal)] text-white font-bold h-12 rounded-[1rem] flex items-center justify-center gap-2 shadow-xl shadow-black/20 active:scale-[0.98] transition-all whitespace-nowrap"
+              >
+                Agregar
+                <span className="opacity-80 font-normal">|</span>
+                ${(precioFinal * quantity).toLocaleString('es-AR')}
+              </button>
             </div>
           </div>
         </div>
