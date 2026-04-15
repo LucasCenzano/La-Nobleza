@@ -40,7 +40,10 @@ function SortableImageCard({
 }: {
   img: UploadedImage;
   index: number;
+  totalImages: number;
   onRemove: (id: string) => void;
+  onMoveLeft: (id: string) => void;
+  onMoveRight: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: img.id });
@@ -109,6 +112,30 @@ function SortableImageCard({
         </span>
       )}
 
+      {/* ── Native UI Reorder Buttons ── */}
+      {img.uploaded && totalImages > 1 && (
+        <div className="absolute top-1/2 -translate-y-1/2 left-0 w-full flex justify-between px-1 z-30 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto">
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onMoveLeft(img.id); }}
+            disabled={index === 0}
+            className="w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/90 disabled:opacity-0 active:scale-95 shadow-md"
+            aria-label="Mover a la izquierda"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onMoveRight(img.id); }}
+            disabled={index === totalImages - 1}
+            className="w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/90 disabled:opacity-0 active:scale-95 shadow-md"
+            aria-label="Mover a la derecha"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+      )}
+
       {/* Remove button — visible on hover */}
       <button
         type="button"
@@ -138,7 +165,7 @@ async function processImage(file: File): Promise<File> {
     const blob = (await heic2any({
       blob: file,
       toType: 'image/jpeg',
-      quality: 0.95,
+      quality: 0.82,
     })) as Blob;
     work = new File(
       [blob],
@@ -151,7 +178,8 @@ async function processImage(file: File): Promise<File> {
   const bitmap = await createImageBitmap(work);
   const canvas = document.createElement('canvas');
 
-  const MAX = 1920;
+  // Reducción drástica a MAX = 1024 para acelerar los payloads de la base de datos (PostgreSQL/Neon)
+  const MAX = 1024;
   let { width, height } = bitmap;
   if (width > MAX || height > MAX) {
     if (width > height) {
@@ -168,7 +196,7 @@ async function processImage(file: File): Promise<File> {
   bitmap.close();
 
   const blob = await new Promise<Blob>((res) =>
-    canvas.toBlob((b) => res(b!), 'image/webp', 0.95),
+    canvas.toBlob((b) => res(b!), 'image/webp', 0.80),
   );
 
   return new File(
@@ -277,6 +305,20 @@ export default function ImageUploader({ images, onChange, maxImages = 8 }: Props
     onChange(arr);
   }
 
+  function handleMoveManual(id: string, dir: -1 | 1) {
+    const arr = [...images];
+    const idx = arr.findIndex((i) => i.id === id);
+    if (idx === -1) return;
+    const to = idx + dir;
+    if (to < 0 || to >= arr.length) return;
+    
+    // Swap
+    const temp = arr[idx];
+    arr[idx] = arr[to];
+    arr[to] = temp;
+    onChange(arr);
+  }
+
   const canAddMore = images.length < maxImages;
 
   return (
@@ -305,7 +347,10 @@ export default function ImageUploader({ images, onChange, maxImages = 8 }: Props
                   key={img.id}
                   img={img}
                   index={idx}
+                  totalImages={images.length}
                   onRemove={handleRemove}
+                  onMoveLeft={(id) => handleMoveManual(id, -1)}
+                  onMoveRight={(id) => handleMoveManual(id, 1)}
                 />
               ))}
 
