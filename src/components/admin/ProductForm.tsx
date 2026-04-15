@@ -139,7 +139,7 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     : 0;
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6 max-w-2xl">
+    <form onSubmit={handleSubmit} className={`flex flex-col gap-6 max-w-2xl transition-opacity duration-300 ${loading ? 'opacity-60 pointer-events-none' : ''}`}>
 
       {/* ── Nombre + Precio ───────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -253,9 +253,9 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
       {/* ── Descripción ───────────────────────────────────────── */}
       <div>
         <label htmlFor="descripcion" className="label">Descripción corta</label>
-        <textarea id="descripcion" name="descripcion" rows={3}
+        <textarea id="descripcion" name="descripcion" rows={5}
           value={form.descripcion} onChange={handleChange}
-          className="input resize-none"
+          className="input resize-y min-h-[100px]"
           placeholder="Descripción opcional del producto..." />
       </div>
 
@@ -328,13 +328,23 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
         <button
           type="submit"
           disabled={loading || pendingUploads > 0}
-          className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed"
+          className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed min-h-[48px] flex items-center justify-center transition-all bg-[var(--gold-dark)]"
         >
-          {loading
-            ? '⟳ Guardando...'
-            : pendingUploads > 0
-            ? `⏳ Esperando ${pendingUploads} foto${pendingUploads > 1 ? 's' : ''}…`
-            : mode === 'create' ? '✅ Crear Producto' : '💾 Guardar Cambios'}
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <svg className="animate-spin -ml-1 w-5 h-5 text-white" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Guardando producto...
+            </span>
+          ) : pendingUploads > 0 ? (
+            `⏳ Esperando ${pendingUploads} foto${pendingUploads > 1 ? 's' : ''}…`
+          ) : mode === 'create' ? (
+            '✅ Crear Producto'
+          ) : (
+            '💾 Guardar Cambios'
+          )}
         </button>
         <button type="button"
           onClick={() => router.push('/admin/productos')}
