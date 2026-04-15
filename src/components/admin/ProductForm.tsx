@@ -29,6 +29,8 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     descripcion:  initialData?.descripcion  ?? '',
     precio:       initialData?.precio?.toString()       ?? '',
     precioOferta: (initialData as any)?.precioOferta?.toString() ?? '',
+    stock:        (initialData as any)?.stock?.toString() ?? '',
+    incrementoPeso: (initialData as any)?.incrementoPeso?.toString() ?? (initialData?.tipoVenta === 'PESO' ? '0.100' : ''),
     categoria:    (initialData as any)?.categoria       ?? '',
     tipoVenta:    initialData?.tipoVenta    ?? 'UNIDAD',
     activo:       initialData?.activo       ?? true,
@@ -100,6 +102,8 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
       ...form,
       precio:       parseFloat(form.precio),
       precioOferta: form.precioOferta ? parseFloat(form.precioOferta) : null,
+      stock:        form.stock ? parseFloat(form.stock) : null,
+      incrementoPeso: form.incrementoPeso ? parseFloat(form.incrementoPeso) : null,
       imagenesUrls,
       imagenUrl:    imagenesUrls[0] ?? null,
       etiquetas:    finalEtiquetas,
@@ -201,7 +205,12 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
         <div>
           <label htmlFor="tipoVenta" className="label">Tipo de venta *</label>
           <select id="tipoVenta" name="tipoVenta"
-            value={form.tipoVenta} onChange={handleChange} className="input">
+            value={form.tipoVenta} onChange={(e) => {
+              handleChange(e);
+              if (e.target.value === 'PESO' && !form.incrementoPeso) {
+                setForm(p => ({ ...p, incrementoPeso: '0.100' }));
+              }
+            }} className="input">
             {TIPOS_VENTA.map(([value, label]) => (
               <option key={value} value={value}>{label}</option>
             ))}
@@ -213,6 +222,33 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
           </p>
         </div>
       </div>
+
+      {/* ── Stock y Pesaje ─────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="stock" className="label">Stock Disponible</label>
+          <input id="stock" name="stock" type="number"
+            min={0} step={form.tipoVenta === 'PESO' ? 0.001 : 1}
+            value={form.stock} onChange={handleChange}
+            className="input" placeholder={form.tipoVenta === 'PESO' ? 'Ej: 50 (kg)' : 'Ej: 10'} />
+          <p className="text-xs text-gray-400 mt-1">
+            Vacío = ilimitado. {form.tipoVenta === 'PESO' ? 'Introduzca los kg. totales.' : 'Introduzca el nro. de unidades.'}
+          </p>
+        </div>
+        {form.tipoVenta === 'PESO' && (
+          <div>
+            <label htmlFor="incrementoPeso" className="label">Paso de Venta (Kg) *</label>
+            <input id="incrementoPeso" name="incrementoPeso" type="number"
+              min={0.05} step={0.001} required
+              value={form.incrementoPeso} onChange={handleChange}
+              className="input" placeholder="Ej: 0.100 (100gr)" />
+            <p className="text-xs text-gray-400 mt-1">
+              Incremento del selector. Ej: 0.100 permite pedir de a 100 gramos.
+            </p>
+          </div>
+        )}
+      </div>
+
 
       {/* ── Descripción ───────────────────────────────────────── */}
       <div>

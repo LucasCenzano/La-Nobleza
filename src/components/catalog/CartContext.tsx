@@ -9,6 +9,8 @@ export interface CartItem {
   tipoVenta: 'UNIDAD' | 'PESO';
   cantidad: number;
   imagenUrl: string | null;
+  incrementoPeso?: number | null;
+  stock?: number | null;
 }
 
 interface CartContextType {

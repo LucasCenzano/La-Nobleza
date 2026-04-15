@@ -73,14 +73,27 @@ export default function CartDrawer() {
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
                         <button 
-                          onClick={() => updateQuantity(item.productoId, item.cantidad - (item.tipoVenta === 'PESO' ? 0.5 : 1))}
+                          onClick={() => {
+                            const step = item.tipoVenta === 'PESO' ? (item.incrementoPeso || 0.100) : 1;
+                            const next = Math.round((item.cantidad - step) * 1000) / 1000;
+                            if (next >= step) updateQuantity(item.productoId, next);
+                            else removeItem(item.productoId);
+                          }}
                           className="w-7 h-7 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 active:scale-95"
                         >-</button>
-                        <span className="text-[13px] font-bold w-10 text-center">
-                          {item.cantidad}{item.tipoVenta === 'PESO' ? 'kg' : ''}
+                        <span className="text-[13px] font-bold w-12 text-center">
+                          {item.tipoVenta === 'PESO' ? item.cantidad.toFixed(3).replace(/\.?0+$/, '') || '0' : item.cantidad}{item.tipoVenta === 'PESO' ? 'kg' : ''}
                         </span>
                         <button 
-                          onClick={() => updateQuantity(item.productoId, item.cantidad + (item.tipoVenta === 'PESO' ? 0.5 : 1))}
+                          onClick={() => {
+                            const step = item.tipoVenta === 'PESO' ? (item.incrementoPeso || 0.100) : 1;
+                            const next = Math.round((item.cantidad + step) * 1000) / 1000;
+                            if (item.stock !== null && item.stock !== undefined && next > item.stock) {
+                              updateQuantity(item.productoId, Math.max(item.stock, step));
+                            } else {
+                              updateQuantity(item.productoId, next);
+                            }
+                          }}
                           className="w-7 h-7 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 active:scale-95"
                         >+</button>
                       </div>

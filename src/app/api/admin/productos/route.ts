@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       nombre, descripcion, precio, precioOferta,
-      categoria, tipoVenta, imagenUrl, imagenesUrls,
+      categoria, tipoVenta, stock, incrementoPeso, imagenUrl, imagenesUrls,
       etiquetas, activo,
     } = body;
 
@@ -50,6 +50,8 @@ export async function POST(req: NextRequest) {
         precioOferta: precioOferta ? Number(precioOferta) : null,
         categoria,
         tipoVenta,
+        stock:        stock !== undefined && stock !== null ? Number(stock) : null,
+        incrementoPeso: incrementoPeso !== undefined && incrementoPeso !== null ? Number(incrementoPeso) : null,
         imagenUrl:    imagenUrl    || null,
         imagenesUrls: imagenesUrls ?? [],
         etiquetas:    etiquetas    ?? [],

@@ -32,6 +32,8 @@ model Producto {
   precioOferta Float?             // null = sin oferta activa
   categoria    String             // slug dinámico — ref a CategoriaConfig.slug
   tipoVenta    TipoVenta @default(UNIDAD)
+  stock        Float?             // null = sin control de stock
+  incrementoPeso Float?           // paso en kilos o gramos
   imagenUrl    String?            // legado — portada (primer elemento de imagenesUrls)
   imagenesUrls String[]           // array ordenado: [0]=portada, [1..]=adicionales
   etiquetas    String[]           // "NUEVO" | "DESTACADO" | "OFERTA" | "SIN_STOCK"

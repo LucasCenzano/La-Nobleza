@@ -32,12 +32,13 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
 
   const {
     nombre, descripcion, precio, precioOferta,
-    tipoVenta, categoria, imagenUrl, imagenesUrls, etiquetas,
+    tipoVenta, categoria, imagenUrl, imagenesUrls, etiquetas, stock, incrementoPeso
   } = producto as any;
 
   const isPeso        = tipoVenta === 'PESO';
+  const parsedStep    = isPeso ? (incrementoPeso || 0.100) : 1;
   const precioFinal   = precioOferta && precioOferta > 0 ? precioOferta : precio;
-  const [quantity, setQuantity] = useState(isPeso ? 1 : 1);
+  const [quantity, setQuantity] = useState(isPeso ? parsedStep : 1);
   // Reúne todas las imágenes (imagenesUrls o imagenUrl)
   const allImages     = (imagenesUrls?.length ? imagenesUrls : (imagenUrl ? [imagenUrl] : [])) as string[];
   const cardImage     = allImages[0];
@@ -272,21 +273,42 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
               </div>
             </div>
 
+            {/* Disclaimer para Peso Variable */}
+            {isPeso && (
+              <div className="px-4 pb-3 bg-white">
+                <div className="text-[11px] text-amber-700 bg-amber-50 rounded-lg p-2 leading-tight flex items-start gap-2 border border-amber-100">
+                  <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <span>
+                    <strong>Nota:</strong> Los cortes son manuales y el peso (y su precio) puede variar levemente. Se ajustará al pesar el producto real.
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Fila Pegajosa Inferior - Agregar al Carrito */}
             <div className="border-t border-gray-100 bg-white p-4 pb-safe flex items-center justify-between shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-10 shrink-0">
               <div className="flex items-center gap-3">
                 <button 
-                  onClick={() => setQuantity(q => Math.max(isPeso ? 0.5 : 1, q - (isPeso ? 0.5 : 1)))}
+                  onClick={() => setQuantity(q => {
+                    const next = Math.round((q - parsedStep) * 1000) / 1000;
+                    return next < parsedStep ? parsedStep : next;
+                  })}
                   className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700 active:bg-gray-200 transition-colors shadow-sm"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14"/></svg>
                 </button>
                 <div className="w-14 text-center">
-                  <span className="font-bold text-[18px] text-[var(--black-charcoal)] leading-none">{quantity}</span>
-                  <span className="text-xs text-gray-500 font-medium ml-0.5 block">{isPeso ? 'kg' : 'un.'}</span>
+                  <span className="font-bold text-[18px] text-[var(--black-charcoal)] leading-none">
+                    {isPeso ? quantity.toFixed(3).replace(/\.?0+$/, '') || '0' : quantity}
+                  </span>
+                  <span className="text-[10px] text-gray-500 font-medium ml-0.5 block">{isPeso ? 'kg' : 'un.'}</span>
                 </div>
                 <button 
-                  onClick={() => setQuantity(q => q + (isPeso ? 0.5 : 1))}
+                  onClick={() => setQuantity(q => {
+                    const next = Math.round((q + parsedStep) * 1000) / 1000;
+                    if (stock !== null && stock !== undefined && next > stock) return Math.max(stock, parsedStep);
+                    return next;
+                  })}
                   className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700 active:bg-gray-200 transition-colors shadow-sm"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -302,6 +324,8 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                     tipoVenta,
                     cantidad: quantity,
                     imagenUrl: cardImage,
+                    incrementoPeso,
+                    stock
                   });
                   setIsDetailOpen(false);
                   setIsCartOpen(true);
