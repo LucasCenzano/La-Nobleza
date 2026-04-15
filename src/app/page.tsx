@@ -14,6 +14,7 @@ interface HomePageProps {
   searchParams: {
     q?:         string;
     categoria?: string;
+    etiqueta?:  string;
   };
 }
 
@@ -174,7 +175,10 @@ const MOCK_CATEGORIAS: CategoriaConfigType[] = [
   { id: '12', slug: 'OTROS',        nombre: 'Otros',           emoji: '📦', color: '#000', orden: 11, activo: true },
 ];
 
-async function getData(q?: string, categoria?: string) {
+async function getData(q?: string, categoria?: string, etiqueta?: string) {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
   try {
     const { prisma } = await import('@/lib/prisma');
     const [productos, categorias] = await Promise.all([
@@ -183,6 +187,7 @@ async function getData(q?: string, categoria?: string) {
           activo: true,
           ...(categoria ? { categoria } : {}),
           ...(q ? { nombre: { contains: q, mode: 'insensitive' } } : {}),
+          ...(etiqueta ? { etiquetas: { has: etiqueta } } : {}), // For simple db matching
         },
         orderBy: [{ orden: 'asc' }, { nombre: 'asc' }],
       }),
@@ -191,20 +196,48 @@ async function getData(q?: string, categoria?: string) {
         orderBy: [{ orden: 'asc' }],
       }),
     ]);
-    return { productos, categorias, demo: false };
+
+    // Apply auto-tags for business logic (NUEVO & DESTACADO for items < 30 days)
+    let processedProducts = productos.map((p) => {
+      const etiquetas = new Set(p.etiquetas || []);
+      if (p.createdAt && new Date(p.createdAt) >= thirtyDaysAgo) {
+        etiquetas.add('NUEVO');
+        etiquetas.add('DESTACADO');
+      }
+      return { ...p, etiquetas: Array.from(etiquetas) };
+    });
+
+    // If we rely on auto-tags, we need to filter them in memory if the user requested a tag the DB didn't catch 
+    // (since auto-tags are not in the DB)
+    if (etiqueta) {
+      processedProducts = processedProducts.filter(p => p.etiquetas.includes(etiqueta));
+    }
+
+    return { productos: processedProducts, categorias, demo: false };
   } catch {
-    const productos = MOCK_PRODUCTOS.filter((p) => {
+    let productos = MOCK_PRODUCTOS.map((p) => {
+       const etiquetas = new Set(p.etiquetas || []);
+       if (p.createdAt && new Date(p.createdAt) >= thirtyDaysAgo) {
+         etiquetas.add('NUEVO');
+         etiquetas.add('DESTACADO');
+       }
+       return { ...p, etiquetas: Array.from(etiquetas) };
+    });
+
+    productos = productos.filter((p) => {
       const matchQ   = !q        || p.nombre.toLowerCase().includes(q.toLowerCase());
       const matchCat = !categoria || p.categoria === categoria;
-      return matchQ && matchCat;
+      const matchTag = !etiqueta  || p.etiquetas.includes(etiqueta);
+      return matchQ && matchCat && matchTag;
     });
+
     return { productos, categorias: MOCK_CATEGORIAS, demo: true };
   }
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const [{ productos, categorias, demo }, catalogConfig] = await Promise.all([
-    getData(searchParams.q, searchParams.categoria),
+    getData(searchParams.q, searchParams.categoria, searchParams.etiqueta),
     getCatalogConfig(),
   ]);
 

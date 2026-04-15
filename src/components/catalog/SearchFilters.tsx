@@ -6,7 +6,6 @@ import { CategoriaConfigType } from '@/lib/constants';
 
 const STATIC_CATEGORIAS: CategoriaConfigType[] = [
   { id: '0',  slug: '',              nombre: 'Todos',           emoji: '', color: '#000', orden: -1, activo: true },
-  { id: '1',  slug: 'OFERTAS',       nombre: 'Ofertas',         emoji: '🔥', color: '#dc2626', orden: 0,  activo: true },
   { id: '2',  slug: 'POLLO_ENTERO',  nombre: 'Pollo Entero',    emoji: '', color: '#000', orden: 1,  activo: true },
   { id: '3',  slug: 'PRESAS',        nombre: 'Presas',          emoji: '', color: '#000', orden: 2,  activo: true },
   { id: '4',  slug: 'EMBUTIDOS',     nombre: 'Embutidos',       emoji: '', color: '#000', orden: 3,  activo: true },
@@ -82,21 +81,56 @@ export default function SearchFilters() {
           aria-label="Buscar productos"
         />
         {isPending && (
-          <span className="absolute right-7 top-1/2 -translate-y-1/2 animate-spin text-[var(--gold-dark)]" aria-hidden="true">
+           <span className="absolute right-7 top-1/2 -translate-y-1/2 animate-spin text-[var(--gold-dark)]" aria-hidden="true">
             ⟳
           </span>
         )}
       </div>
 
-      {/* Category Pills */}
+      {/* Category & Tag Pills */}
       <div className="flex gap-2 overflow-x-auto scroll-x-hide px-4 pb-1">
-        {categorias.map((cat) => {
-          const isActive = cat.slug === '' ? currentCat === '' : currentCat === cat.slug;
+        {/* 'Todos' pill */}
+        <button
+          onClick={() => handleCategory('')}
+          className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[13px] font-semibold transition-all active:scale-95 border ${currentCat === '' && !searchParams.get('etiqueta') ? 'bg-[var(--black-charcoal)] text-white border-[var(--black-charcoal)] shadow-[0_4px_10px_rgba(0,0,0,0.15)]' : 'bg-white text-gray-600 border-gray-200 shadow-sm'}`}
+        >
+          Todos
+        </button>
+
+        {/* Special Tags */}
+        {['OFERTA', 'DESTACADO', 'NUEVO'].map((tag) => {
+          const isActive = searchParams.get('etiqueta') === tag;
+          const labels: Record<string, string> = { OFERTA: '🔥 Ofertas', DESTACADO: '⭐ Destacados', NUEVO: '🆕 Nuevos' };
+          
+          return (
+            <button
+              key={tag}
+              onClick={() => {
+                startTransition(() => {
+                  const nextTag = isActive ? '' : tag;
+                  router.push(`${pathname}?${createQueryString({ q: currentQuery, categoria: '', etiqueta: nextTag })}`);
+                });
+              }}
+              className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[13px] font-semibold transition-all active:scale-95 border ${isActive ? 'bg-[#dc2626] text-white border-[#dc2626] shadow-[0_4px_10px_rgba(220,38,38,0.25)]' : 'bg-red-50 text-red-700 border-red-200 shadow-sm'}`}
+            >
+              {labels[tag]}
+            </button>
+          );
+        })}
+
+        {/* Categories */}
+        {categorias.filter(c => c.slug !== '').map((cat) => {
+          const isActive = currentCat === cat.slug;
 
           return (
             <button
               key={cat.id}
-              onClick={() => handleCategory(cat.slug)}
+              onClick={() => {
+                startTransition(() => {
+                  const next = isActive ? '' : cat.slug;
+                  router.push(`${pathname}?${createQueryString({ q: currentQuery, categoria: next, etiqueta: '' })}`);
+                });
+              }}
               className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[13px] font-semibold transition-all active:scale-95 border ${isActive ? 'bg-[var(--black-charcoal)] text-white border-[var(--black-charcoal)] shadow-[0_4px_10px_rgba(0,0,0,0.15)]' : 'bg-white text-gray-600 border-gray-200 shadow-sm'}`}
             >
               {cat.emoji && <span className="mr-1.5">{cat.emoji}</span>}
