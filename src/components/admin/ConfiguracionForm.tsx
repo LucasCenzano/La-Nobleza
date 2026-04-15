@@ -218,48 +218,48 @@ export default function ConfiguracionForm() {
             return (
               <div
                 key={key}
-                className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                className={`flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 rounded-xl border transition-colors ${
                   h.activo ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100'
                 }`}
               >
-                {/* Día toggle */}
-                <label className="toggle flex-shrink-0" title={h.activo ? 'Cerrado este día' : 'Abierto este día'}>
-                  <input
-                    type="checkbox"
-                    checked={h.activo}
-                    onChange={(e) => updateHorario(key, { activo: e.target.checked })}
-                  />
-                  <span className="toggle-track"><span className="toggle-thumb" /></span>
-                </label>
+                <div className="flex items-center gap-3">
+                  {/* Día toggle */}
+                  <label className="toggle flex-shrink-0" title={h.activo ? 'Cerrado este día' : 'Abierto este día'}>
+                    <input
+                      type="checkbox"
+                      checked={h.activo}
+                      onChange={(e) => updateHorario(key, { activo: e.target.checked })}
+                    />
+                    <span className="toggle-track"><span className="toggle-thumb" /></span>
+                  </label>
 
-                {/* Nombre del día */}
-                <span className={`w-24 text-sm font-semibold flex-shrink-0 ${h.activo ? 'text-gray-800' : 'text-gray-400'}`}>
-                  {label}
-                </span>
+                  {/* Nombre del día */}
+                  <span className={`w-24 text-sm font-semibold flex-shrink-0 ${h.activo ? 'text-gray-800' : 'text-gray-400'}`}>
+                    {label}
+                  </span>
+                </div>
 
                 {h.activo ? (
-                  <>
-                    <div className="flex items-center gap-2 flex-1">
-                      <input
-                        type="time"
-                        value={h.abre}
-                        onChange={(e) => updateHorario(key, { abre: e.target.value })}
-                        className="input text-sm py-1.5 flex-1"
-                        aria-label={`${label} apertura`}
-                      />
-                      <span className="text-gray-400 text-sm flex-shrink-0">a</span>
-                      <input
-                        type="time"
-                        value={h.cierra}
-                        onChange={(e) => updateHorario(key, { cierra: e.target.value })}
-                        className="input text-sm py-1.5 flex-1"
-                        aria-label={`${label} cierre`}
-                      />
-                    </div>
-                    <span className="text-xs text-green-600 font-medium flex-shrink-0">Abierto</span>
-                  </>
+                  <div className="flex items-center gap-2 w-full sm:w-auto flex-1 pl-12 sm:pl-0">
+                    <input
+                      type="time"
+                      value={h.abre}
+                      onChange={(e) => updateHorario(key, { abre: e.target.value })}
+                      className="input text-sm py-1.5 flex-1 p-0 text-center sm:text-left"
+                      aria-label={`${label} apertura`}
+                    />
+                    <span className="text-gray-400 text-sm flex-shrink-0">a</span>
+                    <input
+                      type="time"
+                      value={h.cierra}
+                      onChange={(e) => updateHorario(key, { cierra: e.target.value })}
+                      className="input text-sm py-1.5 flex-1 p-0 text-center sm:text-left"
+                      aria-label={`${label} cierre`}
+                    />
+                    <span className="text-xs text-green-600 font-medium hidden sm:inline-block flex-shrink-0">Abierto</span>
+                  </div>
                 ) : (
-                  <span className="text-sm text-gray-400 italic flex-1">Cerrado</span>
+                  <span className="text-sm text-gray-400 italic flex-1 pl-12 sm:pl-0">Cerrado</span>
                 )}
               </div>
             );

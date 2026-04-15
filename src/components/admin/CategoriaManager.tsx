@@ -56,7 +56,7 @@ function SortableRow({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm ${
+      className={`flex items-center flex-wrap sm:flex-nowrap gap-2 sm:gap-3 px-3 sm:px-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm ${
         !cat.activo ? 'opacity-60' : ''
       }`}
     >
@@ -64,7 +64,7 @@ function SortableRow({
       <div
         {...attributes}
         {...listeners}
-        className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none select-none"
+        className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none select-none pl-1"
         title="Arrastrar para reordenar"
       >
         ⠿
@@ -72,50 +72,54 @@ function SortableRow({
 
       {/* Color swatch + emoji */}
       <div
-        className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+        className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-base sm:text-lg flex-shrink-0"
         style={{ backgroundColor: cat.color + '33' }}
       >
         {cat.emoji}
       </div>
 
       {/* Info */}
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-gray-900 text-sm truncate">{cat.nombre}</p>
-        <p className="text-xs text-gray-400 truncate font-mono">{cat.slug}</p>
+      <div className="flex-1 min-w-0 pr-2">
+        <p className="font-semibold text-gray-900 text-sm sm:text-sm truncate">{cat.nombre}</p>
+        <p className="text-[10px] sm:text-xs text-gray-400 truncate font-mono">{cat.slug}</p>
       </div>
 
-      {/* Products count */}
-      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-        {count} producto{count !== 1 ? 's' : ''}
-      </span>
+      <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end mt-1 sm:mt-0 pl-7 sm:pl-0">
+        {/* Products count */}
+        <span className="text-[10px] sm:text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+          {count} prod{count !== 1 ? 's' : ''}
+        </span>
 
-      {/* Active toggle */}
-      <label className="toggle flex-shrink-0" title={cat.activo ? 'Desactivar' : 'Activar'}>
-        <input
-          type="checkbox"
-          checked={cat.activo}
-          onChange={() => onToggle(cat)}
-        />
-        <span className="toggle-track"><span className="toggle-thumb" /></span>
-      </label>
+        <div className="flex items-center gap-2">
+          {/* Active toggle */}
+          <label className="toggle flex-shrink-0 scale-90 sm:scale-100" title={cat.activo ? 'Desactivar' : 'Activar'}>
+            <input
+              type="checkbox"
+              checked={cat.activo}
+              onChange={() => onToggle(cat)}
+            />
+            <span className="toggle-track"><span className="toggle-thumb" /></span>
+          </label>
 
-      {/* Edit */}
-      <button
-        onClick={() => onEdit(cat)}
-        className="btn-secondary px-2.5 py-1.5 text-xs flex-shrink-0"
-      >
-        ✏️
-      </button>
+          {/* Edit */}
+          <button
+            onClick={() => onEdit(cat)}
+            className="btn-secondary px-2 py-1 sm:px-2.5 sm:py-1.5 text-xs flex-shrink-0"
+          >
+            ✏️
+          </button>
 
-      {/* Delete */}
-      <button
-        onClick={() => onDelete(cat)}
-        disabled={count > 0}
-        title={count > 0 ? `No se puede eliminar: ${count} productos la usan` : 'Eliminar'}
-        className="btn-danger px-2.5 py-1.5 text-xs flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        🗑️
-      </button>
+          {/* Delete */}
+          <button
+            onClick={() => onDelete(cat)}
+            disabled={count > 0}
+            title={count > 0 ? `No se puede eliminar: ${count} productos la usan` : 'Eliminar'}
+            className="btn-danger px-2 py-1 sm:px-2.5 sm:py-1.5 text-xs flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            🗑️
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
