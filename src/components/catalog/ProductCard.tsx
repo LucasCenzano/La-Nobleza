@@ -12,20 +12,16 @@ interface ProductCardProps {
 }
 
 const CAT_BG: Record<string, string> = {
-  POLLO_ENTERO: '#fdf9f3',
-  PRESAS:       '#fdf9f3',
-  ALITAS:       '#fdf9f3',
-  MENUDENCIAS:  '#fdf9f3',
-  EMBUTIDOS:    '#fdf9f3',
-  HUEVOS:       '#fdf9f3',
-  CARNICERIA:   '#fdf9f3',
-  PESCADO:      '#fdf9f3',
-  PASTAS:       '#fdf9f3',
-  ALMACEN:      '#fdf9f3',
-  LACTEOS:      '#fdf9f3',
-  PANADERIA:    '#fdf9f3',
-  OFERTAS:      '#fef2f2',
-  OTROS:        '#fdf9f3',
+  POLLERIA:              '#fdf9f3',
+  PESCADERIA:            '#fdf9f3',
+  PASTAS:                '#fdf9f3',
+  COMIDAS_PREPARADAS:    '#fdf9f3',
+  CONGELADOS:            '#fdf9f3',
+  ALMACEN:               '#fdf9f3',
+  IMPORTADOS_ESPECIALES: '#fdf9f3',
+  ESPECIAS:              '#fdf9f3',
+  OFERTAS:               '#fef2f2',
+  OTROS:                 '#fdf9f3',
 };
 
 export default function ProductCard({ producto, categorias }: ProductCardProps) {

@@ -5,12 +5,15 @@ import { useCallback, useEffect, useState, useTransition } from 'react';
 import { CategoriaConfigType } from '@/lib/constants';
 
 const STATIC_CATEGORIAS: CategoriaConfigType[] = [
-  { id: '0',  slug: '',              nombre: 'Todos',           emoji: '', color: '#000', orden: -1, activo: true },
-  { id: '2',  slug: 'POLLO_ENTERO',  nombre: 'Pollo Entero',    emoji: '', color: '#000', orden: 1,  activo: true },
-  { id: '3',  slug: 'PRESAS',        nombre: 'Presas',          emoji: '', color: '#000', orden: 2,  activo: true },
-  { id: '4',  slug: 'EMBUTIDOS',     nombre: 'Embutidos',       emoji: '', color: '#000', orden: 3,  activo: true },
-  { id: '5',  slug: 'HUEVOS',        nombre: 'Huevos',          emoji: '', color: '#000', orden: 4,  activo: true },
-  { id: '6',  slug: 'ALMACEN',       nombre: 'Almacén',         emoji: '', color: '#000', orden: 5,  activo: true },
+  { id: '0',  slug: '',                     nombre: 'Todos',                          emoji: '', color: '#000', orden: -1, activo: true },
+  { id: '1',  slug: 'POLLERIA',             nombre: 'Pollería',                       emoji: '🍗', color: '#000', orden: 0,  activo: true },
+  { id: '2',  slug: 'PESCADERIA',           nombre: 'Pescadería',                     emoji: '🐟', color: '#000', orden: 1,  activo: true },
+  { id: '3',  slug: 'PASTAS',               nombre: 'Pastas',                         emoji: '🍝', color: '#000', orden: 2,  activo: true },
+  { id: '4',  slug: 'COMIDAS_PREPARADAS',   nombre: 'Comidas Preparadas',             emoji: '🍲', color: '#000', orden: 3,  activo: true },
+  { id: '5',  slug: 'CONGELADOS',           nombre: 'Congelados',                     emoji: '🧊', color: '#000', orden: 4,  activo: true },
+  { id: '6',  slug: 'ALMACEN',              nombre: 'Almacén',                        emoji: '🫙', color: '#000', orden: 5,  activo: true },
+  { id: '7',  slug: 'IMPORTADOS_ESPECIALES',nombre: 'Productos Importados / Especiales', emoji: '🌎', color: '#000', orden: 6,  activo: true },
+  { id: '8',  slug: 'ESPECIAS',             nombre: 'Especias',                       emoji: '🌶️', color: '#000', orden: 7,  activo: true },
 ];
 
 export default function SearchFilters() {
