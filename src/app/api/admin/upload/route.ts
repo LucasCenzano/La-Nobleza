@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { randomUUID } from 'crypto';
+
 
 
 export async function POST(req: NextRequest) {
@@ -18,17 +16,12 @@ export async function POST(req: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    
+    // Convert to base64 Data URL to store directly in the database (Neon)
+    const mime = file.type || 'image/webp';
+    const base64 = buffer.toString('base64');
+    const url = `data:${mime};base64,${base64}`;
 
-    // Save to public/uploads/
-    const uploadsDir = join(process.cwd(), 'public', 'uploads');
-    await mkdir(uploadsDir, { recursive: true });
-
-    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'webp';
-    const filename = `${randomUUID()}.${ext}`;
-    const filepath = join(uploadsDir, filename);
-    await writeFile(filepath, buffer);
-
-    const url = `/uploads/${filename}`;
     return NextResponse.json({ url });
   } catch (err) {
     console.error('[POST /api/admin/upload]', err);
