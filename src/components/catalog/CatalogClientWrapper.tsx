@@ -25,17 +25,19 @@ export default function CatalogClientWrapper({ initialProductos, categorias }: C
   }, [initialProductos, q, cat, tag]);
 
   return (
-    <>
-      <SearchFilters 
-        query={q} onQueryChange={setQ}
-        categoria={cat} onCategoriaChange={setCat}
-        etiqueta={tag} onEtiquetaChange={setTag}
-        categorias={categorias}
-      />
+    <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start w-full relative pb-16 md:pb-8">
+      <aside className="w-full md:w-[260px] lg:w-[280px] shrink-0 md:sticky md:top-[88px] z-30 md:pt-6">
+        <SearchFilters 
+          query={q} onQueryChange={setQ}
+          categoria={cat} onCategoriaChange={setCat}
+          etiqueta={tag} onEtiquetaChange={setTag}
+          categorias={categorias}
+        />
+      </aside>
 
-      <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-4 mb-4">
+      <main className="flex-1 w-full px-4 py-4 mb-4 min-w-0 md:pt-6 md:pl-8">
         {/* ── Results count ── */}
-        <p className="text-[12px] font-semibold mb-3 tracking-wide text-gray-500 uppercase">
+        <p className="text-[12px] font-semibold mb-3 lg:mb-5 tracking-wide text-gray-500 uppercase">
           {filtered.length === 0
             ? 'Sin resultados'
             : `${filtered.length} producto${filtered.length !== 1 ? 's' : ''}`}
@@ -43,21 +45,21 @@ export default function CatalogClientWrapper({ initialProductos, categorias }: C
 
         {/* ── Product Grid ── */}
         {filtered.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
             {filtered.map((p) => (
               <ProductCard key={p.id} producto={p} categorias={categorias} />
             ))}
           </div>
         ) : (
-          <div className="py-20 text-center flex flex-col items-center justify-center">
-            <span className="text-4xl block mb-3 opacity-60">🔍</span>
-            <p className="font-semibold text-[var(--black-charcoal)] text-lg">No encontramos productos</p>
-            <p className="text-sm mt-1 text-gray-500 max-w-[250px]">
-              Intentá con otra palabra u otra categoría.
+          <div className="py-20 text-center flex flex-col items-center justify-center bg-white rounded-3xl border border-gray-100 shadow-sm mt-4">
+            <span className="text-5xl block mb-4 opacity-40">🔍</span>
+            <p className="font-bold text-[var(--black-charcoal)] text-xl">No encontramos productos</p>
+            <p className="text-sm mt-2 text-gray-500 max-w-xs mx-auto">
+              Intentá con otra palabra u otra categoría en el panel.
             </p>
           </div>
         )}
       </main>
-    </>
+    </div>
   );
 }
