@@ -36,7 +36,10 @@ interface Props {
 function SortableImageCard({
   img,
   index,
+  totalImages,
   onRemove,
+  onMoveLeft,
+  onMoveRight,
 }: {
   img: UploadedImage;
   index: number;
