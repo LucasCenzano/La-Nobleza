@@ -90,9 +90,22 @@ export default function SearchFilters() {
         )}
       </div>
 
-      {/* Category & Tag Pills */}
-      <div className="flex gap-2 overflow-x-auto scroll-x-hide px-4 pb-1">
-        {/* 'Todos' pill */}
+      {/* Category & Tag Pills Wrapper */}
+      <div className="relative">
+        <div className="flex items-center justify-between px-4 mb-2">
+          <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest pl-1">
+            Categorías
+          </span>
+          <div className="text-[10px] text-[var(--gold-dark)] font-bold flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 shadow-sm animate-pulse">
+            Deslizar <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+          </div>
+        </div>
+        
+        {/* Gradient Fade to indicate scroll */}
+        <div className="absolute right-0 bottom-0 top-[22px] w-10 bg-gradient-to-l from-[var(--bg-cream)] to-transparent pointer-events-none z-10" />
+
+        <div className="flex gap-2 overflow-x-auto scroll-x-hide px-4 pb-2 snap-x">
+          {/* 'Todos' pill */}
         <button
           onClick={() => handleCategory('')}
           className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[13px] font-semibold transition-all active:scale-95 border ${currentCat === '' && !searchParams.get('etiqueta') ? 'bg-[var(--black-charcoal)] text-white border-[var(--black-charcoal)] shadow-[0_4px_10px_rgba(0,0,0,0.15)]' : 'bg-white text-gray-600 border-gray-200 shadow-sm'}`}
@@ -141,6 +154,7 @@ export default function SearchFilters() {
             </button>
           );
         })}
+        </div>
       </div>
     </div>
   );
