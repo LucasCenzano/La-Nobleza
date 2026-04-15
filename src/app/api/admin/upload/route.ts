@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    
+
     // Convert to base64 Data URL to store directly in the database (Neon)
     const mime = file.type || 'image/webp';
     const base64 = buffer.toString('base64');

@@ -41,8 +41,11 @@ export function CatalogBanner({ config }: { config: BannerData | null }) {
   const style = TIPO_STYLES[config.bannerTipo] ?? TIPO_STYLES.INFO;
 
   return (
-    <div className={`border-b ${style.bg} ${style.border}`}>
-      <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-center gap-2 text-sm font-medium">
+    <div
+      className={`border-b ${style.bg} ${style.border}`}
+      style={{ borderColor: 'rgba(210,175,120,0.25)' }}
+    >
+      <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-center gap-2 text-sm font-medium">
         <span className="text-base">{style.icon}</span>
         <span className={style.text}>{config.bannerTexto}</span>
       </div>
@@ -55,40 +58,38 @@ export function CatalogHorarios({ config }: { config: BannerData | null }) {
 
   const dias = Object.entries(config.horarios);
   const abiertos  = dias.filter(([, h]) => h.activo);
-  const cerrados  = dias.filter(([, h]) => !h.activo);
 
-  // Group consecutive same-hours days
-  const today = new Date().getDay(); // 0=domingo, 1=lunes...
+  const today = new Date().getDay();
   const dayKeyMap: Record<number, string> = {
     1: 'lunes', 2: 'martes', 3: 'miercoles',
     4: 'jueves', 5: 'viernes', 6: 'sabado', 0: 'domingo',
   };
-  const todayKey = dayKeyMap[today];
+  const todayKey     = dayKeyMap[today];
   const todayHorario = config.horarios[todayKey];
-  const isOpenToday = todayHorario?.activo;
+  const isOpenToday  = todayHorario?.activo;
 
   return (
-    <div className="bg-white border-b border-gray-100">
-      <div className="max-w-5xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-xs text-gray-500">
-        {/* Today highlight */}
-        <span className={`font-semibold ${isOpenToday ? 'text-green-600' : 'text-red-500'}`}>
+    <div
+      className="border-b"
+      style={{ background: 'linear-gradient(90deg,#fdf9f3,#f9f0e3)', borderColor: 'rgba(210,175,120,0.25)' }}
+    >
+      <div className="max-w-2xl mx-auto px-4 py-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
+        <span
+          className="font-semibold flex items-center gap-1"
+          style={{ color: isOpenToday ? '#15803d' : '#dc2626' }}
+        >
+          <span>{isOpenToday ? '🟢' : '🔴'}</span>
           {isOpenToday
-            ? `🟢 Hoy abierto: ${todayHorario.abre}–${todayHorario.cierra}`
-            : '🔴 Hoy cerrado'}
+            ? `Hoy abierto: ${todayHorario.abre}–${todayHorario.cierra}`
+            : 'Hoy cerrado'}
         </span>
 
-        {/* All open days summary */}
         {abiertos.map(([key, h]) => (
-          <span key={key}>
-            <strong>{DIAS_LABEL[key] ?? key}:</strong> {h.abre}–{h.cierra}
+          <span key={key} style={{ color: 'rgba(90,60,30,0.6)' }}>
+            <strong style={{ color: 'rgba(90,60,30,0.85)' }}>{DIAS_LABEL[key] ?? key}:</strong>{' '}
+            {h.abre}–{h.cierra}
           </span>
         ))}
-
-        {cerrados.length > 0 && (
-          <span className="text-gray-400">
-            Cerrado: {cerrados.map(([k]) => DIAS_LABEL[k] ?? k).join(', ')}
-          </span>
-        )}
       </div>
     </div>
   );

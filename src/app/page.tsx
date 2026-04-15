@@ -6,7 +6,8 @@ export const revalidate = 0;
 import CatalogHeader from '@/components/catalog/CatalogHeader';
 import ProductCard from '@/components/catalog/ProductCard';
 import SearchFilters from '@/components/catalog/SearchFilters';
-import { CatalogBanner, CatalogHorarios, getCatalogConfig } from '@/components/catalog/CatalogInfo';
+import BottomNav from '@/components/catalog/BottomNav';
+import { CatalogBanner, getCatalogConfig } from '@/components/catalog/CatalogInfo';
 import { CategoriaConfigType } from '@/lib/constants';
 
 interface HomePageProps {
@@ -159,18 +160,18 @@ const MOCK_PRODUCTOS = [
 ];
 
 const MOCK_CATEGORIAS: CategoriaConfigType[] = [
-  { id: '1',  slug: 'POLLO_ENTERO', nombre: 'Pollo',           emoji: '🐔', color: '#c9501e', orden: 0,  activo: true },
-  { id: '2',  slug: 'PRESAS',       nombre: 'Presas',          emoji: '🍗', color: '#ea580c', orden: 1,  activo: true },
-  { id: '3',  slug: 'MENUDENCIAS',  nombre: 'Menudencias',     emoji: '🫀', color: '#dc2626', orden: 2,  activo: true },
-  { id: '4',  slug: 'EMBUTIDOS',    nombre: 'Embutidos',       emoji: '🌭', color: '#d97706', orden: 3,  activo: true },
-  { id: '5',  slug: 'HUEVOS',       nombre: 'Huevos de Campo', emoji: '🥚', color: '#a16207', orden: 4,  activo: true },
-  { id: '6',  slug: 'CARNICERIA',   nombre: 'Carnicería',      emoji: '🥩', color: '#be123c', orden: 5,  activo: true },
-  { id: '7',  slug: 'PESCADO',      nombre: 'Pescado',         emoji: '🐟', color: '#0369a1', orden: 6,  activo: true },
-  { id: '8',  slug: 'PASTAS',       nombre: 'Pastas Frescas',  emoji: '🍝', color: '#d97706', orden: 7,  activo: true },
-  { id: '9',  slug: 'ALMACEN',      nombre: 'Almacén',         emoji: '🫙', color: '#c9501e', orden: 8,  activo: true },
-  { id: '10', slug: 'LACTEOS',      nombre: 'Lácteos',         emoji: '🥛', color: '#0d9488', orden: 9,  activo: true },
-  { id: '11', slug: 'PANADERIA',    nombre: 'Panadería',       emoji: '🥐', color: '#92400e', orden: 10, activo: true },
-  { id: '12', slug: 'OTROS',        nombre: 'Otros',           emoji: '📦', color: '#6b7280', orden: 11, activo: true },
+  { id: '1',  slug: 'POLLO_ENTERO', nombre: 'Pollo',           emoji: '🐔', color: '#000', orden: 0,  activo: true },
+  { id: '2',  slug: 'PRESAS',       nombre: 'Presas',          emoji: '🍗', color: '#000', orden: 1,  activo: true },
+  { id: '3',  slug: 'MENUDENCIAS',  nombre: 'Menudencias',     emoji: '🫀', color: '#000', orden: 2,  activo: true },
+  { id: '4',  slug: 'EMBUTIDOS',    nombre: 'Embutidos',       emoji: '🌭', color: '#000', orden: 3,  activo: true },
+  { id: '5',  slug: 'HUEVOS',       nombre: 'Huevos',          emoji: '🥚', color: '#000', orden: 4,  activo: true },
+  { id: '6',  slug: 'CARNICERIA',   nombre: 'Carnicería',      emoji: '🥩', color: '#000', orden: 5,  activo: true },
+  { id: '7',  slug: 'PESCADO',      nombre: 'Pescado',         emoji: '🐟', color: '#000', orden: 6,  activo: true },
+  { id: '8',  slug: 'PASTAS',       nombre: 'Pastas Frescas',  emoji: '🍝', color: '#000', orden: 7,  activo: true },
+  { id: '9',  slug: 'ALMACEN',      nombre: 'Almacén',         emoji: '🫙', color: '#000', orden: 8,  activo: true },
+  { id: '10', slug: 'LACTEOS',      nombre: 'Lácteos',         emoji: '🥛', color: '#000', orden: 9,  activo: true },
+  { id: '11', slug: 'PANADERIA',    nombre: 'Panadería',       emoji: '🥐', color: '#000', orden: 10, activo: true },
+  { id: '12', slug: 'OTROS',        nombre: 'Otros',           emoji: '📦', color: '#000', orden: 11, activo: true },
 ];
 
 async function getData(q?: string, categoria?: string) {
@@ -208,113 +209,47 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   ]);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#fdf9f3' }}>
+    <div className="flex flex-col min-h-screen relative bg-[var(--bg-cream)]">
       <CatalogHeader />
+      
+      <Suspense>
+        <SearchFilters />
+      </Suspense>
 
-      {/* Horarios & banner from DB */}
-      <CatalogHorarios config={catalogConfig} />
-      <CatalogBanner  config={catalogConfig} />
-
-      {/* Demo mode notice */}
-      {demo && (
-        <div
-          className="px-4 py-2.5 text-center text-xs font-medium border-b"
-          style={{
-            background: 'linear-gradient(90deg, #fffbeb, #fef3c7)',
-            borderColor: 'rgba(217,119,6,0.25)',
-            color: '#92400e',
-          }}
-        >
-          ⚡ Modo demo — conectá tu base de datos Neon en{' '}
-          <code className="font-mono bg-amber-100 px-1 rounded">.env.local</code>{' '}
-          para ver datos reales
-        </div>
-      )}
-
-      <main className="flex-1 max-w-2xl mx-auto w-full px-3 sm:px-4 py-5 sm:py-8">
-        {/* ── Search + Category Filters ── */}
-        <div className="mb-5">
-          <Suspense fallback={
-            <div className="space-y-4">
-              <div className="h-12 animate-pulse rounded-2xl" style={{ background: 'rgba(210,175,120,0.2)' }} />
-              <div className="h-20 animate-pulse rounded-2xl" style={{ background: 'rgba(210,175,120,0.15)' }} />
-            </div>
-          }>
-            <SearchFilters />
-          </Suspense>
-        </div>
+      <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-4 mb-16">
+        {/* Banner from DB, shown conditionally if present */}
+        {catalogConfig?.bannerActivo && (
+          <div className="mb-6 rounded-2xl overflow-hidden shadow-sm">
+            <CatalogBanner config={catalogConfig} />
+          </div>
+        )}
 
         {/* ── Results count ── */}
-        <p
-          className="text-xs font-semibold mb-4 uppercase tracking-wide"
-          style={{ color: 'rgba(90,60,30,0.55)' }}
-        >
+        <p className="text-[12px] font-semibold mb-3 tracking-wide text-gray-500 uppercase">
           {productos.length === 0
             ? 'Sin resultados'
-            : `${productos.length} producto${productos.length !== 1 ? 's' : ''} disponible${productos.length !== 1 ? 's' : ''}`}
+            : `${productos.length} producto${productos.length !== 1 ? 's' : ''}`}
         </p>
 
-        {/* ── Product Grid ── */}
+        {/* ── Product Grid (2 Columns Mobile-First) ── */}
         {productos.length > 0 ? (
-          <div
-            className="grid gap-3 sm:gap-4 animate-fade-in"
-            style={{
-              gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 160px), 1fr))',
-            }}
-          >
-            {productos.map((p, i) => (
-              <div
-                key={p.id}
-                className="animate-slide-up"
-                style={{ animationDelay: `${i * 0.04}s`, animationFillMode: 'both' }}
-              >
-                <ProductCard producto={p as any} categorias={categorias} />
-              </div>
+          <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-3 md:grid-cols-4">
+            {productos.map((p) => (
+              <ProductCard key={p.id} producto={p as any} categorias={categorias} />
             ))}
           </div>
         ) : (
-          <div
-            className="py-20 text-center rounded-3xl border"
-            style={{
-              background: 'linear-gradient(145deg, #fdf9f3, #f9f0e3)',
-              borderColor: 'rgba(210,175,120,0.3)',
-            }}
-          >
-            <span className="text-5xl block mb-3">🔍</span>
-            <p className="font-display font-semibold text-charcoal-800 text-lg">Sin resultados</p>
-            <p className="text-sm mt-1" style={{ color: 'rgba(90,60,30,0.6)' }}>
-              Probá con otro término o quitá el filtro de categoría.
+          <div className="py-20 text-center flex flex-col items-center justify-center">
+            <span className="text-4xl block mb-3 opacity-60">🔍</span>
+            <p className="font-semibold text-[var(--black-charcoal)] text-lg">No encontramos productos</p>
+            <p className="text-sm mt-1 text-gray-500 max-w-[250px]">
+              Intentá con otra palabra u otra categoría.
             </p>
           </div>
         )}
       </main>
 
-      {/* ── Footer ── */}
-      <footer
-        className="border-t py-6 px-4 text-center"
-        style={{
-          background: 'linear-gradient(90deg, #f9f0e3, #fdf9f3)',
-          borderColor: 'rgba(210,175,120,0.3)',
-        }}
-      >
-        <div className="flex flex-col items-center gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🐔</span>
-            <span
-              className="font-display font-bold text-base"
-              style={{ color: '#8a3112' }}
-            >
-              Almacén La Nobleza
-            </span>
-          </div>
-          <p className="text-xs" style={{ color: 'rgba(90,60,30,0.55)' }}>
-            Los Ceibos 19, Salta, Argentina · Lun–Vie 9–14 &amp; 18–22 · Sáb 9–14
-          </p>
-          <p className="text-[11px] mt-1" style={{ color: 'rgba(90,60,30,0.4)' }}>
-            © {new Date().getFullYear()} Almacén La Nobleza · Todos los derechos reservados
-          </p>
-        </div>
-      </footer>
+      <BottomNav />
     </div>
   );
 }
