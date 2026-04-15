@@ -43,12 +43,15 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
   const allImages     = (imagenesUrls?.length ? imagenesUrls : (imagenUrl ? [imagenUrl] : [])) as string[];
   const cardImage     = allImages[0];
   const detailImage   = allImages[currentImageIndex] || cardImage;
+  const [instrucciones, setInstrucciones] = useState('');
   
   const hasOferta     = !!precioOferta && precioOferta > 0 && precioOferta < precio;
   const descuento     = hasOferta ? Math.round((1 - precioOferta / precio) * 100) : 0;
   const catBg         = CAT_BG[categoria as string] ?? CAT_BG.OTROS;
   const etiquetasList = (etiquetas as string[]) ?? [];
   const hasOfertaTag  = etiquetasList.includes('OFERTA') || hasOferta;
+  const hasOpcionPechugas = etiquetasList.includes('OPCION_PECHUGAS');
+  const hasOpcionPolloEntero = etiquetasList.includes('OPCION_POLLO_ENTERO');
 
   // Auto deslizador de imágenes en el detalle
   useEffect(() => {
@@ -67,6 +70,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
   useEffect(() => {
     if (!isDetailOpen) {
       setCurrentImageIndex(0);
+      setInstrucciones('');
     }
   }, [isDetailOpen]);
 
@@ -271,6 +275,45 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                   </div>
                 )}
               </div>
+
+              {/* Opciones Especiales */}
+              {(hasOpcionPechugas || hasOpcionPolloEntero) && (
+                <div className="px-5 pb-4">
+                  <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-4">
+                    {hasOpcionPechugas && (
+                      <>
+                        <label className="block text-sm font-bold text-emerald-800 mb-2">
+                          🍗 ¿Cómo las preferís?
+                        </label>
+                        <select 
+                          value={instrucciones}
+                          onChange={(e) => setInstrucciones(e.target.value)}
+                          className="w-full bg-white border border-emerald-200 text-emerald-900 text-[16px] sm:text-sm rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+                        >
+                          <option value="">(Enteras por defecto)</option>
+                          <option value="Fileteadas para milanesa">Fileteadas para milanesa</option>
+                          <option value="En tiritas">En tiritas</option>
+                        </select>
+                      </>
+                    )}
+                    {hasOpcionPolloEntero && (
+                      <>
+                        <label className="block text-sm font-bold text-emerald-800 mb-2">
+                          🐔 Instrucciones especiales
+                        </label>
+                        <input 
+                          type="text"
+                          value={instrucciones}
+                          onChange={(e) => setInstrucciones(e.target.value)}
+                          maxLength={100}
+                          placeholder="Ej: Sin menudos, en 8 piezas..."
+                          className="w-full bg-white border border-emerald-200 text-emerald-900 text-[16px] sm:text-sm rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-emerald-300 shadow-sm"
+                        />
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Disclaimer para Peso Variable */}
@@ -325,7 +368,8 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                     cantidad: quantity,
                     imagenUrl: cardImage,
                     incrementoPeso,
-                    stock
+                    stock,
+                    instrucciones: instrucciones.trim() || undefined
                   });
                   setIsDetailOpen(false);
                   setIsCartOpen(true);

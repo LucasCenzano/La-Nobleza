@@ -253,9 +253,14 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
       {/* ── Descripción ───────────────────────────────────────── */}
       <div>
         <label htmlFor="descripcion" className="label">Descripción corta</label>
-        <textarea id="descripcion" name="descripcion" rows={5}
-          value={form.descripcion} onChange={handleChange}
-          className="input resize-y min-h-[100px]"
+        <textarea id="descripcion" name="descripcion" rows={3}
+          value={form.descripcion} 
+          onChange={(e) => {
+             e.target.style.height = 'auto';
+             e.target.style.height = `${e.target.scrollHeight}px`;
+             handleChange(e);
+          }}
+          className="input min-h-[50px] overflow-hidden"
           placeholder="Descripción opcional del producto..." />
       </div>
 

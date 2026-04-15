@@ -11,13 +11,14 @@ export interface CartItem {
   imagenUrl: string | null;
   incrementoPeso?: number | null;
   stock?: number | null;
+  instrucciones?: string;
 }
 
 interface CartContextType {
   items: CartItem[];
   addItem: (item: CartItem) => void;
-  updateQuantity: (productoId: string, cantidad: number) => void;
-  removeItem: (productoId: string) => void;
+  updateQuantity: (productoId: string, instrucciones: string | undefined, cantidad: number) => void;
+  removeItem: (productoId: string, instrucciones: string | undefined) => void;
   totalItems: number;
   totalPrice: number;
   clearCart: () => void;
@@ -49,10 +50,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = (newItem: CartItem) => {
     setItems((prev) => {
-      const existing = prev.find(i => i.productoId === newItem.productoId);
+      // Find item with same ID AND same instrucciones
+      const existing = prev.find(i => i.productoId === newItem.productoId && i.instrucciones === newItem.instrucciones);
       if (existing) {
         return prev.map(i => 
-          i.productoId === newItem.productoId 
+          (i.productoId === newItem.productoId && i.instrucciones === newItem.instrucciones)
             ? { ...i, cantidad: i.cantidad + newItem.cantidad } 
             : i
         );
@@ -61,16 +63,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const updateQuantity = (productoId: string, cantidad: number) => {
+  const updateQuantity = (productoId: string, instrucciones: string | undefined, cantidad: number) => {
     if (cantidad <= 0) {
-      removeItem(productoId);
+      removeItem(productoId, instrucciones);
       return;
     }
-    setItems(prev => prev.map(i => i.productoId === productoId ? { ...i, cantidad } : i));
+    setItems(prev => prev.map(i => (i.productoId === productoId && i.instrucciones === instrucciones) ? { ...i, cantidad } : i));
   };
 
-  const removeItem = (productoId: string) => {
-    setItems(prev => prev.filter(i => i.productoId !== productoId));
+  const removeItem = (productoId: string, instrucciones: string | undefined) => {
+    setItems(prev => prev.filter(i => !(i.productoId === productoId && i.instrucciones === instrucciones)));
   };
 
   const clearCart = () => setItems([]);

@@ -14,7 +14,10 @@ export default function CartDrawer() {
       const isPeso = item.tipoVenta === 'PESO';
       const cant = isPeso ? `${item.cantidad} Kg` : `${item.cantidad}x`;
       const sub = item.cantidad * item.precioFinal;
-      text += `• ${cant} *${item.nombre}*\n  _Subtotal: $${sub.toLocaleString('es-AR')}_\n`;
+      let line = `• ${cant} *${item.nombre}*`;
+      if (item.instrucciones) line += `\n  _📌 Nota: ${item.instrucciones}_`;
+      line += `\n  _Subtotal: $${sub.toLocaleString('es-AR')}_\n`;
+      text += line;
     });
 
     text += `\n*Total estimado:* $${totalPrice.toLocaleString('es-AR')}\n\n`;
@@ -64,7 +67,10 @@ export default function CartDrawer() {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-800 text-[14px] truncate leading-tight">{item.nombre}</h3>
+                    <h3 className="font-semibold text-gray-800 text-[14px] truncate leading-tight mb-0.5">{item.nombre}</h3>
+                    {item.instrucciones && (
+                      <p className="text-[11px] text-gray-500 mb-1 flex items-start gap-1 leading-tight"><span className="text-[10px] mt-0.5">📌</span> {item.instrucciones}</p>
+                    )}
                     <p className="font-bold text-[var(--gold-dark)] text-sm mb-2">
                       ${(item.precioFinal * item.cantidad).toLocaleString('es-AR')}
                     </p>
@@ -76,8 +82,8 @@ export default function CartDrawer() {
                           onClick={() => {
                             const step = item.tipoVenta === 'PESO' ? (item.incrementoPeso || 0.100) : 1;
                             const next = Math.round((item.cantidad - step) * 1000) / 1000;
-                            if (next >= step) updateQuantity(item.productoId, next);
-                            else removeItem(item.productoId);
+                            if (next >= step) updateQuantity(item.productoId, item.instrucciones, next);
+                            else removeItem(item.productoId, item.instrucciones);
                           }}
                           className="w-7 h-7 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 active:scale-95"
                         >-</button>
@@ -89,16 +95,16 @@ export default function CartDrawer() {
                             const step = item.tipoVenta === 'PESO' ? (item.incrementoPeso || 0.100) : 1;
                             const next = Math.round((item.cantidad + step) * 1000) / 1000;
                             if (item.stock !== null && item.stock !== undefined && next > item.stock) {
-                              updateQuantity(item.productoId, Math.max(item.stock, step));
+                              updateQuantity(item.productoId, item.instrucciones, Math.max(item.stock, step));
                             } else {
-                              updateQuantity(item.productoId, next);
+                              updateQuantity(item.productoId, item.instrucciones, next);
                             }
                           }}
                           className="w-7 h-7 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 active:scale-95"
                         >+</button>
                       </div>
                       <button 
-                        onClick={() => removeItem(item.productoId)}
+                        onClick={() => removeItem(item.productoId, item.instrucciones)}
                         className="text-red-500 p-1 bg-red-50 rounded-lg active:scale-90 ml-auto"
                       >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
