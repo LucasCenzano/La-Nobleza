@@ -10,7 +10,20 @@ export async function GET() {
   const productos = await prisma.producto.findMany({
     orderBy: [{ activo: 'desc' }, { categoria: 'asc' }, { nombre: 'asc' }],
   });
-  return NextResponse.json(productos);
+
+  // Limpiar Base64 inmensos para que el Admin cargue instantáneamente
+  const cleanProducts = productos.map(p => {
+    const imagesCount = p.imagenesUrls?.length || (p.imagenUrl ? 1 : 0);
+    const fakeUrls = Array.from({ length: imagesCount }).map((_, i) => `/api/images/${p.id}?idx=${i}`);
+    
+    return {
+      ...p,
+      imagenUrl: fakeUrls[0] || null,
+      imagenesUrls: fakeUrls,
+    };
+  });
+
+  return NextResponse.json(cleanProducts);
 }
 
 export async function POST(req: NextRequest) {

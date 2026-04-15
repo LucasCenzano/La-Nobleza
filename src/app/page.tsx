@@ -204,11 +204,21 @@ async function getData(q?: string, categoria?: string, etiqueta?: string) {
         etiquetas.add('NUEVO');
         etiquetas.add('DESTACADO');
       }
-      return { ...p, etiquetas: Array.from(etiquetas) };
+
+      // Scrub Base64 so they don't bloat the Client payload. 
+      // Point them to our Image API endpoint which caches efficiently.
+      const imagesCount = p.imagenesUrls?.length || (p.imagenUrl ? 1 : 0);
+      const fakeUrls = Array.from({ length: imagesCount }).map((_, i) => `/api/images/${p.id}?idx=${i}`);
+
+      return { 
+        ...p, 
+        etiquetas: Array.from(etiquetas),
+        imagenUrl: fakeUrls[0] || null,
+        imagenesUrls: fakeUrls,
+      };
     });
 
     // If we rely on auto-tags, we need to filter them in memory if the user requested a tag the DB didn't catch 
-    // (since auto-tags are not in the DB)
     if (etiqueta) {
       processedProducts = processedProducts.filter(p => p.etiquetas.includes(etiqueta));
     }
