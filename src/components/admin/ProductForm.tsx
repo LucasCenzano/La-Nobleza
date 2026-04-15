@@ -162,7 +162,7 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     incrementoPeso: form.incrementoPeso ? parseFloat(form.incrementoPeso) : null,
     solicitaInstrucciones: form.solicitaInstrucciones,
     opcionesTitulo: form.opcionesTitulo.trim() || null,
-    opcionesValores: form.opcionesValoresStr.split(',').map((s) => s.trim()).filter(Boolean),
+    opcionesValores: form.opcionesValoresStr.split(',').map((s: string) => s.trim()).filter(Boolean),
     activo: form.activo,
     etiquetas: finalPreviewEtiquetas,
     imagenUrl: images[0]?.url || null,
