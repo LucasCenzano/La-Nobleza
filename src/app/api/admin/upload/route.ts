@@ -5,7 +5,6 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
 
-export const config = { api: { bodyParser: false } };
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
