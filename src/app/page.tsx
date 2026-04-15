@@ -199,7 +199,8 @@ async function getData() {
     });
 
     // Products are handled purely on exactly Client Side now. No need for parameter-based tag filtering directly.
-    return { productos: processedProducts, categorias, demo: false };
+    const finalCategorias = categorias.length > 0 ? categorias : MOCK_CATEGORIAS;
+    return { productos: processedProducts, categorias: finalCategorias, demo: false };
   } catch {
     let productos = MOCK_PRODUCTOS.map((p) => {
        const etiquetas = new Set(p.etiquetas || []);
