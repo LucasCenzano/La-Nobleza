@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Producto, TipoVenta } from '@prisma/client';
 import { formatPrecio, formatPrecioSolo, CategoriaConfigType } from '@/lib/constants';
@@ -30,6 +30,7 @@ const CAT_BG: Record<string, string> = {
 export default function ProductCard({ producto, categorias }: ProductCardProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const {
     nombre, descripcion, precio, precioOferta,
@@ -39,13 +40,34 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
   const isPeso        = tipoVenta === 'PESO';
   // Reúne todas las imágenes (imagenesUrls o imagenUrl)
   const allImages     = (imagenesUrls?.length ? imagenesUrls : (imagenUrl ? [imagenUrl] : [])) as string[];
-  const displayImage  = allImages[0];
+  const cardImage     = allImages[0];
+  const detailImage   = allImages[currentImageIndex] || cardImage;
   
   const hasOferta     = !!precioOferta && precioOferta > 0 && precioOferta < precio;
   const descuento     = hasOferta ? Math.round((1 - precioOferta / precio) * 100) : 0;
   const catBg         = CAT_BG[categoria as string] ?? CAT_BG.OTROS;
   const etiquetasList = (etiquetas as string[]) ?? [];
   const hasOfertaTag  = etiquetasList.includes('OFERTA') || hasOferta;
+
+  // Auto deslizador de imágenes en el detalle
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isDetailOpen && allImages.length > 1 && !isGalleryOpen) {
+      interval = setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+      }, 5000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isDetailOpen, allImages.length, isGalleryOpen]);
+
+  // Al cerrar, reiniciar el índice
+  useEffect(() => {
+    if (!isDetailOpen) {
+      setCurrentImageIndex(0);
+    }
+  }, [isDetailOpen]);
 
   return (
     <>
@@ -58,9 +80,9 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
           className="relative overflow-hidden w-full flex items-center justify-center p-3"
           style={{ aspectRatio: '1 / 1', backgroundColor: catBg }}
         >
-          {displayImage ? (
+          {cardImage ? (
             <Image
-              src={displayImage}
+              src={cardImage}
               alt={nombre}
               fill
               loading="lazy"
@@ -122,16 +144,15 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
         </div>
       </article>
 
-      {/* ── Detail Drawer Modal ── */}
+      {/* ── Detail Drawer Modal (z-index 100 covers BottomNav) ── */}
       {isDetailOpen && (
         <div 
-          className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center items-center bg-black/60 p-0 sm:p-4 animate-fade-in"
+          className="fixed inset-0 z-[100] flex flex-col justify-end sm:justify-center items-center bg-black/60 p-0 sm:p-4 animate-fade-in"
           onClick={(e) => {
-            // Cierra si tocas el fondo negro, pero no el modal
             if (e.target === e.currentTarget) setIsDetailOpen(false);
           }}
         >
-          <div className="bg-white w-full sm:max-w-md max-h-[90vh] sm:max-h-[85vh] rounded-t-[2rem] sm:rounded-[2rem] overflow-hidden flex flex-col shadow-2xl relative animate-slide-up">
+          <div className="bg-white w-full sm:max-w-md max-h-[95vh] sm:max-h-[85vh] rounded-t-[2rem] sm:rounded-[2rem] overflow-hidden flex flex-col shadow-2xl relative animate-slide-up">
             
             {/* Header del modal (botón cerrar y drag pill) */}
             <div className="absolute top-0 w-full z-10 flex flex-col items-center pt-3 pb-2 bg-gradient-to-b from-black/20 to-transparent pointer-events-none">
@@ -145,7 +166,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
 
-            <div className="overflow-y-auto w-full">
+            <div className="overflow-y-auto w-full pb-safe">
               {/* Imagen destacada en el detalle */}
               <div 
                 className="w-full relative cursor-magnify"
@@ -154,20 +175,37 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                   if (allImages.length > 0) setIsGalleryOpen(true);
                 }}
               >
-                {displayImage ? (
+                {detailImage ? (
                   <>
                     <Image
-                      src={displayImage}
+                      key={currentImageIndex} // force re-render for clean swapping
+                      src={detailImage}
                       alt={nombre}
                       fill
                       loading="lazy"
                       sizes="(max-width: 640px) 100vw, 400px"
-                      className="object-contain p-6"
+                      className="object-contain p-6 transition-opacity duration-300 animate-fade-in"
                     />
-                    <div className="absolute bottom-3 right-3 bg-white/80 backdrop-blur text-gray-800 text-xs px-2.5 py-1 rounded-full font-medium shadow-sm flex items-center gap-1.5 pointer-events-none">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.29 7.04 12 12 20.71 7.04"></polyline><line x1="12" y1="22" x2="12" y2="12"></line></svg>
-                      {allImages.length} 
-                    </div>
+                    
+                    {allImages.length > 1 && (
+                      <div className="absolute bottom-3 right-3 bg-white/80 backdrop-blur text-gray-800 text-xs px-3 py-1.5 rounded-full font-bold shadow-sm flex items-center gap-1.5 pointer-events-none">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.29 7.04 12 12 20.71 7.04"></polyline><line x1="12" y1="22" x2="12" y2="12"></line></svg>
+                        {currentImageIndex + 1} / {allImages.length}
+                      </div>
+                    )}
+                    
+                    {allImages.length > 1 && (
+                      <div className="absolute bottom-4 left-0 w-full flex justify-center gap-1.5 pointer-events-none">
+                        {allImages.map((_, idx) => (
+                           <div 
+                             key={idx} 
+                             className={`h-1.5 rounded-full transition-all duration-300 ${
+                               idx === currentImageIndex ? 'w-4 bg-gray-800' : 'w-1.5 bg-gray-400'
+                             }`} 
+                           />
+                        ))}
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center opacity-40">
@@ -226,7 +264,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                 </div>
 
                 {descripcion && (
-                  <div className="text-sm text-gray-600 leading-relaxed pb-4">
+                  <div className="text-sm text-gray-600 leading-relaxed pb-6">
                     <p className="font-bold text-gray-800 text-xs uppercase tracking-wider mb-2">Descripción</p>
                     {descripcion}
                   </div>
@@ -237,9 +275,9 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
         </div>
       )}
 
-      {/* ── Fullscreen Image Gallery Modal ── */}
+      {/* ── Fullscreen Image Gallery Modal (z-index 110) ── */}
       {isGalleryOpen && (
-        <div className="fixed inset-0 z-[60] bg-black flex flex-col animate-fade-in touch-none">
+        <div className="fixed inset-0 z-[110] bg-black flex flex-col animate-fade-in touch-none">
           {/* Header */}
           <div className="flex items-center justify-between p-4 z-10 w-full absolute top-0 bg-gradient-to-b from-black/60 to-transparent">
             {allImages.length > 1 ? (
