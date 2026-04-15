@@ -52,6 +52,7 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
   const [error,   setError]   = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [categorias, setCategorias] = useState<CategoriaConfigType[]>([]);
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
 
   // Load dynamic categories
   useEffect(() => {
@@ -199,7 +200,7 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
         <div className="flex-1 w-full flex flex-col gap-6">
 
           {/* ── Tabs Navegación ── */}
-          <div className="sticky top-0 z-40 bg-gray-50/90 backdrop-blur-md pb-3 pt-3 flex gap-2 overflow-x-auto snap-x hidden-scrollbar border-b border-gray-200/50 mb-2">
+          <div className="sticky top-0 z-40 bg-gray-50/90 backdrop-blur-md pb-3 pt-3 flex gap-2 overflow-x-auto snap-x border-b border-gray-200/50 mb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {SECTIONS.map(s => (
               <a key={s.id} href={`#${s.id}`} className="shrink-0 px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 text-sm font-bold shadow-sm hover:border-gray-300 hover:bg-gray-50 transition-all focus:ring-2 focus:ring-brand-500 outline-none">
                 {s.emoji} {s.title}
@@ -393,7 +394,7 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
                      e.target.style.height = `${e.target.scrollHeight}px`;
                      handleChange(e);
                   }}
-                  className="input mt-1.5 min-h-[80px] overflow-hidden focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] placeholder-gray-400 transition-all"
+                  className="input mt-1.5 min-h-[120px] overflow-hidden focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] placeholder-gray-400 transition-all"
                   placeholder="Detalles sobre el origen, calidad, ingredientes..." />
               </div>
 
@@ -503,12 +504,12 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
           
           <div className="bg-white rounded-[2rem] p-1.5 shadow-2xl shadow-black/10 border border-gray-100 relative group overflow-hidden">
             {/* The actual product card preview */}
-            <div className="pointer-events-none">
+            <div className="pointer-events-auto cursor-pointer">
               <ProductCard producto={previewProduct} categorias={categorias} />
             </div>
             
             {/* Overlay hint */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-6">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-6 pointer-events-none">
               <span className="text-white text-xs font-bold tracking-widest bg-black/40 backdrop-blur-md px-4 py-2 rounded-full shadow-lg">
                 VISTA DEL CLIENTE
               </span>
@@ -534,8 +535,15 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
           
           <div className="flex gap-3 w-full sm:w-auto justify-end">
             <button type="button"
+              onClick={() => setShowMobilePreview(true)}
+              className="lg:hidden flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100 active:scale-95 transition-all text-xl"
+              aria-label="Ver Previa Móvil"
+            >
+              👁️
+            </button>
+            <button type="button"
               onClick={() => router.push('/admin/productos')}
-              className="px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 active:scale-95 transition-all text-sm">
+              className="hidden sm:inline-flex px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 active:scale-95 transition-all text-sm items-center">
               Cancelar
             </button>
             <button
@@ -564,6 +572,31 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
         </div>
       </div>
       
+      {/* ── MOBILE MODAL PREVIEW ── */}
+      {showMobilePreview && (
+        <div className="fixed inset-0 z-[120] bg-black/80 flex flex-col justify-end lg:hidden animate-fade-in touch-none" onClick={() => setShowMobilePreview(false)}>
+          <div className="w-full bg-gray-50 rounded-t-[2.5rem] p-5 pb-safe flex flex-col shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4 px-2">
+              <h3 className="font-black text-gray-800 uppercase tracking-widest text-xs flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Modal de Cliente
+              </h3>
+              <button type="button" className="bg-gray-200 text-gray-800 rounded-full w-8 h-8 flex items-center justify-center font-bold active:scale-90" onClick={() => setShowMobilePreview(false)}>✕</button>
+            </div>
+            
+            <div className="w-full max-w-sm mx-auto pointer-events-auto">
+              {/* Product preview interactive wrapper */}
+              <div className="pointer-events-auto cursor-pointer pb-2">
+                <ProductCard producto={previewProduct} categorias={categorias} />
+              </div>
+              <p className="text-[11px] font-bold text-gray-400 text-center uppercase tracking-widest mt-4">
+                Clickeá la tarjeta para explorar el detalle (simulando vista final)
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

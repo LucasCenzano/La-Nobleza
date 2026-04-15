@@ -113,11 +113,18 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
           )}
 
           {/* ── Badges ── */}
-          {hasOfertaTag && descuento > 0 && (
-            <div className="absolute top-2 left-2 bg-[var(--accent-orange)] text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm z-10">
-              -{descuento}%
-            </div>
-          )}
+          <div className="absolute top-2 left-2 flex flex-col items-start gap-1 z-10 pointer-events-none">
+            {hasOfertaTag && descuento > 0 && (
+              <div className="bg-[var(--accent-orange)] text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">
+                -{descuento}%
+              </div>
+            )}
+            {etiquetasList.filter(t => t !== 'OFERTA').map(tag => {
+              if (tag === 'NUEVO') return <div key={tag} className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">NUEVO</div>;
+              if (tag === 'DESTACADO') return <div key={tag} className="bg-[var(--gold-main)] text-white text-[9px] tracking-wider uppercase font-bold px-2 py-0.5 rounded-md shadow-sm">★ Destacado</div>;
+              return <div key={tag} className="bg-gray-800 text-white text-[9px] tracking-wider uppercase font-bold px-2 py-0.5 rounded-md shadow-sm">{tag}</div>;
+            })}
+          </div>
         </div>
 
         {/* ── Card Content ── */}
@@ -154,6 +161,11 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
               )}
             </div>
           </div>
+          {descripcion && (
+            <p className="text-[11px] text-gray-500 line-clamp-2 mt-1.5 leading-tight font-medium">
+              {descripcion}
+            </p>
+          )}
         </div>
       </article>
 
