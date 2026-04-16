@@ -6,6 +6,9 @@ interface HorarioDia {
   activo: boolean;
   abre:   string;
   cierra: string;
+  dobleTurno?: boolean;
+  abre2?: string;
+  cierra2?: string;
 }
 
 const DIAS: { key: string; label: string }[] = [
@@ -21,7 +24,14 @@ const DIAS: { key: string; label: string }[] = [
 const DEFAULT_HORARIOS: Record<string, HorarioDia> = Object.fromEntries(
   DIAS.map(({ key }) => [
     key,
-    { activo: key !== 'domingo', abre: '08:00', cierra: key === 'sabado' ? '13:00' : '19:00' },
+    { 
+      activo: key !== 'domingo', 
+      abre: '09:00', 
+      cierra: key === 'sabado' ? '14:00' : '14:00',
+      dobleTurno: key !== 'sabado' && key !== 'domingo',
+      abre2: '18:00',
+      cierra2: '22:00'
+    },
   ]),
 );
 
@@ -240,26 +250,69 @@ export default function ConfiguracionForm() {
                 </div>
 
                 {h.activo ? (
-                  <div className="flex items-center gap-2 w-full sm:w-auto flex-1 pl-12 sm:pl-0">
-                    <input
-                      type="time"
-                      value={h.abre}
-                      onChange={(e) => updateHorario(key, { abre: e.target.value })}
-                      className="input text-sm py-1.5 flex-1 p-0 text-center sm:text-left"
-                      aria-label={`${label} apertura`}
-                    />
-                    <span className="text-gray-400 text-sm flex-shrink-0">a</span>
-                    <input
-                      type="time"
-                      value={h.cierra}
-                      onChange={(e) => updateHorario(key, { cierra: e.target.value })}
-                      className="input text-sm py-1.5 flex-1 p-0 text-center sm:text-left"
-                      aria-label={`${label} cierre`}
-                    />
-                    <span className="text-xs text-green-600 font-medium hidden sm:inline-block flex-shrink-0">Abierto</span>
+                  <div className="flex flex-col gap-2 w-full sm:w-auto flex-1 pl-12 sm:pl-0">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="time"
+                        value={h.abre}
+                        onChange={(e) => updateHorario(key, { abre: e.target.value })}
+                        className="input text-sm py-1.5 flex-1 p-0 text-center sm:text-left"
+                        aria-label={`${label} apertura`}
+                      />
+                      <span className="text-gray-400 text-sm flex-shrink-0">a</span>
+                      <input
+                        type="time"
+                        value={h.cierra}
+                        onChange={(e) => updateHorario(key, { cierra: e.target.value })}
+                        className="input text-sm py-1.5 flex-1 p-0 text-center sm:text-left"
+                        aria-label={`${label} cierre`}
+                      />
+                      <label className="hidden sm:flex items-center gap-1.5 text-xs text-gray-500 font-medium ml-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={h.dobleTurno || false}
+                          onChange={(e) => updateHorario(key, { dobleTurno: e.target.checked })}
+                          className="rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+                        />
+                        Doble Turno
+                      </label>
+                    </div>
+
+                    {h.dobleTurno && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] bg-gray-100 px-2 py-1 rounded text-gray-500 font-bold uppercase tracking-wider self-center shrink-0">Turno 2</span>
+                        <input
+                          type="time"
+                          value={h.abre2 || '18:00'}
+                          onChange={(e) => updateHorario(key, { abre2: e.target.value })}
+                          className="input text-sm py-1.5 flex-1 p-0 text-center sm:text-left border-dashed"
+                          aria-label={`${label} apertura turno 2`}
+                        />
+                        <span className="text-gray-400 text-sm flex-shrink-0">a</span>
+                        <input
+                          type="time"
+                          value={h.cierra2 || '22:00'}
+                          onChange={(e) => updateHorario(key, { cierra2: e.target.value })}
+                          className="input text-sm py-1.5 flex-1 p-0 text-center sm:text-left border-dashed"
+                          aria-label={`${label} cierre turno 2`}
+                        />
+                      </div>
+                    )}
+
+                    <div className="sm:hidden flex items-center justify-end pl-1 pt-1 border-t border-gray-50">
+                      <label className="flex items-center gap-1.5 text-xs text-gray-500 font-medium cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={h.dobleTurno || false}
+                          onChange={(e) => updateHorario(key, { dobleTurno: e.target.checked })}
+                          className="rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+                        />
+                        Doble Turno
+                      </label>
+                    </div>
                   </div>
                 ) : (
-                  <span className="text-sm text-gray-400 italic flex-1 pl-12 sm:pl-0">Cerrado</span>
+                  <span className="text-sm text-gray-400 italic flex-1 pl-12 sm:pl-0 self-center">Cerrado</span>
                 )}
               </div>
             );
@@ -275,7 +328,7 @@ export default function ConfiguracionForm() {
                 const h = config.horarios?.[key]!;
                 return (
                   <span key={key} className="text-xs text-gray-600">
-                    <strong>{label.substring(0, 3)}:</strong> {h.abre}–{h.cierra}
+                    <strong>{label.substring(0, 3)}:</strong> {h.abre}–{h.cierra}{h.dobleTurno ? ` y ${h.abre2 || '18:00'}–${h.cierra2 || '22:00'}` : ''}
                   </span>
                 );
               })}

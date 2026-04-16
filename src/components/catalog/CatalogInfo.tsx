@@ -2,6 +2,9 @@ interface HorarioDia {
   activo: boolean;
   abre:   string;
   cierra: string;
+  dobleTurno?: boolean;
+  abre2?: string;
+  cierra2?: string;
 }
 
 interface BannerData {
@@ -80,14 +83,14 @@ export function CatalogHorarios({ config }: { config: BannerData | null }) {
         >
           <span>{isOpenToday ? '🟢' : '🔴'}</span>
           {isOpenToday
-            ? `Hoy abierto: ${todayHorario.abre}–${todayHorario.cierra}`
+            ? `Hoy abierto: ${todayHorario.abre}–${todayHorario.cierra}${todayHorario.dobleTurno ? ` y ${todayHorario.abre2 || '18:00'}–${todayHorario.cierra2 || '22:00'}` : ''}`
             : 'Hoy cerrado'}
         </span>
 
         {abiertos.map(([key, h]) => (
           <span key={key} style={{ color: 'rgba(90,60,30,0.6)' }}>
             <strong style={{ color: 'rgba(90,60,30,0.85)' }}>{DIAS_LABEL[key] ?? key}:</strong>{' '}
-            {h.abre}–{h.cierra}
+            {h.abre}–{h.cierra}{h.dobleTurno ? ` y ${h.abre2 || '18:00'}–${h.cierra2 || '22:00'}` : ''}
           </span>
         ))}
       </div>
