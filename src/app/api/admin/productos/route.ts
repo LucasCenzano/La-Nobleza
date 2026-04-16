@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
       categoria, tipoVenta, stock, incrementoPeso, imagenUrl, imagenesUrls,
       etiquetas, activo,
       solicitaInstrucciones, opcionesTitulo, opcionesValores,
+      promoPersonalizada,
     } = body;
 
     if (!nombre || precio === undefined || !categoria || !tipoVenta) {
@@ -60,6 +61,7 @@ export async function POST(req: NextRequest) {
         solicitaInstrucciones: Boolean(solicitaInstrucciones),
         opcionesTitulo: opcionesTitulo || null,
         opcionesValores: opcionesValores ?? [],
+        promoPersonalizada: promoPersonalizada || null,
       },
     });
 

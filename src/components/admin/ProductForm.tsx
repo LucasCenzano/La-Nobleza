@@ -37,6 +37,7 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     solicitaInstrucciones: (initialData as any)?.solicitaInstrucciones ?? false,
     opcionesTitulo: (initialData as any)?.opcionesTitulo ?? '',
     opcionesValoresStr: (initialData as any)?.opcionesValores?.join(', ') ?? '',
+    promoPersonalizada: (initialData as any)?.promoPersonalizada ?? '',
     activo:       initialData?.activo       ?? true,
   });
 
@@ -129,6 +130,7 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
       solicitaInstrucciones: form.solicitaInstrucciones,
       opcionesTitulo: form.opcionesTitulo.trim() || null,
       opcionesValores: form.opcionesValoresStr.split(',').map((s: string) => s.trim()).filter(Boolean),
+      promoPersonalizada: form.promoPersonalizada.trim() || null,
     };
 
     const url =
@@ -177,6 +179,7 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     solicitaInstrucciones: form.solicitaInstrucciones,
     opcionesTitulo: form.opcionesTitulo.trim() || null,
     opcionesValores: form.opcionesValoresStr.split(',').map((s: string) => s.trim()).filter(Boolean),
+    promoPersonalizada: form.promoPersonalizada || null,
     activo: form.activo,
     etiquetas: finalPreviewEtiquetas,
     imagenUrl: images[0]?.url || null,
@@ -305,6 +308,18 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
                     )}
                   </div>
                 </div>
+              </div>
+
+              {/* Banda de texto promocional libre */}
+              <div className="pt-2 border-t border-gray-100">
+                <label htmlFor="promoPersonalizada" className="label font-bold text-[var(--gold-dark)]">Texto Promocional (Opcional)</label>
+                <input id="promoPersonalizada" name="promoPersonalizada" type="text"
+                  value={form.promoPersonalizada} onChange={handleChange}
+                  className="input mt-1.5 focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] placeholder-gray-400 transition-all font-medium" 
+                  placeholder="Ej: Llevando 2kg -> $5.000" />
+                <p className="text-[11px] text-gray-500 font-medium mt-1.5 leading-tight">
+                  Este texto aparecerá destacado en amarillo en el producto. Podés usarlo para promociones por cantidad o combos.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-gray-100">

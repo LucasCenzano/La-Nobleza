@@ -43,6 +43,9 @@ model Producto {
   opcionesTitulo        String? // ej: "¿Cómo las preferís?"
   opcionesValores       String[] // ej: ["Enteras", "Fileteadas", "En dados"]
   
+  // Custom text for promo, e.g. "Llevando 2kg -> $5.000"
+  promoPersonalizada    String?
+  
   activo       Boolean   @default(true)
   orden        Int       @default(0)  // posición en el catálogo (0 = primero)
   createdAt    DateTime  @default(now())

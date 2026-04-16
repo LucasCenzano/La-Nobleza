@@ -23,6 +23,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
       nombre, descripcion, precio, precioOferta,
       categoria, tipoVenta, stock, incrementoPeso, imagenUrl, imagenesUrls,
       etiquetas, activo, solicitaInstrucciones, opcionesTitulo, opcionesValores,
+      promoPersonalizada,
     } = await req.json();
 
     const producto = await prisma.producto.update({
@@ -43,6 +44,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
         solicitaInstrucciones: Boolean(solicitaInstrucciones),
         opcionesTitulo: opcionesTitulo || null,
         opcionesValores: opcionesValores ?? [],
+        promoPersonalizada: promoPersonalizada || null,
       },
     });
 

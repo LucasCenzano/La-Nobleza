@@ -33,7 +33,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
   const {
     nombre, descripcion, precio, precioOferta,
     tipoVenta, categoria, imagenUrl, imagenesUrls, etiquetas, stock, incrementoPeso,
-    solicitaInstrucciones, opcionesTitulo, opcionesValores
+    solicitaInstrucciones, opcionesTitulo, opcionesValores, promoPersonalizada
   } = producto as any;
 
   const isPeso        = tipoVenta === 'PESO';
@@ -133,6 +133,12 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
           <h3 className="font-sans font-semibold text-[13px] leading-snug line-clamp-2 text-[var(--black-charcoal)]">
             {nombre}
           </h3>
+
+          {promoPersonalizada && (
+            <div className="mt-1 flex items-center gap-1.5 bg-yellow-50 text-[var(--gold-dark)] text-[10px] font-black px-2 py-1 rounded-md shadow-[inset_0_0_0_1px_rgba(212,175,55,0.3)] uppercase tracking-wide w-fit">
+              🔥 {promoPersonalizada}
+            </div>
+          )}
 
           {/* ── Price block ── */}
           <div className="mt-auto flex items-end justify-between pt-2">
@@ -251,6 +257,12 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                   <h2 className="font-sans font-bold text-xl text-[var(--black-charcoal)] leading-tight mb-2">
                     {nombre}
                   </h2>
+                  
+                  {promoPersonalizada && (
+                    <div className="mb-3 flex items-center gap-2 bg-yellow-50 text-[var(--gold-dark)] text-[12px] font-black px-3 py-1.5 rounded-lg shadow-[inset_0_0_0_1px_rgba(212,175,55,0.3)] tracking-wide w-fit">
+                      🔥 <span className="uppercase">{promoPersonalizada}</span>
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     {etiquetasList.map((tag) => (
                       <span key={tag} className="text-[10px] font-bold tracking-wider uppercase bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">
