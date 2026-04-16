@@ -1,10 +1,11 @@
 import { Suspense } from 'react';
 import { TipoVenta } from '@prisma/client';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// ISR: Regenerar la página en background cada 2 minutos.
+// Los usuarios siempre reciben la versión cacheada instantáneamente.
+export const revalidate = 120;
 import CatalogHeader from '@/components/catalog/CatalogHeader';
-import CatalogClientWrapper from '@/components/catalog/CatalogClientWrapper';
+import CatalogClientWrapper, { CatalogSkeleton } from '@/components/catalog/CatalogClientWrapper';
 import BottomNav from '@/components/catalog/BottomNav';
 import { CatalogBanner, getCatalogConfig } from '@/components/catalog/CatalogInfo';
 import { CategoriaConfigType } from '@/lib/constants';
@@ -232,7 +233,10 @@ export default async function HomePage() {
         </div>
       )}
 
-      <CatalogClientWrapper initialProductos={productos} categorias={categorias} />
+      {/* Suspense permite que el header se vea instantáneo y el catálogo cargue progresivamente */}
+      <Suspense fallback={<CatalogSkeleton />}>
+        <CatalogClientWrapper initialProductos={productos} categorias={categorias} />
+      </Suspense>
 
       <BottomNav />
     </div>

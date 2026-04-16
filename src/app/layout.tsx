@@ -1,5 +1,22 @@
 import type { Metadata } from 'next';
+import { Inter, DM_Serif_Display } from 'next/font/google';
 import './globals.css';
+
+// ── Optimized font loading via next/font (no render-blocking external requests) ──
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const dmSerifDisplay = DM_Serif_Display({
+  subsets: ['latin'],
+  weight: ['400'],
+  style: ['normal', 'italic'],
+  variable: '--font-dm-serif',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Almacén La Nobleza – Catálogo de Productos Frescos',
@@ -22,7 +39,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
+    <html lang="es" className={`${inter.variable} ${dmSerifDisplay.variable}`}>
       <body>
         <CartProvider>
           {children}
