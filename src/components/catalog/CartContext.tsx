@@ -12,6 +12,24 @@ export interface CartItem {
   incrementoPeso?: number | null;
   stock?: number | null;
   instrucciones?: string;
+  promoCantidadRequerida?: number | null;
+  promoPrecioTotal?: number | null;
+}
+
+export function calculateItemTotal(item: CartItem): number {
+  const basePrice = Math.round(item.precioFinal);
+  if (item.promoCantidadRequerida && item.promoPrecioTotal && item.cantidad >= item.promoCantidadRequerida) {
+    // Si la cantidad es mayor al requerimiento, armamos los "combos"
+    // e.g. si lleva 2.5kg y la promo es cada 2kg, hay 1 combo + 0.5kg normales.
+    // OJO: calculamos el EPSILON de javascript evitando errores de precision.
+    const qty = Math.round(item.cantidad * 1000) / 1000;
+    const req = item.promoCantidadRequerida;
+    const combos = Math.floor(qty / req);
+    const resto = (qty - (combos * req));
+    // Redondeamos para evitar decimales sueltos
+    return Math.round((combos * item.promoPrecioTotal) + (resto * basePrice));
+  }
+  return Math.round(basePrice * item.cantidad);
 }
 
 interface CartContextType {
@@ -79,7 +97,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Calculamos todo
   const totalItems = items.reduce((acc, i) => acc + (i.tipoVenta === 'UNIDAD' ? Math.ceil(i.cantidad) : 1), 0);
-  const totalPrice = Math.round(items.reduce((acc, i) => acc + (Math.round(i.precioFinal) * i.cantidad), 0));
+  const totalPrice = items.reduce((acc, i) => acc + calculateItemTotal(i), 0);
 
   return (
     <CartContext.Provider value={{ 

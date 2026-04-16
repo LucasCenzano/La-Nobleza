@@ -1,5 +1,5 @@
 'use client';
-import { useCart } from './CartContext';
+import { useCart, calculateItemTotal } from './CartContext';
 import Image from 'next/image';
 
 export default function CartDrawer() {
@@ -19,10 +19,13 @@ export default function CartDrawer() {
           : `${item.cantidad.toFixed(3).replace(/\.?0+$/, '') || '0'} Kg`;
       }
       const cant = cantStr;
-      const sub = item.cantidad * item.precioFinal;
+      const sub = calculateItemTotal(item);
+      const subOriginal = Math.round(item.cantidad * item.precioFinal);
+      const hasCombo = sub < subOriginal;
+      
       let line = `• ${cant} *${item.nombre}*`;
       if (item.instrucciones) line += `\n  _📌 Nota: ${item.instrucciones}_`;
-      line += `\n  _Subtotal: $${sub.toLocaleString('es-AR')}_\n`;
+      line += `\n  _Subtotal: $${sub.toLocaleString('es-AR')}_${hasCombo ? ' *(Combo Aplicado)*' : ''}\n`;
       text += line;
     });
 
@@ -77,9 +80,20 @@ export default function CartDrawer() {
                     {item.instrucciones && (
                       <p className="text-[11px] text-gray-500 mb-1 flex items-start gap-1 leading-tight"><span className="text-[10px] mt-0.5">📌</span> {item.instrucciones}</p>
                     )}
-                    <p className="font-bold text-[var(--gold-dark)] text-sm mb-2">
-                      ${(item.precioFinal * item.cantidad).toLocaleString('es-AR')}
-                    </p>
+                    {calculateItemTotal(item) < Math.round(item.precioFinal * item.cantidad) ? (
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-bold text-[var(--accent-orange)] text-[15px] flex items-center gap-1">
+                          <span className="text-[10px] mt-0.5">🔥</span> ${(calculateItemTotal(item)).toLocaleString('es-AR')}
+                        </span>
+                        <span className="text-[11px] text-gray-400 line-through">
+                          ${Math.round(item.precioFinal * item.cantidad).toLocaleString('es-AR')}
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="font-bold text-[var(--gold-dark)] text-sm mb-2">
+                        ${(calculateItemTotal(item)).toLocaleString('es-AR')}
+                      </p>
+                    )}
 
                     {/* Controles cantidad */}
                     <div className="flex items-center gap-3">

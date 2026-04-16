@@ -33,7 +33,8 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
   const {
     nombre, descripcion, precio, precioOferta,
     tipoVenta, categoria, imagenUrl, imagenesUrls, etiquetas, stock, incrementoPeso,
-    solicitaInstrucciones, opcionesTitulo, opcionesValores, promoPersonalizada
+    solicitaInstrucciones, opcionesTitulo, opcionesValores, promoPersonalizada,
+    promoCantidadRequerida, promoPrecioTotal
   } = producto as any;
 
   const isPeso        = tipoVenta === 'PESO';
@@ -401,7 +402,9 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                     imagenUrl: cardImage,
                     incrementoPeso,
                     stock,
-                    instrucciones: instrucciones.trim() || undefined
+                    instrucciones: instrucciones.trim() || undefined,
+                    promoCantidadRequerida,
+                    promoPrecioTotal
                   });
                   setIsDetailOpen(false);
                   setIsCartOpen(true);

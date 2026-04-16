@@ -46,6 +46,10 @@ model Producto {
   // Custom text for promo, e.g. "Llevando 2kg -> $5.000"
   promoPersonalizada    String?
   
+  // Custom discount rules
+  promoCantidadRequerida Float?
+  promoPrecioTotal       Float?
+  
   activo       Boolean   @default(true)
   orden        Int       @default(0)  // posición en el catálogo (0 = primero)
   createdAt    DateTime  @default(now())

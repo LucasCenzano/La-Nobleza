@@ -38,6 +38,8 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     opcionesTitulo: (initialData as any)?.opcionesTitulo ?? '',
     opcionesValoresStr: (initialData as any)?.opcionesValores?.join(', ') ?? '',
     promoPersonalizada: (initialData as any)?.promoPersonalizada ?? '',
+    promoCantidadRequerida: (initialData as any)?.promoCantidadRequerida?.toString() ?? '',
+    promoPrecioTotal: (initialData as any)?.promoPrecioTotal?.toString() ?? '',
     activo:       initialData?.activo       ?? true,
   });
 
@@ -131,6 +133,8 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
       opcionesTitulo: form.opcionesTitulo.trim() || null,
       opcionesValores: form.opcionesValoresStr.split(',').map((s: string) => s.trim()).filter(Boolean),
       promoPersonalizada: form.promoPersonalizada.trim() || null,
+      promoCantidadRequerida: form.promoCantidadRequerida ? parseFloat(form.promoCantidadRequerida) : null,
+      promoPrecioTotal: form.promoPrecioTotal ? parseFloat(form.promoPrecioTotal) : null,
     };
 
     const url =
@@ -317,8 +321,32 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
                   value={form.promoPersonalizada} onChange={handleChange}
                   className="input mt-1.5 focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] placeholder-gray-400 transition-all font-medium" 
                   placeholder="Ej: Llevando 2kg -> $5.000" />
-                <p className="text-[11px] text-gray-500 font-medium mt-1.5 leading-tight">
+                <p className="text-[11px] text-gray-500 font-medium mt-1.5 leading-tight mb-4">
                   Este texto aparecerá destacado en amarillo en el producto. Podés usarlo para promociones por cantidad o combos.
+                </p>
+
+                <div className="flex flex-col md:flex-row items-start gap-4 p-4 bg-yellow-50/50 border border-yellow-200/50 rounded-2xl animate-fade-in">
+                  <div className="flex-1 w-full relative">
+                    <label htmlFor="promoCantidadRequerida" className="label font-bold text-yellow-900 line-clamp-1">Llevando (Cantidad/Kg)</label>
+                    <input id="promoCantidadRequerida" name="promoCantidadRequerida" type="number" min={0} step="any"
+                      value={form.promoCantidadRequerida} onChange={handleChange}
+                      className="input border-yellow-200 mt-1.5 focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)]" 
+                      placeholder="Ej: 2" />
+                  </div>
+                  <div className="shrink-0 pt-8 hidden md:block text-yellow-600 font-bold">👉</div>
+                  <div className="flex-1 w-full relative">
+                    <label htmlFor="promoPrecioTotal" className="label font-bold text-yellow-900 line-clamp-1">Precio Total Promocional</label>
+                    <div className="relative mt-1.5">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-yellow-600 font-bold">$</span>
+                      <input id="promoPrecioTotal" name="promoPrecioTotal" type="number" min={0} step="any"
+                        value={form.promoPrecioTotal} onChange={handleChange}
+                        className="input border-yellow-200 pl-8 focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)]" 
+                        placeholder="Ej: 5000" />
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[11px] text-yellow-700 font-medium mt-2 leading-tight">
+                  (Opcional) Si configurás estos dos campos, el sistema aplicará automáticamente el descuento en el carrito cuando el cliente alcance la cantidad. Por ejemplo: lleva 2kg por $5000.
                 </p>
               </div>
 
