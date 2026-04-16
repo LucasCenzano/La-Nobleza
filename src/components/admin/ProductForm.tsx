@@ -143,12 +143,11 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
       body: JSON.stringify(payload),
     });
 
-    setLoading(false);
-
     if (res.ok) {
       router.push('/admin/productos');
       router.refresh();
     } else {
+      setLoading(false);
       const data = await res.json().catch(() => ({}));
       setError(data.message ?? 'Ocurrió un error. Intentá de nuevo.');
     }
