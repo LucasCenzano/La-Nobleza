@@ -48,7 +48,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
     return fallback;
   })();
   
-  const precioFinal   = precioOferta && precioOferta > 0 ? precioOferta : precio;
+  const precioFinal   = Math.round(precioOferta && precioOferta > 0 ? precioOferta : precio);
   const [quantity, setQuantity] = useState(initialQuantity);
   const allImages     = (imagenesUrls?.length ? imagenesUrls : (imagenUrl ? [imagenUrl] : [])) as string[];
   const cardImage     = allImages[0];
@@ -398,7 +398,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
               >
                 Agregar
                 <span className="opacity-80 font-normal">|</span>
-                ${(precioFinal * quantity).toLocaleString('es-AR')}
+                ${Math.round(precioFinal * quantity).toLocaleString('es-AR')}
               </button>
             </div>
           </div>

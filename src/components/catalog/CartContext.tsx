@@ -79,7 +79,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Calculamos todo
   const totalItems = items.reduce((acc, i) => acc + (i.tipoVenta === 'UNIDAD' ? Math.ceil(i.cantidad) : 1), 0);
-  const totalPrice = items.reduce((acc, i) => acc + (i.precioFinal * i.cantidad), 0);
+  const totalPrice = Math.round(items.reduce((acc, i) => acc + (Math.round(i.precioFinal) * i.cantidad), 0));
 
   return (
     <CartContext.Provider value={{ 
