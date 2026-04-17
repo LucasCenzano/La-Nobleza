@@ -24,6 +24,12 @@ const CAT_BG: Record<string, string> = {
   OTROS:                 '#fdf9f3',
 };
 
+/* ── Badge visual config ── */
+const BADGE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  NUEVO:     { bg: '#22c55e', text: '#ffffff', label: 'NUEVO' },
+  DESTACADO: { bg: 'rgba(212,175,55,0.15)', text: '#92400e', label: '★ Destacado' },
+};
+
 export default function ProductCard({ producto, categorias }: ProductCardProps) {
   const { addItem, setIsCartOpen } = useCart();
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -62,6 +68,11 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
   const etiquetasList = (etiquetas as string[]) ?? [];
   const hasOfertaTag  = etiquetasList.includes('OFERTA') || hasOferta;
 
+  // Pick top badge to display on card (priority: NUEVO > DESTACADO), only when no discount shown
+  const visibleBadge = (!hasOfertaTag || descuento === 0)
+    ? etiquetasList.find((t) => BADGE_STYLES[t]) || null
+    : null;
+
   // Auto deslizador de imágenes en el detalle
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -85,14 +96,17 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
 
   return (
     <>
+      {/* ═══════════════════════════════════════════════════════════
+           PRODUCT CARD (Grid Item)
+         ═══════════════════════════════════════════════════════════ */}
       <article 
         onClick={() => setIsDetailOpen(true)}
-        className="card-product flex flex-col h-full active:scale-[0.98] transition-transform cursor-pointer"
+        className="card-product group flex flex-col h-full cursor-pointer"
       >
         {/* ── Product Image ── */}
         <div
-          className="relative overflow-hidden w-full flex items-center justify-center"
-          style={{ aspectRatio: '1 / 1', backgroundColor: catBg }}
+          className="card-product__image relative overflow-hidden w-full flex items-center justify-center"
+          style={{ aspectRatio: '4 / 3', backgroundColor: catBg }}
         >
           {cardImage ? (
             <Image
@@ -101,82 +115,108 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
               fill
               loading="lazy"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover transition-transform duration-500 hover:scale-105 pointer-events-none"
+              className="object-cover transition-transform duration-[450ms] ease-out group-hover:scale-[1.06] pointer-events-none"
             />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center opacity-40">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <div className="w-full h-full flex flex-col items-center justify-center opacity-25">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                 <circle cx="8.5" cy="8.5" r="1.5"></circle>
                 <polyline points="21 15 16 10 5 21"></polyline>
               </svg>
+              <span className="text-[9px] mt-1.5 font-medium text-gray-400 tracking-wide uppercase">Sin imagen</span>
             </div>
           )}
 
-          {/* ── Badges ── */}
-          <div className="absolute top-2 left-2 flex flex-col items-start gap-1 z-10 pointer-events-none">
+          {/* ── Badges stack (top-left) ── */}
+          <div className="absolute top-2.5 left-2.5 flex flex-col items-start gap-1.5 z-10 pointer-events-none">
+            {/* Discount badge */}
             {hasOfertaTag && descuento > 0 && (
-              <div className="bg-[var(--accent-orange)] text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">
+              <div className="card-product__badge-discount">
                 -{descuento}%
               </div>
             )}
-            {etiquetasList.filter(t => t !== 'OFERTA').map(tag => {
-              if (tag === 'NUEVO') return <div key={tag} className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">NUEVO</div>;
-              if (tag === 'DESTACADO') return <div key={tag} className="bg-[var(--gold-main)] text-white text-[9px] tracking-wider uppercase font-bold px-2 py-0.5 rounded-md shadow-sm">★ Destacado</div>;
-              return <div key={tag} className="bg-gray-800 text-white text-[9px] tracking-wider uppercase font-bold px-2 py-0.5 rounded-md shadow-sm">{tag}</div>;
-            })}
+            {/* Tag badge (NUEVO / DESTACADO) — shown only when no discount */}
+            {visibleBadge && BADGE_STYLES[visibleBadge] && (
+              <div
+                className={`text-[10px] font-bold tracking-wider px-2.5 py-1 z-10 shadow-sm ${
+                  visibleBadge === 'NUEVO' ? 'rounded-full' : 'rounded-lg'
+                }`}
+                style={{
+                  backgroundColor: BADGE_STYLES[visibleBadge].bg,
+                  color: BADGE_STYLES[visibleBadge].text,
+                }}
+              >
+                {BADGE_STYLES[visibleBadge].label}
+              </div>
+            )}
+            {/* All other custom tags */}
+            {etiquetasList.filter(t => t !== 'OFERTA' && !BADGE_STYLES[t]).map(tag => (
+              <div key={tag} className="card-product__badge-tag" style={{ backgroundColor: 'rgba(0,0,0,0.06)', color: '#374151' }}>
+                {tag}
+              </div>
+            ))}
           </div>
         </div>
 
         {/* ── Card Content ── */}
-        <div className="flex flex-col gap-1 p-3 flex-1 bg-white">
+        <div className="flex flex-col gap-0.5 px-3 pt-2.5 pb-3 sm:px-3.5 sm:pt-3 sm:pb-3.5 flex-1 bg-white">
           {/* Product name */}
-          <h3 className="font-sans font-semibold text-[13px] leading-snug line-clamp-2 text-[var(--black-charcoal)]">
+          <h3 className="font-sans font-semibold text-sm leading-snug line-clamp-1 text-[var(--black-charcoal)]">
             {nombre}
           </h3>
 
+          {/* Promo badge */}
           {promoPersonalizada && (
-            <div className="mt-1 flex items-center gap-1.5 bg-yellow-50 text-[var(--gold-dark)] text-[10px] font-black px-2 py-1 rounded-md shadow-[inset_0_0_0_1px_rgba(212,175,55,0.3)] uppercase tracking-wide w-fit">
+            <div className="card-product__promo mt-1">
               🔥 {promoPersonalizada}
             </div>
           )}
 
-          {/* ── Price block ── */}
-          <div className="mt-auto flex items-end justify-between pt-2">
+          {/* ── Price block (pushed to bottom) ── */}
+          <div className="mt-auto flex items-end justify-between pt-2.5">
             <div className="flex flex-col">
               {hasOferta ? (
                 <>
-                  <span className="text-[10px] line-through text-gray-400 font-medium">
+                  <span className="text-[11px] line-through text-gray-400 font-medium leading-none">
                     {formatPrecioSolo(precio)}
                   </span>
-                  <span className="font-bold text-[16px] text-[var(--accent-orange)] leading-none mt-0.5">
-                    {formatPrecio(precioOferta, tipoVenta as TipoVenta)}
-                  </span>
+                  <div className="flex items-baseline gap-0.5 mt-0.5">
+                    <span className="font-bold text-xl text-[#dc2626] leading-none tracking-tight">
+                      {formatPrecioSolo(precioOferta)}
+                    </span>
+                    <span className="text-[9px] text-gray-400 font-normal">
+                      {isPeso ? '/kg' : '/un'}
+                    </span>
+                  </div>
                 </>
               ) : (
                 <>
-                  <span className="h-[15px]"></span> {/* spacer if no old price */}
-                  <span className="font-bold text-[16px] text-[var(--black-charcoal)] leading-none">
-                    {formatPrecio(precio, tipoVenta as TipoVenta)}
-                  </span>
+                  <div className="flex items-baseline gap-0.5">
+                    <span className="font-bold text-xl text-[var(--black-charcoal)] leading-none tracking-tight">
+                      {formatPrecioSolo(precio)}
+                    </span>
+                    <span className="text-[9px] text-gray-400 font-normal">
+                      {isPeso ? '/kg' : '/un'}
+                    </span>
+                  </div>
                 </>
               )}
-              {isPeso && (
-                <span className="text-[9px] text-gray-400 mt-1 font-medium tracking-wide">
-                  /KG
-                </span>
-              )}
+            </div>
+
+            {/* Quick-add button */}
+            <div className="flex w-8 h-8 rounded-full bg-[var(--black-charcoal)] items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 shadow-lg shrink-0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
             </div>
           </div>
-          {descripcion && (
-            <p className="text-[11px] text-gray-500 line-clamp-2 mt-1.5 leading-tight font-medium">
-              {descripcion}
-            </p>
-          )}
         </div>
       </article>
 
-      {/* ── Detail Drawer Modal (z-index 100 covers BottomNav) ── */}
+      {/* ═══════════════════════════════════════════════════════════
+           DETAIL DRAWER MODAL (z-index 100 covers BottomNav)
+         ═══════════════════════════════════════════════════════════ */}
       {isDetailOpen && (
         <div 
           className="fixed inset-0 z-[100] flex flex-col justify-end sm:justify-center items-center bg-black/60 p-0 sm:p-4 animate-fade-in"
@@ -210,7 +250,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                 {detailImage ? (
                   <>
                     <Image
-                      key={currentImageIndex} // force re-render for clean swapping
+                      key={currentImageIndex}
                       src={detailImage}
                       alt={nombre}
                       fill
@@ -228,7 +268,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                     
                     {allImages.length > 1 && (
                       <div className="absolute bottom-4 left-0 w-full flex justify-center gap-1.5 pointer-events-none">
-                        {allImages.map((_, idx) => (
+                        {allImages.map((_: string, idx: number) => (
                            <div 
                              key={idx} 
                              className={`h-1.5 rounded-full transition-all duration-300 ${
@@ -246,7 +286,9 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                 )}
                 
                 {hasOfertaTag && descuento > 0 && (
-                  <div className="absolute top-4 left-4 bg-[var(--accent-orange)] text-white text-sm font-bold px-3 py-1.5 rounded-lg shadow-md z-10">
+                  <div className="absolute top-4 left-4 text-white text-sm font-bold px-3 py-1.5 rounded-xl shadow-md z-10"
+                    style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}
+                  >
                     -{descuento}% OFF
                   </div>
                 )}
@@ -260,16 +302,34 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                   </h2>
                   
                   {promoPersonalizada && (
-                    <div className="mb-3 flex items-center gap-2 bg-yellow-50 text-[var(--gold-dark)] text-[12px] font-black px-3 py-1.5 rounded-lg shadow-[inset_0_0_0_1px_rgba(212,175,55,0.3)] tracking-wide w-fit">
+                    <div className="mb-3 flex items-center gap-2 text-[12px] font-black px-3 py-1.5 rounded-lg tracking-wide w-fit"
+                      style={{
+                        background: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
+                        color: '#92400e',
+                        border: '1px solid rgba(212,175,55,0.3)',
+                      }}
+                    >
                       🔥 <span className="uppercase">{promoPersonalizada}</span>
                     </div>
                   )}
+
+                  {/* Detail tag pills */}
                   <div className="flex flex-wrap gap-2">
-                    {etiquetasList.map((tag) => (
-                      <span key={tag} className="text-[10px] font-bold tracking-wider uppercase bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">
-                        {tag}
-                      </span>
-                    ))}
+                    {etiquetasList.map((tag: string) => {
+                      const style = BADGE_STYLES[tag];
+                      return (
+                        <span
+                          key={tag}
+                          className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-lg"
+                          style={{
+                            backgroundColor: style?.bg || 'rgba(0,0,0,0.04)',
+                            color: style?.text || '#6b7280',
+                          }}
+                        >
+                          {style?.label || tag}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -280,7 +340,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                       <span className="text-xl line-through text-gray-400 font-medium tracking-tight">
                         {formatPrecioSolo(precio)}
                       </span>
-                      <span className="font-bold text-3xl text-[var(--accent-orange)] leading-none tracking-tight">
+                      <span className="font-bold text-3xl text-[#dc2626] leading-none tracking-tight">
                         {formatPrecio(precioOferta, tipoVenta as TipoVenta)}
                       </span>
                     </div>
@@ -420,7 +480,9 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
         </div>
       )}
 
-      {/* ── Fullscreen Image Gallery Modal (z-index 110) ── */}
+      {/* ═══════════════════════════════════════════════════════════
+           FULLSCREEN IMAGE GALLERY MODAL (z-index 110)
+         ═══════════════════════════════════════════════════════════ */}
       {isGalleryOpen && (
         <div className="fixed inset-0 z-[110] bg-black flex flex-col animate-fade-in touch-none">
           {/* Header */}
@@ -440,21 +502,21 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
 
           {/* Swipeable Gallery Container */}
           <div className="flex-1 w-full h-full flex overflow-x-auto snap-x snap-mandatory scroll-x-hide">
-            {allImages.map((img, i) => (
+            {allImages.map((img: string, i: number) => (
               <div 
                 key={i} 
                 className="min-w-full w-full h-full snap-center flex items-center justify-center p-2 relative"
               >
-                <div className="relative w-full h-4/5 flex items-center justify-center">
-                  <Image
-                    src={img}
-                    alt={`Imagen ${i+1}`}
-                    fill
-                    className="object-contain"
-                    sizes="100vw"
-                    priority={i === 0}
-                  />
-                </div>
+              <div className="relative w-full h-4/5 flex items-center justify-center">
+                <Image
+                  src={img}
+                  alt={`Imagen ${i+1}`}
+                  fill
+                  className="object-contain"
+                  sizes="100vw"
+                  priority={i === 0}
+                />
+              </div>
               </div>
             ))}
           </div>

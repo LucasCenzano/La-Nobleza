@@ -40,7 +40,7 @@ export function CatalogSkeleton() {
       </div>
       {/* Grid skeleton */}
       <div className="flex-1 w-full py-4 md:pl-8">
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {[...Array(10)].map((_, i) => (
             <SkeletonCard key={i} />
           ))}
@@ -85,7 +85,7 @@ export default function CatalogClientWrapper({ initialProductos, categorias }: C
 
         {/* ── Product Grid ── */}
         {filtered.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
             {filtered.map((p) => (
               <ProductCard key={p.id} producto={p} categorias={categorias} />
             ))}
