@@ -20,6 +20,8 @@ export default function SearchFilters({
   categorias
 }: SearchFiltersProps) {
 
+  const activeCategory = categorias.find(c => c.slug === categoria);
+
   return (
     <div className="flex flex-col gap-3 sticky top-[72px] md:top-0 md:relative z-30 bg-[var(--bg-cream)] md:bg-transparent pt-2 pb-3 md:pb-0">
       {/* Search Input */}
@@ -40,54 +42,46 @@ export default function SearchFilters({
         />
       </div>
 
-      {/* Category & Tag Pills Wrapper */}
-      <div className="relative md:static mt-2 md:mt-4">
-        {/* Mobile header */}
-        <div className="flex items-center justify-between px-4 mb-2 md:hidden">
-          <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest pl-1">
-            Categorías
-          </span>
-          <div className="text-[10px] text-[var(--gold-dark)] font-bold flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 shadow-sm animate-pulse">
-            Deslizar <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+      <div className="px-4 mt-2">
+        {/* Selector de Categoría (Dropdown) */}
+        <div className="relative group">
+          <label htmlFor="category-select" className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-2 pl-1">
+            Explorar Categoría
+          </label>
+          <div className="relative">
+            <select
+              id="category-select"
+              value={categoria}
+              onChange={(e) => {
+                onCategoriaChange(e.target.value);
+                onEtiquetaChange('');
+              }}
+              className="w-full bg-white border border-gray-100 rounded-2xl py-3.5 pl-12 pr-10 appearance-none text-sm font-bold text-gray-800 shadow-sm focus:outline-none focus:ring-4 focus:ring-[var(--gold-main)]/10 focus:border-[var(--gold-main)] transition-all cursor-pointer"
+            >
+              <option value="">🛒 Todas las categorías</option>
+              {categorias.filter(c => c.slug !== '').map((cat) => (
+                <option key={cat.id} value={cat.slug}>
+                  {cat.emoji} {cat.nombre}
+                </option>
+              ))}
+            </select>
+            
+            {/* Icono de la categoría seleccionada (Emoji dinámico) */}
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-lg">
+              {activeCategory ? activeCategory.emoji : '🛍️'}
+            </div>
+
+            {/* Flecha personalizada */}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+              <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
           </div>
         </div>
 
-        {/* Desktop section title */}
-        <div className="hidden md:block px-4 mb-3 border-b border-gray-200/50 pb-2">
-           <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest">Navegación</h2>
-        </div>
-        
-        {/* Gradient Fade to indicate scroll on Mobile */}
-        <div className="absolute right-0 bottom-0 top-[22px] w-10 bg-gradient-to-l from-[var(--bg-cream)] to-transparent pointer-events-none z-10 md:hidden" />
-
-        {/* ── Buttons container ── */}
-        {/* Mobile: horizontal scroll pills | Desktop: stacked full-width buttons */}
-        <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible scroll-x-hide px-4 pb-2 snap-x md:items-stretch">
-
-          {/* ── 'Todos' button ── */}
-          <button
-            onClick={() => {
-               onCategoriaChange('');
-               onEtiquetaChange('');
-            }}
-            className={`
-              flex-shrink-0 flex items-center
-              px-4 py-1.5
-              md:w-full md:py-2.5 md:px-4
-              rounded-full md:rounded-xl
-              text-[13px] md:text-sm font-semibold text-left
-              transition-all duration-200 active:scale-[0.97]
-              border
-              ${categoria === '' && etiqueta === ''
-                ? 'bg-[var(--black-charcoal)] text-white border-[var(--black-charcoal)] shadow-md'
-                : 'bg-white text-gray-600 border-gray-200 shadow-sm hover:border-gray-300 hover:bg-gray-50'
-              }
-            `}
-          >
-            Todos
-          </button>
-
-          {/* ── Special Tags (Ofertas, Destacados, Nuevos) ── */}
+        {/* Botones de Acceso Rápido (Ofertas, Destacados) */}
+        <div className="flex gap-2 mt-4 overflow-x-auto pb-2 scroll-x-hide">
           {['OFERTA', 'DESTACADO', 'NUEVO'].map((tag) => {
             const isActive = etiqueta === tag;
             const config: Record<string, { label: string; emoji: string }> = {
@@ -106,51 +100,19 @@ export default function SearchFilters({
                 }}
                 className={`
                   flex-shrink-0 flex items-center gap-2
-                  px-4 py-1.5
-                  md:w-full md:py-2.5 md:px-4
-                  rounded-full md:rounded-xl
-                  text-[13px] md:text-sm font-semibold text-left
-                  transition-all duration-200 active:scale-[0.97]
+                  px-4 py-2
+                  rounded-xl
+                  text-[13px] font-bold
+                  transition-all duration-200 active:scale-95
                   border
                   ${isActive
-                    ? 'bg-[#dc2626] text-white border-[#dc2626] shadow-md'
-                    : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:border-red-300'
+                    ? 'bg-[#dc2626] text-white border-[#dc2626] shadow-lg shadow-red-200'
+                    : 'bg-red-50 text-red-700 border-red-100 hover:bg-red-100 hover:border-red-200'
                   }
                 `}
               >
-                <span className="text-base leading-none w-5 text-center shrink-0">{emoji}</span>
-                <span className="truncate">{label}</span>
-              </button>
-            );
-          })}
-
-          {/* ── Category buttons ── */}
-          {categorias.filter(c => c.slug !== '').map((cat) => {
-            const isActive = categoria === cat.slug;
-
-            return (
-              <button
-                key={cat.id}
-                onClick={() => {
-                    onCategoriaChange(isActive ? '' : cat.slug);
-                    onEtiquetaChange('');
-                }}
-                className={`
-                  flex-shrink-0 flex items-center gap-2
-                  px-4 py-1.5
-                  md:w-full md:py-2.5 md:px-4
-                  rounded-full md:rounded-xl
-                  text-[13px] md:text-sm font-semibold text-left
-                  transition-all duration-200 active:scale-[0.97]
-                  border
-                  ${isActive
-                    ? 'bg-[var(--black-charcoal)] text-white border-[var(--black-charcoal)] shadow-md'
-                    : 'bg-white text-gray-600 border-gray-200 shadow-sm hover:border-gray-300 hover:bg-gray-50'
-                  }
-                `}
-              >
-                <span className="text-base md:text-lg leading-none w-5 text-center shrink-0">{cat.emoji}</span>
-                <span className="truncate">{cat.nombre}</span>
+                <span className="text-sm shrink-0">{emoji}</span>
+                <span>{label}</span>
               </button>
             );
           })}
