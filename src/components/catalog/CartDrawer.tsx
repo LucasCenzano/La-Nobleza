@@ -26,7 +26,6 @@ function CartItemQuantity({ item }: { item: CartItem }) {
     }
   };
 
-  const isPeso = item.tipoVenta === 'PESO';
   const longPressPlus = useLongPressQuantity(increment);
   const longPressMinus = useLongPressQuantity(decrement);
 
