@@ -7,7 +7,7 @@ import { useCallback, useRef } from 'react';
  * @param delay Tiempo de espera inicial antes de empezar el auto-repeat (ms).
  * @param interval Tiempo entre repeticiones (ms).
  */
-export function useLongPressQuantity(onStep: () => void, delay = 2000, interval = 150) {
+export function useLongPressQuantity(onStep: () => void, delay = 5000, interval = 150) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
