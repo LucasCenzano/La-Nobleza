@@ -108,7 +108,7 @@ export default function CartDrawer() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-5 pb-24 bg-gray-50/50">
+        <div className="flex-1 overflow-y-auto p-5 pb-40 bg-gray-50/50">
           {items.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-3">
               <span className="text-5xl opacity-40">🛍️</span>
@@ -163,7 +163,7 @@ export default function CartDrawer() {
               {/* Botón para agregar más productos */}
               <button 
                 onClick={() => setIsCartOpen(false)}
-                className="mt-2 w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-amber-200 bg-amber-50/30 text-amber-700 font-bold text-sm hover:bg-amber-50 transition-all active:scale-95"
+                className="mt-2 mb-8 w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-amber-200 bg-amber-50/30 text-amber-700 font-bold text-sm hover:bg-amber-50 transition-all active:scale-95"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Seguir sumando productos
