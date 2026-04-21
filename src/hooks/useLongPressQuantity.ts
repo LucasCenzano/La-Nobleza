@@ -7,7 +7,7 @@ import { useCallback, useRef } from 'react';
  * @param delay Tiempo de espera inicial antes de empezar el auto-repeat (ms).
  * @param interval Tiempo entre repeticiones (ms).
  */
-export function useLongPressQuantity(onStep: () => void, delay = 1400, interval = 150) {
+export function useLongPressQuantity(onStep: () => void, delay = 2000, interval = 150) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -42,13 +42,12 @@ export function useLongPressQuantity(onStep: () => void, delay = 1400, interval 
     onMouseUp: stop,
     onMouseLeave: stop,
     onTouchStart: (e: React.TouchEvent) => {
-      // Iniciar el long press en táctil
+      // Evitar que el navegador emule eventos de mouse (evita el "doble click")
+      if (e.cancelable) e.preventDefault();
       start();
     },
     onTouchEnd: stop,
     onTouchCancel: stop,
-    // Prevenir el menú contextual (clic derecho / mantener presionado) 
-    // mientras se ajusta la cantidad
     onContextMenu: (e: React.MouseEvent | React.TouchEvent) => {
       e.preventDefault();
     },
