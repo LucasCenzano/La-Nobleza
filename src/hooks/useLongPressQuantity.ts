@@ -7,20 +7,16 @@ import { useCallback, useRef } from 'react';
  * @param delay Tiempo de espera inicial antes de empezar el auto-repeat (ms).
  * @param interval Tiempo entre repeticiones (ms).
  */
-export function useLongPressQuantity(onStep: () => void, delay = 400, interval = 80) {
+export function useLongPressQuantity(onStep: () => void, delay = 600, interval = 150) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const start = useCallback(() => {
-    // Si ya está funcionando, no hacer nada
     if (timeoutRef.current || intervalRef.current) return;
 
-    // Ejecutar el primer paso inmediatamente
     onStep();
 
-    // Esperar el delay inicial
     timeoutRef.current = setTimeout(() => {
-      // Iniciar el intervalo de repetición
       intervalRef.current = setInterval(() => {
         onStep();
       }, interval);
@@ -40,18 +36,21 @@ export function useLongPressQuantity(onStep: () => void, delay = 400, interval =
 
   return {
     onMouseDown: (e: React.MouseEvent) => {
-      if (e.button !== 0) return; // Solo clic izquierdo
+      if (e.button !== 0) return;
       start();
     },
     onMouseUp: stop,
     onMouseLeave: stop,
     onTouchStart: (e: React.TouchEvent) => {
-      // Prevenir el menú contextual en móviles si es necesario, 
-      // pero aquí solo queremos detectar el inicio.
+      // Iniciar el long press en táctil
       start();
     },
     onTouchEnd: stop,
-    // Prevenir scroll accidental o comportamientos extraños en móviles
     onTouchCancel: stop,
+    // Prevenir el menú contextual (clic derecho / mantener presionado) 
+    // mientras se ajusta la cantidad
+    onContextMenu: (e: React.MouseEvent | React.TouchEvent) => {
+      e.preventDefault();
+    },
   };
 }
