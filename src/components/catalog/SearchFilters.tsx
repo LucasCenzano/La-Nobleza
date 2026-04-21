@@ -56,7 +56,7 @@ export default function SearchFilters({
                 onCategoriaChange(e.target.value);
                 onEtiquetaChange('');
               }}
-              className="w-full bg-white border border-gray-100 rounded-2xl py-3.5 pl-12 pr-10 appearance-none text-sm font-bold text-gray-800 shadow-sm focus:outline-none focus:ring-4 focus:ring-[var(--gold-main)]/10 focus:border-[var(--gold-main)] transition-all cursor-pointer"
+              className="w-full bg-white border border-gray-100 rounded-2xl py-3.5 px-5 appearance-none text-sm font-bold text-gray-800 shadow-sm focus:outline-none focus:ring-4 focus:ring-[var(--gold-main)]/10 focus:border-[var(--gold-main)] transition-all cursor-pointer"
             >
               <option value="">🛒 Todas las categorías</option>
               {categorias.filter(c => c.slug !== '').map((cat) => (
@@ -66,11 +66,6 @@ export default function SearchFilters({
               ))}
             </select>
             
-            {/* Icono de la categoría seleccionada (Emoji dinámico) */}
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-lg">
-              {activeCategory ? activeCategory.emoji : '🛍️'}
-            </div>
-
             {/* Flecha personalizada */}
             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
               <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
