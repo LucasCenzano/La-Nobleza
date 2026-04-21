@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { Producto, TipoVenta } from '@prisma/client';
 import { formatPrecio, formatPrecioSolo, CategoriaConfigType } from '@/lib/constants';
 import { useCart } from './CartContext';
+import { useLongPressQuantity } from '@/hooks/useLongPressQuantity';
 
 // ─── Framing helpers (mirrors ImageUploader logic) ─────────────────────────
 interface ImageFraming { x: number; y: number; zoom: number; }
@@ -144,6 +145,25 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
       setInstrucciones('');
     }
   }, [isDetailOpen]);
+
+  // ─── Handlers para cantidad con Long Press ───
+  const increment = () => {
+    setQuantity((q: number) => {
+      const next = Math.round((q + parsedStep) * 1000) / 1000;
+      if (stock !== null && stock !== undefined && next > stock) return stock;
+      return next;
+    });
+  };
+
+  const decrement = () => {
+    setQuantity((q: number) => {
+      const next = Math.round((q - parsedStep) * 1000) / 1000;
+      return next < parsedStep ? parsedStep : next;
+    });
+  };
+
+  const longPressPlus = useLongPressQuantity(increment);
+  const longPressMinus = useLongPressQuantity(decrement);
 
   return (
     <>
@@ -513,10 +533,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
             <div className="border-t border-gray-100 bg-white p-4 pb-safe flex items-center justify-between shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-10 shrink-0">
               <div className="flex items-center gap-3">
                 <button 
-                  onClick={() => setQuantity((q: number) => {
-                    const next = Math.round((q - parsedStep) * 1000) / 1000;
-                    return next < parsedStep ? parsedStep : next;
-                  })}
+                  {...longPressMinus}
                   className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700 active:bg-gray-200 transition-colors shadow-sm"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14"/></svg>
@@ -528,11 +545,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                   <span className="text-[10px] text-gray-500 font-medium ml-0.5 block">{isPeso ? (quantity < 1 ? 'gr' : 'kg') : 'un.'}</span>
                 </div>
                 <button 
-                  onClick={() => setQuantity((q: number) => {
-                    const next = Math.round((q + parsedStep) * 1000) / 1000;
-                    if (stock !== null && stock !== undefined && next > stock) return stock;
-                    return next;
-                  })}
+                  {...longPressPlus}
                   disabled={stock !== null && stock !== undefined && quantity >= stock}
                   className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-sm ${
                     stock !== null && stock !== undefined && quantity >= stock 

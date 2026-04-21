@@ -1,9 +1,59 @@
-'use client';
-import { useCart, calculateItemTotal } from './CartContext';
+import { useCart, calculateItemTotal, CartItem } from './CartContext';
 import Image from 'next/image';
+import { useLongPressQuantity } from '@/hooks/useLongPressQuantity';
+
+function CartItemQuantity({ item }: { item: CartItem }) {
+  const { updateQuantity, removeItem } = useCart();
+  const step = item.tipoVenta === 'PESO' ? (item.incrementoPeso || 0.100) : 1;
+
+  const increment = () => {
+    const next = Math.round((item.cantidad + step) * 1000) / 1000;
+    if (item.stock !== null && item.stock !== undefined && next > item.stock) {
+      updateQuantity(item.productoId, item.instrucciones, item.stock);
+    } else {
+      updateQuantity(item.productoId, item.instrucciones, next);
+    }
+  };
+
+  const decrement = () => {
+    const next = Math.round((item.cantidad - step) * 1000) / 1000;
+    if (next >= (isPeso ? 0.001 : 1)) {
+        updateQuantity(item.productoId, item.instrucciones, next);
+    } else {
+        removeItem(item.productoId, item.instrucciones);
+    }
+  };
+
+  const isPeso = item.tipoVenta === 'PESO';
+  const longPressPlus = useLongPressQuantity(increment);
+  const longPressMinus = useLongPressQuantity(decrement);
+
+  return (
+    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+      <button 
+        {...longPressMinus}
+        className="w-7 h-7 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 active:scale-95 transition-all"
+      >-</button>
+      <span className="text-[13px] font-bold w-[52px] text-center shrink-0">
+        {isPeso 
+          ? (item.cantidad < 1 ? `${Math.round(item.cantidad * 1000)}gr` : `${item.cantidad.toFixed(3).replace(/\.?0+$/, '') || '0'}kg`) 
+          : item.cantidad}
+      </span>
+      <button 
+        {...longPressPlus}
+        disabled={item.stock !== null && item.stock !== undefined && item.cantidad >= item.stock}
+        className={`w-7 h-7 flex items-center justify-center bg-white rounded-md shadow-sm transition-all ${
+          item.stock !== null && item.stock !== undefined && item.cantidad >= item.stock
+            ? 'text-gray-300 cursor-not-allowed'
+            : 'text-gray-600 active:scale-95'
+        }`}
+      >+</button>
+    </div>
+  );
+}
 
 export default function CartDrawer() {
-  const { isCartOpen, setIsCartOpen, items, updateQuantity, removeItem, totalPrice } = useCart();
+  const { isCartOpen, setIsCartOpen, items, removeItem, totalPrice } = useCart();
 
   if (!isCartOpen) return null;
 
@@ -66,7 +116,7 @@ export default function CartDrawer() {
           ) : (
             <div className="flex flex-col gap-4">
               {items.map((item) => (
-                <div key={item.productoId} className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3">
+                <div key={item.productoId + (item.instrucciones || '')} className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3">
                   {/* Imagen */}
                   <div className="w-16 h-16 shrink-0 rounded-xl bg-gray-100 relative overflow-hidden flex items-center justify-center text-2xl">
                     {item.imagenUrl ? (
@@ -97,39 +147,7 @@ export default function CartDrawer() {
 
                     {/* Controles cantidad */}
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
-                        <button 
-                          onClick={() => {
-                            const step = item.tipoVenta === 'PESO' ? (item.incrementoPeso || 0.100) : 1;
-                            const next = Math.round((item.cantidad - step) * 1000) / 1000;
-                            if (next >= step) updateQuantity(item.productoId, item.instrucciones, next);
-                            else removeItem(item.productoId, item.instrucciones);
-                          }}
-                          className="w-7 h-7 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 active:scale-95"
-                        >-</button>
-                        <span className="text-[13px] font-bold w-[52px] text-center shrink-0">
-                          {item.tipoVenta === 'PESO' 
-                            ? (item.cantidad < 1 ? `${Math.round(item.cantidad * 1000)}gr` : `${item.cantidad.toFixed(3).replace(/\.?0+$/, '') || '0'}kg`) 
-                            : item.cantidad}
-                        </span>
-                        <button 
-                          onClick={() => {
-                            const step = item.tipoVenta === 'PESO' ? (item.incrementoPeso || 0.100) : 1;
-                            const next = Math.round((item.cantidad + step) * 1000) / 1000;
-                            if (item.stock !== null && item.stock !== undefined && next > item.stock) {
-                              updateQuantity(item.productoId, item.instrucciones, item.stock);
-                            } else {
-                              updateQuantity(item.productoId, item.instrucciones, next);
-                            }
-                          }}
-                          disabled={item.stock !== null && item.stock !== undefined && item.cantidad >= item.stock}
-                          className={`w-7 h-7 flex items-center justify-center bg-white rounded-md shadow-sm transition-all ${
-                            item.stock !== null && item.stock !== undefined && item.cantidad >= item.stock
-                              ? 'text-gray-300 cursor-not-allowed'
-                              : 'text-gray-600 active:scale-95'
-                          }`}
-                        >+</button>
-                      </div>
+                      <CartItemQuantity item={item} />
                       <button 
                         onClick={() => removeItem(item.productoId, item.instrucciones)}
                         className="text-red-500 p-1 bg-red-50 rounded-lg active:scale-90 ml-auto"
