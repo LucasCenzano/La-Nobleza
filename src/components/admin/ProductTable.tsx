@@ -54,6 +54,7 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
           <tr>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Producto</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Categoría</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Stock</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Precio</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Etiquetas</th>
             <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Activo</th>
@@ -95,6 +96,17 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
                 {/* Category */}
                 <td className="px-4 py-3 hidden sm:table-cell">
                   <span className="badge-orange">{catLabel}</span>
+                </td>
+
+                {/* Stock */}
+                <td className="px-4 py-3">
+                  {p.stock !== null && p.stock !== undefined ? (
+                    <span className={`font-bold ${p.stock <= 0 ? 'text-red-500' : p.stock < 5 ? 'text-amber-600' : 'text-gray-700'}`}>
+                      {p.stock} {p.tipoVenta === 'PESO' ? 'kg' : 'un.'}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400 italic">Ilimitado</span>
+                  )}
                 </td>
 
                 {/* Price */}
