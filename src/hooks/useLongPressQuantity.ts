@@ -10,20 +10,11 @@ import { useCallback, useRef } from 'react';
 export function useLongPressQuantity(onStep: () => void, delay = 5000, interval = 150) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const start = useCallback(() => {
-    if (timeoutRef.current || intervalRef.current) return;
-
-    onStep();
-
-    timeoutRef.current = setTimeout(() => {
-      intervalRef.current = setInterval(() => {
-        onStep();
-      }, interval);
-    }, delay);
-  }, [onStep, delay, interval]);
+  const isPressed = useRef(false);
+  const lastInteractionTime = useRef(0);
 
   const stop = useCallback(() => {
+    isPressed.current = false;
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
@@ -34,22 +25,41 @@ export function useLongPressQuantity(onStep: () => void, delay = 5000, interval 
     }
   }, []);
 
+  const start = useCallback((e: React.PointerEvent | React.MouseEvent | React.TouchEvent) => {
+    // Evitar disparos dobles por eventos emulados (touch + mouse)
+    const now = Date.now();
+    if (now - lastInteractionTime.current < 100) return;
+    lastInteractionTime.current = now;
+
+    // Solo clic izquierdo
+    if ('button' in e && e.button !== 0) return;
+
+    if (isPressed.current) return;
+    isPressed.current = true;
+
+    // Primer paso inmediato
+    onStep();
+
+    // Iniciar el temporizador para el repetición automática
+    timeoutRef.current = setTimeout(() => {
+      if (!isPressed.current) return;
+      intervalRef.current = setInterval(() => {
+        onStep();
+      }, interval);
+    }, delay);
+  }, [onStep, delay, interval]);
+
   return {
-    onMouseDown: (e: React.MouseEvent) => {
-      if (e.button !== 0) return;
-      start();
-    },
-    onMouseUp: stop,
-    onMouseLeave: stop,
-    onTouchStart: (e: React.TouchEvent) => {
-      // Evitar que el navegador emule eventos de mouse (evita el "doble click")
-      if (e.cancelable) e.preventDefault();
-      start();
-    },
-    onTouchEnd: stop,
-    onTouchCancel: stop,
+    // Usamos Pointer Events que es el estándar moderno para Mouse, Touch y Stylus
+    onPointerDown: start,
+    onPointerUp: stop,
+    onPointerLeave: stop,
+    onPointerCancel: stop,
+    // Prevenir el menú contextual para evitar interrupciones
     onContextMenu: (e: React.MouseEvent | React.TouchEvent) => {
       e.preventDefault();
     },
+    // Evitar scroll accidental en botones durante el toque
+    style: { touchAction: 'none' } as React.CSSProperties,
   };
 }
