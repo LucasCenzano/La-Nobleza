@@ -81,81 +81,123 @@ function FramingEditor({
 
   return (
     <div
-      className="absolute inset-0 z-40 flex flex-col bg-black/90 rounded-xl p-3 gap-2.5"
-      onClick={(e) => e.stopPropagation()}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-6 animate-fade-in"
+      onClick={onClose}
     >
-      {/* Live Preview */}
-      <div className="relative flex-1 rounded-lg overflow-hidden bg-gray-900 min-h-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={img.url}
-          alt="preview"
-          className="absolute inset-0 w-full h-full pointer-events-none"
-          style={framingToStyle({ x, y, zoom })}
-        />
-        {/* Crosshair overlay */}
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-          <div className="w-[1px] h-full bg-white/20" />
-          <div className="absolute w-full h-[1px] bg-white/20" />
-          <div className="w-4 h-4 rounded-full border-2 border-white/70 bg-transparent" />
-        </div>
-      </div>
-
-      {/* Controls */}
-      <div className="flex flex-col gap-1.5">
-        {/* Zoom */}
-        <div className="flex items-center gap-2">
-          <span className="text-white/60 text-[10px] w-7 shrink-0">🔍</span>
-          <input
-            type="range" min={1} max={2.5} step={0.05}
-            value={zoom}
-            onChange={(e) => { const v = parseFloat(e.target.value); setZoom(v); apply(x, y, v); }}
-            className="flex-1 accent-brand-400 h-1.5 rounded-full cursor-pointer"
-          />
-          <span className="text-white/60 text-[10px] w-7 text-right shrink-0">{zoom.toFixed(2)}×</span>
+      <div 
+        className="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col animate-slide-up"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-8 pt-8 pb-4 flex items-center justify-between">
+          <div className="flex flex-col">
+            <h3 className="text-xl font-black text-gray-900 leading-tight">Encuadre de Foto</h3>
+            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Ajustar Zoom y Posición</p>
+          </div>
+          <button 
+            onClick={onClose}
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
+          >
+            ✕
+          </button>
         </div>
 
-        {/* X axis */}
-        <div className="flex items-center gap-2">
-          <span className="text-white/60 text-[10px] w-7 shrink-0">↔️</span>
-          <input
-            type="range" min={0} max={100} step={1}
-            value={x}
-            onChange={(e) => { const v = parseInt(e.target.value); setX(v); apply(v, y, zoom); }}
-            className="flex-1 accent-brand-400 h-1.5 rounded-full cursor-pointer"
-          />
-          <span className="text-white/60 text-[10px] w-7 text-right shrink-0">{x}%</span>
+        {/* Live Preview - Large */}
+        <div className="px-8 pb-4">
+          <div className="relative aspect-square rounded-[2rem] overflow-hidden bg-gray-100 border-4 border-gray-50 shadow-inner">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={img.url}
+              alt="preview"
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              style={framingToStyle({ x, y, zoom })}
+            />
+            {/* Crosshair overlay */}
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-30">
+              <div className="w-[1px] h-full bg-white" />
+              <div className="absolute w-full h-[1px] bg-white" />
+              <div className="w-8 h-8 rounded-full border-2 border-white bg-transparent" />
+            </div>
+            
+            {/* Legend */}
+            <div className="absolute bottom-4 left-0 w-full text-center pointer-events-none">
+              <span className="bg-black/40 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full">
+                Vista Previa
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Y axis */}
-        <div className="flex items-center gap-2">
-          <span className="text-white/60 text-[10px] w-7 shrink-0">↕️</span>
-          <input
-            type="range" min={0} max={100} step={1}
-            value={y}
-            onChange={(e) => { const v = parseInt(e.target.value); setY(v); apply(x, v, zoom); }}
-            className="flex-1 accent-brand-400 h-1.5 rounded-full cursor-pointer"
-          />
-          <span className="text-white/60 text-[10px] w-7 text-right shrink-0">{y}%</span>
-        </div>
-      </div>
+        {/* Controls Panel */}
+        <div className="px-8 pb-10 flex flex-col gap-6">
+          <div className="bg-gray-50 rounded-3xl p-6 flex flex-col gap-5 border border-gray-100">
+            {/* Zoom Slider */}
+            <div className="flex flex-col gap-2.5">
+              <div className="flex justify-between items-center px-1">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                  <span className="text-sm">🔍</span> Zoom
+                </label>
+                <span className="text-[13px] font-black text-brand-600">{zoom.toFixed(2)}×</span>
+              </div>
+              <input
+                type="range" min={1} max={2.5} step={0.05}
+                value={zoom}
+                onChange={(e) => { const v = parseFloat(e.target.value); setZoom(v); apply(x, y, v); }}
+                className="w-full h-2 rounded-full appearance-none bg-gray-200 accent-brand-500 cursor-pointer"
+              />
+            </div>
 
-      {/* Action buttons */}
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={reset}
-          className="flex-1 text-[11px] font-bold py-1.5 rounded-lg bg-white/10 text-white/70 hover:bg-white/20 transition-colors"
-        >
-          🔄 Reset
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex-1 text-[11px] font-bold py-1.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition-colors"
-        >
-          ✅ Listo
-        </button>
+            {/* Horizontal Axis */}
+            <div className="flex flex-col gap-2.5">
+              <div className="flex justify-between items-center px-1">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                  <span className="text-sm">↔️</span> Horizontal
+                </label>
+                <span className="text-[13px] font-black text-gray-600">{x}%</span>
+              </div>
+              <input
+                type="range" min={0} max={100} step={1}
+                value={x}
+                onChange={(e) => { const v = parseInt(e.target.value); setX(v); apply(v, y, zoom); }}
+                className="w-full h-2 rounded-full appearance-none bg-gray-200 accent-gray-500 cursor-pointer"
+              />
+            </div>
+
+            {/* Vertical Axis */}
+            <div className="flex flex-col gap-2.5">
+              <div className="flex justify-between items-center px-1">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                  <span className="text-sm">↕️</span> Vertical
+                </label>
+                <span className="text-[13px] font-black text-gray-600">{y}%</span>
+              </div>
+              <input
+                type="range" min={0} max={100} step={1}
+                value={y}
+                onChange={(e) => { const v = parseInt(e.target.value); setY(v); apply(x, v, zoom); }}
+                className="w-full h-2 rounded-full appearance-none bg-gray-200 accent-gray-500 cursor-pointer"
+              />
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-4">
+            <button
+              type="button"
+              onClick={reset}
+              className="flex-1 px-4 py-4 rounded-2xl bg-gray-100 text-gray-600 font-bold text-sm hover:bg-gray-200 active:scale-95 transition-all"
+            >
+              🔄 Restaurar
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-4 rounded-2xl bg-[var(--black-charcoal)] text-white font-bold text-sm shadow-lg shadow-black/20 hover:translate-y-[-2px] active:scale-95 transition-all"
+            >
+              ✅ Guardar Cambios
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
