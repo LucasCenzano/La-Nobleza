@@ -117,12 +117,17 @@ export default function CartDrawer() {
                             const step = item.tipoVenta === 'PESO' ? (item.incrementoPeso || 0.100) : 1;
                             const next = Math.round((item.cantidad + step) * 1000) / 1000;
                             if (item.stock !== null && item.stock !== undefined && next > item.stock) {
-                              updateQuantity(item.productoId, item.instrucciones, Math.max(item.stock, step));
+                              updateQuantity(item.productoId, item.instrucciones, item.stock);
                             } else {
                               updateQuantity(item.productoId, item.instrucciones, next);
                             }
                           }}
-                          className="w-7 h-7 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 active:scale-95"
+                          disabled={item.stock !== null && item.stock !== undefined && item.cantidad >= item.stock}
+                          className={`w-7 h-7 flex items-center justify-center bg-white rounded-md shadow-sm transition-all ${
+                            item.stock !== null && item.stock !== undefined && item.cantidad >= item.stock
+                              ? 'text-gray-300 cursor-not-allowed'
+                              : 'text-gray-600 active:scale-95'
+                          }`}
                         >+</button>
                       </div>
                       <button 

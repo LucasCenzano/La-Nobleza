@@ -71,22 +71,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
       // Find item with same ID AND same instrucciones
       const existing = prev.find(i => i.productoId === newItem.productoId && i.instrucciones === newItem.instrucciones);
       if (existing) {
-        return prev.map(i => 
-          (i.productoId === newItem.productoId && i.instrucciones === newItem.instrucciones)
-            ? {
-                ...i,
-                cantidad: i.cantidad + newItem.cantidad,
-                // Siempre actualizar los datos de promo del producto por si cambiaron
-                precioFinal: newItem.precioFinal,
-                promoCantidadRequerida: newItem.promoCantidadRequerida,
-                promoPrecioTotal: newItem.promoPrecioTotal,
-                incrementoPeso: newItem.incrementoPeso,
-                stock: newItem.stock,
-              } 
-            : i
-        );
+        return prev.map(i => {
+          if (i.productoId === newItem.productoId && i.instrucciones === newItem.instrucciones) {
+            let nextCantidad = i.cantidad + newItem.cantidad;
+            // Cap at stock if it exists
+            if (newItem.stock !== null && newItem.stock !== undefined) {
+              nextCantidad = Math.min(nextCantidad, newItem.stock);
+            }
+            
+            return {
+              ...i,
+              cantidad: nextCantidad,
+              // Siempre actualizar los datos de promo del producto por si cambiaron
+              precioFinal: newItem.precioFinal,
+              promoCantidadRequerida: newItem.promoCantidadRequerida,
+              promoPrecioTotal: newItem.promoPrecioTotal,
+              incrementoPeso: newItem.incrementoPeso,
+              stock: newItem.stock,
+            };
+          }
+          return i;
+        });
       }
-      return [...prev, newItem];
+      
+      // For new item, also cap at stock just in case
+      let finalItem = { ...newItem };
+      if (newItem.stock !== null && newItem.stock !== undefined) {
+        finalItem.cantidad = Math.min(newItem.cantidad, newItem.stock);
+      }
+      return [...prev, finalItem];
     });
   };
 
@@ -95,7 +108,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeItem(productoId, instrucciones);
       return;
     }
-    setItems(prev => prev.map(i => (i.productoId === productoId && i.instrucciones === instrucciones) ? { ...i, cantidad } : i));
+    setItems(prev => prev.map(i => {
+      if (i.productoId === productoId && i.instrucciones === instrucciones) {
+        let nextCantidad = cantidad;
+        if (i.stock !== null && i.stock !== undefined) {
+          nextCantidad = Math.min(nextCantidad, i.stock);
+        }
+        return { ...i, cantidad: nextCantidad };
+      }
+      return i;
+    }));
   };
 
   const removeItem = (productoId: string, instrucciones: string | undefined) => {

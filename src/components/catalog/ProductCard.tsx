@@ -71,10 +71,12 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
   const parsedStep    = isPeso ? (incrementoPeso || 0.100) : 1;
   
   const initialQuantity = (() => {
-    if (!isPeso) return 1;
-    let fallback = 1;
-    if (stock !== null && stock !== undefined && fallback > stock) {
-      fallback = Math.max(stock, parsedStep);
+    const step = isPeso ? (incrementoPeso || 0.100) : 1;
+    let fallback = isPeso ? 1 : 1;
+    if (stock !== null && stock !== undefined) {
+      if (fallback > stock) {
+        fallback = stock;
+      }
     }
     return fallback;
   })();
@@ -207,6 +209,13 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                 {tag}
               </div>
             ))}
+            
+            {/* Out of stock badge */}
+            {stock !== null && stock !== undefined && stock <= 0 && (
+              <div className="card-product__badge-tag" style={{ backgroundColor: '#ef4444', color: '#ffffff' }}>
+                AGOTADO
+              </div>
+            )}
           </div>
         </div>
 
@@ -521,10 +530,15 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                 <button 
                   onClick={() => setQuantity((q: number) => {
                     const next = Math.round((q + parsedStep) * 1000) / 1000;
-                    if (stock !== null && stock !== undefined && next > stock) return Math.max(stock, parsedStep);
+                    if (stock !== null && stock !== undefined && next > stock) return stock;
                     return next;
                   })}
-                  className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700 active:bg-gray-200 transition-colors shadow-sm"
+                  disabled={stock !== null && stock !== undefined && quantity >= stock}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-sm ${
+                    stock !== null && stock !== undefined && quantity >= stock 
+                      ? 'bg-gray-50 text-gray-300 cursor-not-allowed' 
+                      : 'bg-gray-100 text-gray-700 active:bg-gray-200'
+                  }`}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
                 </button>
@@ -548,19 +562,28 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                   setIsDetailOpen(false);
                   setIsCartOpen(true);
                 }}
-                className="flex-1 ml-4 bg-[var(--black-charcoal)] text-white font-bold h-12 rounded-[1rem] flex items-center justify-center gap-2 shadow-xl shadow-black/20 active:scale-[0.98] transition-all whitespace-nowrap"
+                disabled={stock !== null && stock !== undefined && stock <= 0}
+                className={`flex-1 ml-4 text-white font-bold h-12 rounded-[1rem] flex items-center justify-center gap-2 shadow-xl shadow-black/20 active:scale-[0.98] transition-all whitespace-nowrap ${
+                  stock !== null && stock !== undefined && stock <= 0
+                    ? 'bg-gray-400 cursor-not-allowed shadow-none'
+                    : 'bg-[var(--black-charcoal)]'
+                }`}
               >
-                {(() => {
-                  const { total, promoActiva } = calcPromoTotal(quantity);
-                  return (
-                    <>
-                      {promoActiva && <span className="text-[11px] opacity-80">🔥</span>}
-                      Agregar
-                      <span className="opacity-80 font-normal">|</span>
-                      ${total.toLocaleString('es-AR')}
-                    </>
-                  );
-                })()}
+                {stock !== null && stock !== undefined && stock <= 0 ? (
+                  'Sin Stock'
+                ) : (
+                  (() => {
+                    const { total, promoActiva } = calcPromoTotal(quantity);
+                    return (
+                      <>
+                        {promoActiva && <span className="text-[11px] opacity-80">🔥</span>}
+                        Agregar
+                        <span className="opacity-80 font-normal">|</span>
+                        ${total.toLocaleString('es-AR')}
+                      </>
+                    );
+                  })()
+                )}
               </button>
             </div>
           </div>
