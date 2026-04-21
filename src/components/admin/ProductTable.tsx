@@ -63,8 +63,9 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
 
         <tbody className="bg-white divide-y divide-gray-100">
           {productos.map((p) => {
-            const thumb       = p.imagenesUrls?.[0] || p.imagenUrl || null;
-            const hasOferta   = !!p.precioOferta && p.precioOferta > 0 && p.precioOferta < p.precio;
+            const thumbRaw     = p.imagenesUrls?.[0] || p.imagenUrl || null;
+            const thumb        = thumbRaw ? thumbRaw.split('#framing:')[0] : null;
+            const hasOferta    = !!p.precioOferta && p.precioOferta > 0 && p.precioOferta < p.precio;
             const catLabel    = getCategoriaLabel(p.categoria, categorias);
 
             return (

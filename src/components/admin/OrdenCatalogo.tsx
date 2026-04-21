@@ -56,7 +56,8 @@ function SortableProductRow({
     zIndex:  isDragging ? 50 : ('auto' as const),
   };
 
-  const thumb = producto.imagenesUrls?.[0] || producto.imagenUrl;
+  const thumbRaw = producto.imagenesUrls?.[0] || producto.imagenUrl;
+  const thumb = thumbRaw ? thumbRaw.split('#framing:')[0] : null;
   const catLabel = getCategoriaLabel(producto.categoria, categorias);
 
   return (

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
+
 import {
   DndContext,
   closestCenter,
@@ -20,16 +20,145 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+export interface ImageFraming {
+  x: number;   // 0–100, default 50 (object-position-x)
+  y: number;   // 0–100, default 50 (object-position-y)
+  zoom: number; // 1.0–2.5, default 1 (css scale on object-fit: cover)
+}
+
 export interface UploadedImage {
   id: string;
   url: string;
   uploaded: boolean;
+  framing?: ImageFraming;
 }
 
 interface Props {
   images: UploadedImage[];
   onChange: (images: UploadedImage[]) => void;
   maxImages?: number;
+}
+
+// ─── Default framing ─────────────────────────────────────────────────────────
+function defaultFraming(): ImageFraming {
+  return { x: 50, y: 50, zoom: 1 };
+}
+
+// ─── Build CSS style for a framed image ──────────────────────────────────────
+export function framingToStyle(framing?: ImageFraming): React.CSSProperties {
+  const f = framing ?? defaultFraming();
+  return {
+    objectFit: 'cover',
+    objectPosition: `${f.x}% ${f.y}%`,
+    transform: f.zoom !== 1 ? `scale(${f.zoom})` : undefined,
+    transformOrigin: `${f.x}% ${f.y}%`,
+  };
+}
+
+// ─── Framing Editor Panel ─────────────────────────────────────────────────────
+function FramingEditor({
+  img,
+  onUpdate,
+  onClose,
+}: {
+  img: UploadedImage;
+  onUpdate: (id: string, framing: ImageFraming) => void;
+  onClose: () => void;
+}) {
+  const f = img.framing ?? defaultFraming();
+  const [x, setX] = useState(f.x);
+  const [y, setY] = useState(f.y);
+  const [zoom, setZoom] = useState(f.zoom);
+
+  function apply(nx: number, ny: number, nz: number) {
+    onUpdate(img.id, { x: nx, y: ny, zoom: nz });
+  }
+
+  function reset() {
+    setX(50); setY(50); setZoom(1);
+    onUpdate(img.id, defaultFraming());
+  }
+
+  return (
+    <div
+      className="absolute inset-0 z-40 flex flex-col bg-black/90 rounded-xl p-3 gap-2.5"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Live Preview */}
+      <div className="relative flex-1 rounded-lg overflow-hidden bg-gray-900 min-h-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={img.url}
+          alt="preview"
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={framingToStyle({ x, y, zoom })}
+        />
+        {/* Crosshair overlay */}
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+          <div className="w-[1px] h-full bg-white/20" />
+          <div className="absolute w-full h-[1px] bg-white/20" />
+          <div className="w-4 h-4 rounded-full border-2 border-white/70 bg-transparent" />
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="flex flex-col gap-1.5">
+        {/* Zoom */}
+        <div className="flex items-center gap-2">
+          <span className="text-white/60 text-[10px] w-7 shrink-0">🔍</span>
+          <input
+            type="range" min={1} max={2.5} step={0.05}
+            value={zoom}
+            onChange={(e) => { const v = parseFloat(e.target.value); setZoom(v); apply(x, y, v); }}
+            className="flex-1 accent-brand-400 h-1.5 rounded-full cursor-pointer"
+          />
+          <span className="text-white/60 text-[10px] w-7 text-right shrink-0">{zoom.toFixed(2)}×</span>
+        </div>
+
+        {/* X axis */}
+        <div className="flex items-center gap-2">
+          <span className="text-white/60 text-[10px] w-7 shrink-0">↔️</span>
+          <input
+            type="range" min={0} max={100} step={1}
+            value={x}
+            onChange={(e) => { const v = parseInt(e.target.value); setX(v); apply(v, y, zoom); }}
+            className="flex-1 accent-brand-400 h-1.5 rounded-full cursor-pointer"
+          />
+          <span className="text-white/60 text-[10px] w-7 text-right shrink-0">{x}%</span>
+        </div>
+
+        {/* Y axis */}
+        <div className="flex items-center gap-2">
+          <span className="text-white/60 text-[10px] w-7 shrink-0">↕️</span>
+          <input
+            type="range" min={0} max={100} step={1}
+            value={y}
+            onChange={(e) => { const v = parseInt(e.target.value); setY(v); apply(x, v, zoom); }}
+            className="flex-1 accent-brand-400 h-1.5 rounded-full cursor-pointer"
+          />
+          <span className="text-white/60 text-[10px] w-7 text-right shrink-0">{y}%</span>
+        </div>
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={reset}
+          className="flex-1 text-[11px] font-bold py-1.5 rounded-lg bg-white/10 text-white/70 hover:bg-white/20 transition-colors"
+        >
+          🔄 Reset
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex-1 text-[11px] font-bold py-1.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition-colors"
+        >
+          ✅ Listo
+        </button>
+      </div>
+    </div>
+  );
 }
 
 // ─── Sortable Image Card ───────────────────────────────────────────────────────
@@ -40,6 +169,7 @@ function SortableImageCard({
   onRemove,
   onMoveLeft,
   onMoveRight,
+  onUpdateFraming,
 }: {
   img: UploadedImage;
   index: number;
@@ -47,9 +177,11 @@ function SortableImageCard({
   onRemove: (id: string) => void;
   onMoveLeft: (id: string) => void;
   onMoveRight: (id: string) => void;
+  onUpdateFraming: (id: string, framing: ImageFraming) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: img.id });
+  const [editingFraming, setEditingFraming] = useState(false);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -59,6 +191,9 @@ function SortableImageCard({
   };
 
   const isCover = index === 0;
+  const hasCustomFraming = img.framing && (
+    img.framing.x !== 50 || img.framing.y !== 50 || img.framing.zoom !== 1
+  );
 
   return (
     <div
@@ -70,22 +205,35 @@ function SortableImageCard({
           : 'border-gray-200'
       }`}
     >
-      {/* Drag handle — covers whole card */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing"
-      />
+      {/* Framing Editor overlay */}
+      {editingFraming && img.uploaded && (
+        <FramingEditor
+          img={img}
+          onUpdate={onUpdateFraming}
+          onClose={() => setEditingFraming(false)}
+        />
+      )}
+
+      {/* Drag handle — covers whole card (only when not editing) */}
+      {!editingFraming && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing"
+        />
+      )}
 
       {/* Image */}
       {img.uploaded ? (
-        <Image
-          src={img.url}
-          alt={`Foto ${index + 1}`}
-          fill
-          className="object-cover pointer-events-none"
-          sizes="160px"
-        />
+        <div className="absolute inset-0 overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={img.url}
+            alt={`Foto ${index + 1}`}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            style={framingToStyle(img.framing)}
+          />
+        </div>
       ) : (
         // objectURL preview while still uploading
         // eslint-disable-next-line @next/next/no-img-element
@@ -109,14 +257,34 @@ function SortableImageCard({
       )}
 
       {/* Cover badge */}
-      {isCover && img.uploaded && (
+      {isCover && img.uploaded && !editingFraming && (
         <span className="absolute bottom-1 left-1 z-20 text-[10px] font-bold bg-brand-600 text-white px-1.5 py-0.5 rounded-md leading-none pointer-events-none">
           PORTADA
         </span>
       )}
 
+      {/* Custom framing indicator */}
+      {hasCustomFraming && !editingFraming && (
+        <span className="absolute bottom-1 right-1 z-20 text-[9px] font-bold bg-amber-500 text-white px-1 py-0.5 rounded leading-none pointer-events-none">
+          ✂️
+        </span>
+      )}
+
+      {/* ── Framing adjust button ── */}
+      {img.uploaded && !editingFraming && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setEditingFraming(true); }}
+          className="absolute top-1 left-1 z-30 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center text-[11px] hover:bg-amber-500 transition-colors opacity-0 group-hover:opacity-100"
+          aria-label="Ajustar encuadre"
+          title="Ajustar encuadre / zoom"
+        >
+          ✂️
+        </button>
+      )}
+
       {/* ── Native UI Reorder Buttons ── */}
-      {img.uploaded && totalImages > 1 && (
+      {img.uploaded && totalImages > 1 && !editingFraming && (
         <div className="absolute top-1/2 -translate-y-1/2 left-0 w-full flex justify-between px-1 z-30 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto">
           <button
             type="button"
@@ -140,14 +308,16 @@ function SortableImageCard({
       )}
 
       {/* Remove button — visible on hover */}
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); onRemove(img.id); }}
-        className="absolute top-1 right-1 z-30 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center text-xs hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
-        aria-label="Eliminar imagen"
-      >
-        ✕
-      </button>
+      {!editingFraming && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onRemove(img.id); }}
+          className="absolute top-1 right-1 z-30 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center text-xs hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+          aria-label="Eliminar imagen"
+        >
+          ✕
+        </button>
+      )}
     </div>
   );
 }
@@ -322,6 +492,13 @@ export default function ImageUploader({ images, onChange, maxImages = 8 }: Props
     onChange(arr);
   }
 
+  function handleUpdateFraming(id: string, framing: ImageFraming) {
+    const updated = images.map((img) =>
+      img.id === id ? { ...img, framing } : img,
+    );
+    onChange(updated);
+  }
+
   const canAddMore = images.length < maxImages;
 
   return (
@@ -354,6 +531,7 @@ export default function ImageUploader({ images, onChange, maxImages = 8 }: Props
                   onRemove={handleRemove}
                   onMoveLeft={(id) => handleMoveManual(id, -1)}
                   onMoveRight={(id) => handleMoveManual(id, 1)}
+                  onUpdateFraming={handleUpdateFraming}
                 />
               ))}
 
@@ -399,7 +577,7 @@ export default function ImageUploader({ images, onChange, maxImages = 8 }: Props
       {images.length > 0 && (
         <p className="text-xs text-gray-400">
           🖱️ Arrastrá para reordenar · La primera es la{' '}
-          <strong className="text-gray-600">portada</strong> · Máx {maxImages} fotos
+          <strong className="text-gray-600">portada</strong> · Hover → ✂️ para ajustar encuadre · Máx {maxImages} fotos
         </p>
       )}
 

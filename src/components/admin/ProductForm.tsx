@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Producto, TipoVenta } from '@prisma/client';
 import { TIPO_VENTA_LABELS, ETIQUETAS, EtiquetaSlug, CategoriaConfigType } from '@/lib/constants';
-import ImageUploader, { UploadedImage } from '@/components/admin/ImageUploader';
+import ImageUploader, { UploadedImage, ImageFraming } from '@/components/admin/ImageUploader';
 import ProductCard from '@/components/catalog/ProductCard';
 
 interface ProductFormProps {
@@ -14,8 +14,29 @@ interface ProductFormProps {
 
 const TIPOS_VENTA = Object.entries(TIPO_VENTA_LABELS) as [TipoVenta, string][];
 
+// Parse framing from URL fragment: #framing:x,y,zoom
+function parseFramingFromUrl(rawUrl: string): { url: string; framing?: ImageFraming } {
+  const hashIdx = rawUrl.indexOf('#framing:');
+  if (hashIdx === -1) return { url: rawUrl };
+  const url = rawUrl.slice(0, hashIdx);
+  const parts = rawUrl.slice(hashIdx + 9).split(',').map(Number);
+  if (parts.length === 3 && parts.every((n) => !isNaN(n))) {
+    return { url, framing: { x: parts[0], y: parts[1], zoom: parts[2] } };
+  }
+  return { url };
+}
+
+function framingToSuffix(framing?: ImageFraming): string {
+  if (!framing) return '';
+  if (framing.x === 50 && framing.y === 50 && framing.zoom === 1) return '';
+  return `#framing:${framing.x},${framing.y},${framing.zoom}`;
+}
+
 function urlsToImages(urls: string[]): UploadedImage[] {
-  return urls.map((url) => ({ id: `existing-${url}`, url, uploaded: true }));
+  return urls.map((rawUrl) => {
+    const { url, framing } = parseFramingFromUrl(rawUrl);
+    return { id: `existing-${url}`, url, uploaded: true, framing };
+  });
 }
 
 export default function ProductForm({ initialData, mode }: ProductFormProps) {
@@ -110,7 +131,7 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     }
 
     setLoading(true);
-    const imagenesUrls = images.map((img) => img.url);
+    const imagenesUrls = images.map((img) => img.url + framingToSuffix(img.framing));
 
     // Auto-add OFERTA etiqueta
     let finalEtiquetas = [...etiquetas];
@@ -187,7 +208,7 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     activo: form.activo,
     etiquetas: finalPreviewEtiquetas,
     imagenUrl: images[0]?.url || null,
-    imagenesUrls: images.map(i => i.url),
+    imagenesUrls: images.map(i => i.url + framingToSuffix(i.framing)),
   } as null | any;
 
   const SECTIONS = [

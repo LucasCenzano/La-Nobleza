@@ -73,7 +73,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (existing) {
         return prev.map(i => 
           (i.productoId === newItem.productoId && i.instrucciones === newItem.instrucciones)
-            ? { ...i, cantidad: i.cantidad + newItem.cantidad } 
+            ? {
+                ...i,
+                cantidad: i.cantidad + newItem.cantidad,
+                // Siempre actualizar los datos de promo del producto por si cambiaron
+                precioFinal: newItem.precioFinal,
+                promoCantidadRequerida: newItem.promoCantidadRequerida,
+                promoPrecioTotal: newItem.promoPrecioTotal,
+                incrementoPeso: newItem.incrementoPeso,
+                stock: newItem.stock,
+              } 
             : i
         );
       }

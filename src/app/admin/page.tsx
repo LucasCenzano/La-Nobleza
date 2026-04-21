@@ -151,7 +151,8 @@ export default async function AdminDashboardPage() {
                 <p className="text-sm text-gray-400 py-4 text-center">Sin productos aún</p>
               ) : (
                 recientes.map((p) => {
-                  const thumb = (p as any).imagenesUrls?.[0] || p.imagenUrl;
+                  const thumbRaw = (p as any).imagenesUrls?.[0] || p.imagenUrl;
+                  const thumb = thumbRaw ? thumbRaw.split('#framing:')[0] : null;
                   const hasOferta = !!(p as any).precioOferta;
                   return (
                     <div key={p.id} className="flex items-center gap-3 py-3">

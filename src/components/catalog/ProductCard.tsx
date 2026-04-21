@@ -1,10 +1,34 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+
+
 import { Producto, TipoVenta } from '@prisma/client';
 import { formatPrecio, formatPrecioSolo, CategoriaConfigType } from '@/lib/constants';
 import { useCart } from './CartContext';
+
+// ─── Framing helpers (mirrors ImageUploader logic) ─────────────────────────
+interface ImageFraming { x: number; y: number; zoom: number; }
+
+function parseFraming(rawUrl: string): { url: string; framing?: ImageFraming } {
+  const hashIdx = rawUrl.indexOf('#framing:');
+  if (hashIdx === -1) return { url: rawUrl };
+  const url = rawUrl.slice(0, hashIdx);
+  const parts = rawUrl.slice(hashIdx + 9).split(',').map(Number);
+  if (parts.length === 3 && parts.every((n) => !isNaN(n))) {
+    return { url, framing: { x: parts[0], y: parts[1], zoom: parts[2] } };
+  }
+  return { url };
+}
+
+function framingStyle(framing?: ImageFraming): React.CSSProperties {
+  if (!framing) return {};
+  return {
+    objectPosition: `${framing.x}% ${framing.y}%`,
+    transform: framing.zoom !== 1 ? `scale(${framing.zoom})` : undefined,
+    transformOrigin: `${framing.x}% ${framing.y}%`,
+  };
+}
 
 interface ProductCardProps {
   producto: Producto & { imagenesUrls?: string[]; etiquetas?: string[] };
@@ -57,9 +81,34 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
   
   const precioFinal   = Math.round(precioOferta && precioOferta > 0 ? precioOferta : precio);
   const [quantity, setQuantity] = useState(initialQuantity);
-  const allImages     = (imagenesUrls?.length ? imagenesUrls : (imagenUrl ? [imagenUrl] : [])) as string[];
-  const cardImage     = allImages[0];
-  const detailImage   = allImages[currentImageIndex] || cardImage;
+
+  // Calcula el total del item aplicando la promo si corresponde (mismo algoritmo que calculateItemTotal)
+  function calcPromoTotal(qty: number): { total: number; promoActiva: boolean } {
+    const basePrice = precioFinal;
+    if (promoCantidadRequerida && promoPrecioTotal) {
+      const qtyR = Math.round(qty * 1000) / 1000;
+      const req  = Number(promoCantidadRequerida);
+      if (qtyR >= req) {
+        const combos = Math.floor(qtyR / req);
+        const resto  = Math.round((qtyR - combos * req) * 1000) / 1000;
+        const total  = Math.round(combos * Number(promoPrecioTotal) + resto * basePrice);
+        return { total, promoActiva: true };
+      }
+    }
+    return { total: Math.round(basePrice * qty), promoActiva: false };
+  }
+
+  const allImagesRaw = (imagenesUrls?.length ? imagenesUrls : (imagenUrl ? [imagenUrl] : [])) as string[];
+  // Parse framing from URL fragments
+  const allImages = allImagesRaw.map((raw) => {
+    const { url, framing } = parseFraming(raw);
+    return { url, framing };
+  });
+  const cardImage = allImages[0]?.url || null;
+  const cardFraming = allImages[0]?.framing;
+  const detailImageData = allImages[currentImageIndex] || allImages[0];
+  const detailImage = detailImageData?.url || null;
+  const detailFraming = detailImageData?.framing;
   const [instrucciones, setInstrucciones] = useState('');
   
   const hasOferta     = !!precioOferta && precioOferta > 0 && precioOferta < precio;
@@ -109,14 +158,16 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
           style={{ aspectRatio: '4 / 3', backgroundColor: catBg }}
         >
           {cardImage ? (
-            <Image
-              src={cardImage}
-              alt={nombre}
-              fill
-              loading="lazy"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover transition-transform duration-[450ms] ease-out group-hover:scale-[1.06] pointer-events-none"
-            />
+            <div className="absolute inset-0 overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={cardImage}
+                alt={nombre}
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-[450ms] ease-out group-hover:scale-[1.06] pointer-events-none"
+                style={framingStyle(cardFraming)}
+              />
+            </div>
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center opacity-25">
               <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
@@ -249,15 +300,17 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
               >
                 {detailImage ? (
                   <>
-                    <Image
-                      key={currentImageIndex}
-                      src={detailImage}
-                      alt={nombre}
-                      fill
-                      loading="lazy"
-                      sizes="(max-width: 640px) 100vw, 400px"
-                      className="object-cover transition-opacity duration-300 animate-fade-in"
-                    />
+                    <div className="absolute inset-0 overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        key={currentImageIndex}
+                        src={detailImage}
+                        alt={nombre}
+                        loading="lazy"
+                        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 animate-fade-in pointer-events-none"
+                        style={framingStyle(detailFraming)}
+                      />
+                    </div>
                     
                     {allImages.length > 1 && (
                       <div className="absolute bottom-3 right-3 bg-white/80 backdrop-blur text-gray-800 text-xs px-3 py-1.5 rounded-full font-bold shadow-sm flex items-center gap-1.5 pointer-events-none">
@@ -268,7 +321,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                     
                     {allImages.length > 1 && (
                       <div className="absolute bottom-4 left-0 w-full flex justify-center gap-1.5 pointer-events-none">
-                        {allImages.map((_: string, idx: number) => (
+                        {allImages.map((_: { url: string; framing?: ImageFraming }, idx: number) => (
                            <div 
                              key={idx} 
                              className={`h-1.5 rounded-full transition-all duration-300 ${
@@ -359,6 +412,32 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                       Precio calculado por Unidad
                     </span>
                   )}
+
+                  {/* ── Promo status indicator ── */}
+                  {promoCantidadRequerida && promoPrecioTotal && (() => {
+                    const req  = Number(promoCantidadRequerida);
+                    const qtyR = Math.round(quantity * 1000) / 1000;
+                    const { promoActiva } = calcPromoTotal(quantity);
+                    const faltan = Math.round((req - qtyR) * 1000) / 1000;
+                    const unidad = isPeso ? 'kg' : 'un.';
+
+                    if (promoActiva) {
+                      return (
+                        <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold animate-fade-in"
+                          style={{ background: 'linear-gradient(135deg,#fef3c7,#fde68a)', color: '#92400e', border: '1.5px solid rgba(212,175,55,0.4)' }}>
+                          <span className="text-base">🔥</span>
+                          <span>¡Combo aplicado! ${Number(promoPrecioTotal).toLocaleString('es-AR')} por {req}{unidad}</span>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium"
+                        style={{ background: '#f9fafb', color: '#6b7280', border: '1.5px dashed #d1d5db' }}>
+                        <span className="text-base">💡</span>
+                        <span>Llevando {faltan > 0 ? `${faltan} ${unidad} más` : `${req}${unidad}`} pagás solo <strong>${Number(promoPrecioTotal).toLocaleString('es-AR')}</strong></span>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {descripcion && (
@@ -471,9 +550,17 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
                 }}
                 className="flex-1 ml-4 bg-[var(--black-charcoal)] text-white font-bold h-12 rounded-[1rem] flex items-center justify-center gap-2 shadow-xl shadow-black/20 active:scale-[0.98] transition-all whitespace-nowrap"
               >
-                Agregar
-                <span className="opacity-80 font-normal">|</span>
-                ${Math.round(precioFinal * quantity).toLocaleString('es-AR')}
+                {(() => {
+                  const { total, promoActiva } = calcPromoTotal(quantity);
+                  return (
+                    <>
+                      {promoActiva && <span className="text-[11px] opacity-80">🔥</span>}
+                      Agregar
+                      <span className="opacity-80 font-normal">|</span>
+                      ${total.toLocaleString('es-AR')}
+                    </>
+                  );
+                })()}
               </button>
             </div>
           </div>
@@ -502,19 +589,17 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
 
           {/* Swipeable Gallery Container */}
           <div className="flex-1 w-full h-full flex overflow-x-auto snap-x snap-mandatory scroll-x-hide">
-            {allImages.map((img: string, i: number) => (
+            {allImages.map((img: { url: string; framing?: ImageFraming }, i: number) => (
               <div 
                 key={i} 
                 className="min-w-full w-full h-full snap-center flex items-center justify-center p-2 relative"
               >
               <div className="relative w-full h-4/5 flex items-center justify-center">
-                <Image
-                  src={img}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={img.url}
                   alt={`Imagen ${i+1}`}
-                  fill
-                  className="object-contain"
-                  sizes="100vw"
-                  priority={i === 0}
+                  className="w-full h-full object-contain"
                 />
               </div>
               </div>
