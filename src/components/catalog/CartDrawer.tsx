@@ -1,3 +1,4 @@
+'use client';
 import { useCart, calculateItemTotal, CartItem } from './CartContext';
 import Image from 'next/image';
 import { useLongPressQuantity } from '@/hooks/useLongPressQuantity';
@@ -5,6 +6,7 @@ import { useLongPressQuantity } from '@/hooks/useLongPressQuantity';
 function CartItemQuantity({ item }: { item: CartItem }) {
   const { updateQuantity, removeItem } = useCart();
   const step = item.tipoVenta === 'PESO' ? (item.incrementoPeso || 0.100) : 1;
+  const isPeso = item.tipoVenta === 'PESO';
 
   const increment = () => {
     const next = Math.round((item.cantidad + step) * 1000) / 1000;
