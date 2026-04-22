@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
+import { TipoVenta } from '@prisma/client';
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -26,7 +28,7 @@ export async function POST(req: Request) {
         descripcion: p.descripcion || null,
         precio: Number(p.precio) || 0,
         categoria: p.categoria || 'OTROS',
-        tipoVenta: p.tipoVenta === 'PESO' ? 'PESO' : 'UNIDAD',
+        tipoVenta: p.tipoVenta === 'PESO' ? TipoVenta.PESO : TipoVenta.UNIDAD,
         stock: p.stock !== undefined && p.stock !== null && p.stock !== '' ? Number(p.stock) : null,
         activo: p.activo !== undefined ? Boolean(p.activo) : true,
       };
