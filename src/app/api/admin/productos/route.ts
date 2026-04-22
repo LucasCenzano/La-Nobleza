@@ -13,10 +13,11 @@ export async function GET() {
     etiquetas: true, solicitaInstrucciones: true, opcionesTitulo: true,
     opcionesValores: true, promoPersonalizada: true, promoCantidadRequerida: true,
     promoPrecioTotal: true, activo: true, orden: true, createdAt: true, updatedAt: true,
-    imagenUrl: true, imagenesUrls: true
+    imagenUrl: true, imagenesUrls: true, imagenesFraming: true
   };
 
   const productosData = await prisma.producto.findMany({
+    where: { eliminado: false },
     orderBy: [{ activo: 'desc' }, { categoria: 'asc' }, { nombre: 'asc' }],
     select: PRODUCT_SELECT,
   });
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       nombre, descripcion, precio, precioOferta,
-      categoria, tipoVenta, stock, incrementoPeso, imagenUrl, imagenesUrls,
+      categoria, tipoVenta, stock, incrementoPeso, imagenUrl, imagenesUrls, imagenesFraming,
       etiquetas, activo,
       solicitaInstrucciones, opcionesTitulo, opcionesValores,
       promoPersonalizada,
@@ -55,6 +56,7 @@ export async function POST(req: NextRequest) {
         incrementoPeso: incrementoPeso !== undefined && incrementoPeso !== null ? Number(incrementoPeso) : null,
         imagenUrl:    imagenUrl    || null,
         imagenesUrls: imagenesUrls ?? [],
+        imagenesFraming: imagenesFraming ?? null,
         etiquetas:    etiquetas    ?? [],
         activo:       Boolean(activo),
         solicitaInstrucciones: Boolean(solicitaInstrucciones),

@@ -21,7 +21,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
   try {
     const {
       nombre, descripcion, precio, precioOferta,
-      categoria, tipoVenta, stock, incrementoPeso, imagenUrl, imagenesUrls,
+      categoria, tipoVenta, stock, incrementoPeso, imagenUrl, imagenesUrls, imagenesFraming,
       etiquetas, activo, solicitaInstrucciones, opcionesTitulo, opcionesValores,
       promoPersonalizada, promoCantidadRequerida, promoPrecioTotal,
     } = await req.json();
@@ -39,6 +39,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
         incrementoPeso: incrementoPeso !== undefined && incrementoPeso !== null ? Number(incrementoPeso) : null,
         imagenUrl:    imagenUrl    || null,
         imagenesUrls: imagenesUrls ?? [],
+        imagenesFraming: imagenesFraming ?? null,
         etiquetas:    etiquetas    ?? [],
         activo:       Boolean(activo),
         solicitaInstrucciones: Boolean(solicitaInstrucciones),
@@ -79,7 +80,11 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   if (!session) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
 
   try {
-    await prisma.producto.delete({ where: { id: params.id } });
+    // Soft Delete: en lugar de borrar la fila, marcamos eliminado como true
+    await prisma.producto.update({ 
+      where: { id: params.id },
+      data: { eliminado: true }
+    });
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('[DELETE /api/admin/productos/[id]]', err);

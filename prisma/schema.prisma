@@ -36,6 +36,7 @@ model Producto {
   incrementoPeso Float?           // paso en kilos o gramos
   imagenUrl    String?            // legado — portada (primer elemento de imagenesUrls)
   imagenesUrls String[]           // array ordenado: [0]=portada, [1..]=adicionales
+  imagenesFraming Json?           // coordenadas de recorte: [{x, y, zoom}]
   etiquetas    String[]           // "NUEVO" | "DESTACADO" | "OFERTA" | "SIN_STOCK"
   
   // Opciones de Pedido Personalizadas
@@ -51,6 +52,7 @@ model Producto {
   promoPrecioTotal       Float?
   
   activo       Boolean   @default(true)
+  eliminado    Boolean   @default(false)
   orden        Int       @default(0)  // posición en el catálogo (0 = primero)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -58,6 +60,7 @@ model Producto {
   @@map("productos")
   @@index([categoria])
   @@index([activo])
+  @@index([eliminado])
 }
 
 // ---------------------------------------------------------------

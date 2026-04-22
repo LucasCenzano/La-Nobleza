@@ -176,12 +176,12 @@ async function getData() {
       etiquetas: true, solicitaInstrucciones: true, opcionesTitulo: true,
       opcionesValores: true, promoPersonalizada: true, promoCantidadRequerida: true,
       promoPrecioTotal: true, activo: true, orden: true, createdAt: true, updatedAt: true,
-      imagenUrl: true, imagenesUrls: true
+      imagenUrl: true, imagenesUrls: true, imagenesFraming: true
     };
 
     const [productosData, categorias] = await Promise.all([
       prisma.producto.findMany({
-        where: { activo: true },
+        where: { activo: true, eliminado: false },
         orderBy: [{ orden: 'asc' }, { nombre: 'asc' }],
         select: PRODUCT_SELECT,
       }),

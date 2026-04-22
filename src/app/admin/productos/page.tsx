@@ -50,7 +50,7 @@ export default async function AdminProductosPage({ searchParams }: PageProps) {
 
   // ─── Build Prisma WHERE ────────────────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const where: any = {};
+  const where: any = { eliminado: false };
 
   if (q)         where.nombre    = { contains: q, mode: 'insensitive' };
   if (categoria) where.categoria = categoria;
@@ -67,7 +67,7 @@ export default async function AdminProductosPage({ searchParams }: PageProps) {
     etiquetas: true, solicitaInstrucciones: true, opcionesTitulo: true,
     opcionesValores: true, promoPersonalizada: true, promoCantidadRequerida: true,
     promoPrecioTotal: true, activo: true, orden: true, createdAt: true, updatedAt: true,
-    imagenUrl: true, imagenesUrls: true
+    imagenUrl: true, imagenesUrls: true, imagenesFraming: true
   };
 
   const [todosProductosData, categorias] = await Promise.all([
@@ -87,7 +87,7 @@ export default async function AdminProductosPage({ searchParams }: PageProps) {
     : todosProductos;
 
   // Global counts (using select to avoid payload size)
-  const allProductosData = await prisma.producto.findMany({ select: { id: true, activo: true, precioOferta: true, imagenUrl: true, imagenesUrls: true } });
+  const allProductosData = await prisma.producto.findMany({ where: { eliminado: false }, select: { id: true, activo: true, precioOferta: true, imagenUrl: true, imagenesUrls: true } });
   const totalAll  = allProductosData.length;
   const activos   = allProductosData.filter((p) => p.activo).length;
   const pausados  = allProductosData.filter((p) => !p.activo).length;

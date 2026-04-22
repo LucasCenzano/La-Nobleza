@@ -27,11 +27,12 @@ export default async function AdminDashboardPage() {
     etiquetas: true, solicitaInstrucciones: true, opcionesTitulo: true,
     opcionesValores: true, promoPersonalizada: true, promoCantidadRequerida: true,
     promoPrecioTotal: true, activo: true, orden: true, createdAt: true, updatedAt: true,
-    imagenUrl: true, imagenesUrls: true
+    imagenUrl: true, imagenesUrls: true, imagenesFraming: true
   };
 
   const [productosData, categorias] = await Promise.all([
     prisma.producto.findMany({
+      where: { eliminado: false },
       orderBy: { updatedAt: 'desc' },
       select: PRODUCT_SELECT,
     }),

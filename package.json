@@ -18,6 +18,8 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@prisma/client": "^5.14.0",
     "@uploadthing/react": "^6.6.0",
+    "@upstash/ratelimit": "^2.0.8",
+    "@vercel/kv": "^3.0.0",
     "bcryptjs": "^2.4.3",
     "browser-image-compression": "^2.0.2",
     "heic2any": "^0.0.4",
