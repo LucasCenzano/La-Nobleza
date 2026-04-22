@@ -21,21 +21,30 @@ export default async function AdminDashboardPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect('/admin/login');
 
-  const [productos, categorias] = await Promise.all([
+  const PRODUCT_SELECT = {
+    id: true, nombre: true, descripcion: true, precio: true, precioOferta: true,
+    categoria: true, tipoVenta: true, stock: true, incrementoPeso: true,
+    etiquetas: true, solicitaInstrucciones: true, opcionesTitulo: true,
+    opcionesValores: true, promoPersonalizada: true, promoCantidadRequerida: true,
+    promoPrecioTotal: true, activo: true, orden: true, createdAt: true, updatedAt: true,
+    imagenUrl: true, imagenesUrls: true
+  };
+
+  const [productosData, categorias] = await Promise.all([
     prisma.producto.findMany({
       orderBy: { updatedAt: 'desc' },
+      select: PRODUCT_SELECT,
     }),
     prisma.categoriaConfig.findMany({
       orderBy: { orden: 'asc' },
-    }),
+    })
   ]);
 
+  const productos = productosData;
   const total    = productos.length;
   const activos  = productos.filter((p) => p.activo).length;
   const pausados = productos.filter((p) => !p.activo).length;
-  const sinFoto  = productos.filter(
-    (p) => !p.imagenUrl && (!(p as any).imagenesUrls?.length),
-  ).length;
+  const sinFoto  = productos.filter((p) => !p.imagenUrl && (!p.imagenesUrls || p.imagenesUrls.length === 0)).length;
   const enOferta = productos.filter((p) => !!(p as any).precioOferta).length;
   const recientes = productos.slice(0, 6); // already sorted by updatedAt desc
 
@@ -151,7 +160,8 @@ export default async function AdminDashboardPage() {
                 <p className="text-sm text-gray-400 py-4 text-center">Sin productos aún</p>
               ) : (
                 recientes.map((p) => {
-                  const thumbRaw = (p as any).imagenesUrls?.[0] || p.imagenUrl;
+                  const hasPhoto = !!p.imagenUrl || (p.imagenesUrls && p.imagenesUrls.length > 0);
+                  const thumbRaw = p.imagenesUrls?.[0] || p.imagenUrl;
                   const thumb = thumbRaw ? thumbRaw.split('#framing:')[0] : null;
                   const hasOferta = !!(p as any).precioOferta;
                   return (

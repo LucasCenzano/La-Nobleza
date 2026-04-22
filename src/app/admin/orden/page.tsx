@@ -11,17 +11,19 @@ export default async function AdminOrdenPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect('/admin/login');
 
-  const [productos, categorias] = await Promise.all([
+  const [productosData, categorias] = await Promise.all([
     prisma.producto.findMany({
       select: {
         id: true, nombre: true, categoria: true,
-        precio: true, activo: true,
-        imagenUrl: true, imagenesUrls: true, orden: true,
+        precio: true, activo: true, orden: true,
+        imagenUrl: true, imagenesUrls: true,
       },
       orderBy: [{ orden: 'asc' }, { nombre: 'asc' }],
     }),
     prisma.categoriaConfig.findMany({ orderBy: [{ orden: 'asc' }] }),
   ]);
+
+  const productos = productosData;
 
   return (
     <>

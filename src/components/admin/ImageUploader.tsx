@@ -364,142 +364,11 @@ function SortableImageCard({
   );
 }
 
-// ─── Convert any format → WebP with canvas compression ───────────────────────
-async function processImage(file: File): Promise<File> {
-  let work = file;
-
-  // HEIC/HEIF → JPEG conversion (canvas can't decode HEIC natively)
-  const isHeic =
-    file.type === 'image/heic' ||
-    file.type === 'image/heif' ||
-    file.name.toLowerCase().endsWith('.heic') ||
-    file.name.toLowerCase().endsWith('.heif');
-
-  if (isHeic) {
-    const heic2any = (await import('heic2any')).default;
-    const blob = (await heic2any({
-      blob: file,
-      toType: 'image/jpeg',
-      quality: 0.82,
-    })) as Blob;
-    work = new File(
-      [blob],
-      file.name.replace(/\.(heic|heif)$/i, '.jpg'),
-      { type: 'image/jpeg' },
-    );
-  }
-
-  // Canvas → WebP (near-lossless, 60-80% smaller than JPEG)
-  const bitmap = await createImageBitmap(work);
-  const canvas = document.createElement('canvas');
-
-  // Reducción drástica a MAX = 1024 para acelerar los payloads de la base de datos (PostgreSQL/Neon)
-  const MAX = 1024;
-  let { width, height } = bitmap;
-  if (width > MAX || height > MAX) {
-    if (width > height) {
-      height = Math.round((height * MAX) / width);
-      width = MAX;
-    } else {
-      width = Math.round((width * MAX) / height);
-      height = MAX;
-    }
-  }
-  canvas.width = width;
-  canvas.height = height;
-  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, width, height);
-  bitmap.close();
-
-  const blob = await new Promise<Blob>((res) =>
-    canvas.toBlob((b) => res(b!), 'image/webp', 0.80),
-  );
-
-  return new File(
-    [blob],
-    `${work.name.replace(/\.[^.]+$/, '')}.webp`,
-    { type: 'image/webp' },
-  );
-}
-
-// ─── Main Uploader ─────────────────────────────────────────────────────────────
 export default function ImageUploader({ images, onChange, maxImages = 8 }: Props) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [dragOver, setDragOver] = useState(false);
-
-  // Keep a ref that always holds the latest images array so async upload
-  // callbacks can safely read and update it without stale closures.
-  const imagesRef = useRef<UploadedImage[]>(images);
-  useEffect(() => { imagesRef.current = images; }, [images]);
-
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
-
-  async function uploadFile(file: File): Promise<string> {
-    const fd = new FormData();
-    fd.append('file', file);
-    const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
-    if (!res.ok) throw new Error('Upload failed');
-    const { url } = await res.json();
-    return url as string;
-  }
-
-  const processAndUpload = useCallback(
-    async (files: FileList | File[]) => {
-      const current = imagesRef.current;
-      const slots = maxImages - current.length;
-      if (slots <= 0) return;
-
-      const incoming = Array.from(files).slice(0, slots);
-      if (!incoming.length) return;
-
-      // Create placeholders immediately (shows spinners)
-      const placeholders: UploadedImage[] = incoming.map((f) => ({
-        id: `tmp-${crypto.randomUUID()}`,
-        url: URL.createObjectURL(f),
-        uploaded: false,
-      }));
-
-      const withPlaceholders = [...imagesRef.current, ...placeholders];
-      imagesRef.current = withPlaceholders;
-      onChange(withPlaceholders);
-
-      // Process + upload each file in parallel
-      await Promise.all(
-        incoming.map(async (file, i) => {
-          const ph = placeholders[i];
-          try {
-            const processed = await processImage(file);
-            const url = await uploadFile(processed);
-            // Swap placeholder with real URL using the ref for fresh state
-            const updated = imagesRef.current.map((img) =>
-              img.id === ph.id ? { ...img, url, uploaded: true } : img,
-            );
-            imagesRef.current = updated;
-            onChange(updated);
-          } catch (err) {
-            console.error('Error al procesar imagen:', err);
-            const cleaned = imagesRef.current.filter((img) => img.id !== ph.id);
-            imagesRef.current = cleaned;
-            onChange(cleaned);
-          }
-        }),
-      );
-    },
-    [maxImages, onChange],
-  );
-
-  function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.files?.length) processAndUpload(e.target.files);
-    e.target.value = '';
-  }
-
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault();
-    setDragOver(false);
-    if (e.dataTransfer.files.length) processAndUpload(e.dataTransfer.files);
-  }
 
   function handleRemove(id: string) {
     const updated = images.filter((img) => img.id !== id);
@@ -544,15 +413,8 @@ export default function ImageUploader({ images, onChange, maxImages = 8 }: Props
   const canAddMore = images.length < maxImages;
 
   return (
-    <div 
-      className={`flex flex-col gap-4 p-2 rounded-2xl transition-all ${
-        dragOver ? 'bg-brand-50 border-2 border-dashed border-brand-400 scale-[1.01] shadow-inner' : 'border-2 border-transparent'
-      }`}
-      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-      onDragLeave={() => setDragOver(false)}
-      onDrop={handleDrop}
-    >
-      {/* ── Grid of uploaded / uploading images ─────────────────────── */}
+    <div className="flex flex-col gap-4 p-2 rounded-2xl border-2 border-transparent">
+      {/* ── Grid of images ─────────────────────── */}
       {images.length > 0 && (
         <DndContext
           sensors={sensors}
@@ -576,62 +438,78 @@ export default function ImageUploader({ images, onChange, maxImages = 8 }: Props
                   onUpdateFraming={handleUpdateFraming}
                 />
               ))}
-
-              {/* "+ Agregar" slot */}
-              {canAddMore && (
-                <button
-                  type="button"
-                  onClick={() => inputRef.current?.click()}
-                  className="aspect-square rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-1 text-gray-400 hover:border-brand-400 hover:text-brand-500 hover:bg-brand-50 transition-all font-medium"
-                >
-                  <span className="text-2xl leading-none">+</span>
-                  <span className="text-[11px]">Agregar</span>
-                </button>
-              )}
             </div>
           </SortableContext>
         </DndContext>
       )}
 
-      {/* ── Drop zone (empty state) ─────────────────────────────────── */}
+      {/* ── Empty state ─────────────────────────────────── */}
       {images.length === 0 && (
-        <div
-          onClick={() => inputRef.current?.click()}
-          className="border-2 border-dashed border-gray-300 rounded-3xl p-12 flex flex-col items-center justify-center gap-4 cursor-pointer hover:border-brand-400 hover:bg-brand-50/50 transition-all group"
-        >
-          <div className="w-20 h-20 rounded-[2rem] bg-gray-50 flex items-center justify-center text-5xl shadow-sm group-hover:scale-110 group-hover:bg-white transition-transform">
-            📸
+        <div className="border-2 border-dashed border-gray-300 rounded-3xl p-12 flex flex-col items-center justify-center gap-4 bg-gray-50/30">
+          <div className="w-20 h-20 rounded-[2rem] bg-white flex items-center justify-center text-5xl shadow-sm border border-gray-100">
+            🔗
           </div>
           <div className="text-center">
-            <h3 className="text-lg font-black text-gray-800">Arrastrá fotos aquí o hacé clic</h3>
+            <h3 className="text-lg font-black text-gray-800">No hay fotos en este producto</h3>
             <p className="text-sm text-gray-400 mt-1 font-medium">
-              JPG, PNG, WebP o HEIC. Se optimizarán automáticamente.
+              Pegá el link (URL) de una imagen externa abajo para empezar.
             </p>
-            <div className="mt-4 inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm group-hover:border-brand-300 group-hover:text-brand-600 transition-colors">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-              Elegir Archivos
-            </div>
           </div>
         </div>
       )}
 
-      {/* ── Helper text ─────────────────────────────────────────────── */}
+      {/* Helper text */}
       {images.length > 0 && (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-400 mt-2">
           🖱️ Arrastrá para reordenar · La primera es la{' '}
           <strong className="text-gray-600">portada</strong> · Hover → ✂️ para ajustar encuadre · Máx {maxImages} fotos
         </p>
       )}
 
-      {/* Hidden input */}
-      <input
-        ref={inputRef}
-        type="file"
-        multiple
-        accept="image/*,.heic,.heif"
-        className="hidden"
-        onChange={handleFileInput}
-      />
+      {/* External URL Input */}
+      {canAddMore && (
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            type="url"
+            placeholder="Pegá una URL externa (ej: https://...)"
+            className="flex-1 text-sm rounded-xl border-gray-200 focus:ring-brand-500 focus:border-brand-500 py-3 px-4 shadow-sm"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                const val = e.currentTarget.value.trim();
+                if (val && val.startsWith('http')) {
+                  const newImg: UploadedImage = {
+                    id: `ext-${crypto.randomUUID()}`,
+                    url: val,
+                    uploaded: true,
+                  };
+                  onChange([...images, newImg]);
+                  e.currentTarget.value = '';
+                }
+              }
+            }}
+          />
+          <button
+            type="button"
+            className="bg-[var(--black-charcoal)] hover:bg-black text-white font-bold px-5 py-3 rounded-xl whitespace-nowrap active:scale-95 transition-all shadow-md"
+            onClick={(e) => {
+              const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+              const val = input.value.trim();
+              if (val && val.startsWith('http')) {
+                const newImg: UploadedImage = {
+                  id: `ext-${crypto.randomUUID()}`,
+                  url: val,
+                  uploaded: true,
+                };
+                onChange([...images, newImg]);
+                input.value = '';
+              }
+            }}
+          >
+            Añadir URL
+          </button>
+        </div>
+      )}
     </div>
   );
 }

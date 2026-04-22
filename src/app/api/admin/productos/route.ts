@@ -7,23 +7,21 @@ export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
 
-  const productos = await prisma.producto.findMany({
+  const PRODUCT_SELECT = {
+    id: true, nombre: true, descripcion: true, precio: true, precioOferta: true,
+    categoria: true, tipoVenta: true, stock: true, incrementoPeso: true,
+    etiquetas: true, solicitaInstrucciones: true, opcionesTitulo: true,
+    opcionesValores: true, promoPersonalizada: true, promoCantidadRequerida: true,
+    promoPrecioTotal: true, activo: true, orden: true, createdAt: true, updatedAt: true,
+    imagenUrl: true, imagenesUrls: true
+  };
+
+  const productosData = await prisma.producto.findMany({
     orderBy: [{ activo: 'desc' }, { categoria: 'asc' }, { nombre: 'asc' }],
+    select: PRODUCT_SELECT,
   });
 
-  // Limpiar Base64 inmensos para que el Admin cargue instantáneamente
-  const cleanProducts = productos.map(p => {
-    const imagesCount = p.imagenesUrls?.length || (p.imagenUrl ? 1 : 0);
-    const fakeUrls = Array.from({ length: imagesCount }).map((_, i) => `/api/images/${p.id}?idx=${i}`);
-    
-    return {
-      ...p,
-      imagenUrl: fakeUrls[0] || null,
-      imagenesUrls: fakeUrls,
-    };
-  });
-
-  return NextResponse.json(cleanProducts);
+  return NextResponse.json(productosData);
 }
 
 export async function POST(req: NextRequest) {

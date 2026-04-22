@@ -61,28 +61,38 @@ export default async function AdminProductosPage({ searchParams }: PageProps) {
   if (estado === 'en_oferta') where.precioOferta = { not: null };
   // 'sin_foto' is handled post-fetch (array filter)
 
-  const [todosProductos, categorias] = await Promise.all([
+  const PRODUCT_SELECT = {
+    id: true, nombre: true, descripcion: true, precio: true, precioOferta: true,
+    categoria: true, tipoVenta: true, stock: true, incrementoPeso: true,
+    etiquetas: true, solicitaInstrucciones: true, opcionesTitulo: true,
+    opcionesValores: true, promoPersonalizada: true, promoCantidadRequerida: true,
+    promoPrecioTotal: true, activo: true, orden: true, createdAt: true, updatedAt: true,
+    imagenUrl: true, imagenesUrls: true
+  };
+
+  const [todosProductosData, categorias] = await Promise.all([
     prisma.producto.findMany({
       where,
       orderBy: buildOrderBy(sort),
+      select: PRODUCT_SELECT,
     }),
     prisma.categoriaConfig.findMany({ orderBy: [{ orden: 'asc' }] }),
   ]);
 
-  // Post-fetch filter for sin_foto (can't express empty array easily in Prisma where)
+  const todosProductos = todosProductosData;
+
+  // Post-fetch filter for sin_foto
   const productos = estado === 'sin_foto'
-    ? todosProductos.filter(
-        (p) => !p.imagenUrl && (!(p as any).imagenesUrls?.length),
-      )
+    ? todosProductos.filter((p) => !p.imagenUrl && (!p.imagenesUrls?.length))
     : todosProductos;
 
-  // Global counts (always from full DB, not filtered)
-  const allProductos = await prisma.producto.findMany({ select: { activo: true, imagenUrl: true, imagenesUrls: true, precioOferta: true } });
-  const totalAll  = allProductos.length;
-  const activos   = allProductos.filter((p) => p.activo).length;
-  const pausados  = allProductos.filter((p) => !p.activo).length;
-  const sinFoto   = allProductos.filter((p) => !p.imagenUrl && (!(p as any).imagenesUrls?.length)).length;
-  const enOferta  = allProductos.filter((p) => !!(p as any).precioOferta).length;
+  // Global counts (using select to avoid payload size)
+  const allProductosData = await prisma.producto.findMany({ select: { id: true, activo: true, precioOferta: true, imagenUrl: true, imagenesUrls: true } });
+  const totalAll  = allProductosData.length;
+  const activos   = allProductosData.filter((p) => p.activo).length;
+  const pausados  = allProductosData.filter((p) => !p.activo).length;
+  const sinFoto   = allProductosData.filter((p) => !p.imagenUrl && (!p.imagenesUrls?.length)).length;
+  const enOferta  = allProductosData.filter((p) => !!(p as any).precioOferta).length;
 
   const isFiltered = !!(q || estado || categoria || etiqueta);
   const pageTitle  = buildTitle(estado, categoria, etiqueta);

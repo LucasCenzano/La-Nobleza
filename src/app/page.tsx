@@ -167,10 +167,23 @@ async function getData() {
 
   try {
     const { prisma } = await import('@/lib/prisma');
-    const [productos, categorias] = await Promise.all([
+    
+    // Explicitly select only the fields we need, omitting large Base64 strings (imagenUrl, imagenesUrls)
+    // to prevent massive network transfer from Neon Postgres.
+    const PRODUCT_SELECT = {
+      id: true, nombre: true, descripcion: true, precio: true, precioOferta: true,
+      categoria: true, tipoVenta: true, stock: true, incrementoPeso: true,
+      etiquetas: true, solicitaInstrucciones: true, opcionesTitulo: true,
+      opcionesValores: true, promoPersonalizada: true, promoCantidadRequerida: true,
+      promoPrecioTotal: true, activo: true, orden: true, createdAt: true, updatedAt: true,
+      imagenUrl: true, imagenesUrls: true
+    };
+
+    const [productosData, categorias] = await Promise.all([
       prisma.producto.findMany({
         where: { activo: true },
         orderBy: [{ orden: 'asc' }, { nombre: 'asc' }],
+        select: PRODUCT_SELECT,
       }),
       prisma.categoriaConfig.findMany({
         where:   { activo: true },
@@ -179,23 +192,16 @@ async function getData() {
     ]);
 
     // Apply auto-tags for business logic (NUEVO & DESTACADO for items < 30 days)
-    let processedProducts = productos.map((p) => {
+    let processedProducts = productosData.map((p) => {
       const etiquetas = new Set(p.etiquetas || []);
       if (p.createdAt && new Date(p.createdAt) >= thirtyDaysAgo) {
         etiquetas.add('NUEVO');
         etiquetas.add('DESTACADO');
       }
 
-      // Scrub Base64 so they don't bloat the Client payload. 
-      // Point them to our Image API endpoint which caches efficiently.
-      const imagesCount = p.imagenesUrls?.length || (p.imagenUrl ? 1 : 0);
-      const fakeUrls = Array.from({ length: imagesCount }).map((_, i) => `/api/images/${p.id}?idx=${i}`);
-
       return { 
         ...p, 
         etiquetas: Array.from(etiquetas),
-        imagenUrl: fakeUrls[0] || null,
-        imagenesUrls: fakeUrls,
       };
     });
 
