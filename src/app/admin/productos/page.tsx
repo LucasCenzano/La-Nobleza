@@ -6,6 +6,7 @@ import Link from 'next/link';
 import AdminNav from '@/components/admin/AdminNav';
 import ProductTable from '@/components/admin/ProductTable';
 import ProductFilters from '@/components/admin/ProductFilters';
+import ProductImportWrapper from '@/components/admin/ProductImportWrapper';
 import { Suspense } from 'react';
 
 export const dynamic = 'force-dynamic';
@@ -112,9 +113,12 @@ export default async function AdminProductosPage({ searchParams }: PageProps) {
               </p>
             )}
           </div>
-          <Link href="/admin/productos/nuevo" className="btn-primary">
-            ➕ Nuevo Producto
-          </Link>
+          <div className="flex items-center gap-3">
+            <ProductImportWrapper categorias={categorias} />
+            <Link href="/admin/productos/nuevo" className="btn-primary">
+              ➕ Nuevo Producto
+            </Link>
+          </div>
         </div>
 
         {/* ── Mini stat chips (always visible) ────────────────── */}
