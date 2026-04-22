@@ -219,9 +219,9 @@ export default function ProductImportModal({ isOpen, onClose, onImportSuccess, c
           {preview.length > 0 && (
             <div>
               <h3 className="text-gray-900 font-medium mb-2">3. Previsualización ({preview.length} productos)</h3>
-              <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table className="w-full text-sm text-left text-gray-600">
-                  <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
+              <div className="overflow-auto max-h-[400px] rounded-xl border border-gray-200 bg-white shadow-sm relative">
+                <table className="w-full text-sm text-left text-gray-600 relative">
+                  <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200 sticky top-0 z-10 shadow-sm">
                     <tr>
                       <th className="px-4 py-3">Nombre</th>
                       <th className="px-4 py-3">Precio</th>
@@ -231,7 +231,7 @@ export default function ProductImportModal({ isOpen, onClose, onImportSuccess, c
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {preview.slice(0, 10).map((row, idx) => (
+                    {preview.map((row, idx) => (
                       <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
                         <td className="px-4 py-3 font-medium text-gray-900">{row.nombre}</td>
                         <td className="px-4 py-3">${row.precio}</td>
@@ -247,9 +247,6 @@ export default function ProductImportModal({ isOpen, onClose, onImportSuccess, c
                   </tbody>
                 </table>
               </div>
-              {preview.length > 10 && (
-                <p className="text-xs text-gray-500 mt-3 text-center font-medium">Mostrando 10 de {preview.length} productos...</p>
-              )}
             </div>
           )}
         </div>

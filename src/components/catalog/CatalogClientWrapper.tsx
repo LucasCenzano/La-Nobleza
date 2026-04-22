@@ -56,8 +56,11 @@ export default function CatalogClientWrapper({ initialProductos, categorias }: C
   const [tag, setTag] = useState('');
 
   const filtered = useMemo(() => {
+    const normalizeString = (str: string) => 
+      str.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
     return initialProductos.filter((p) => {
-      const matchQ = !q || p.nombre.toLowerCase().includes(q.toLowerCase());
+      const matchQ = !q || normalizeString(p.nombre).includes(normalizeString(q));
       const matchCat = !cat || p.categoria === cat;
       const matchTag = !tag || p.etiquetas?.includes(tag);
       return matchQ && matchCat && matchTag;
