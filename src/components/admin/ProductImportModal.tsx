@@ -8,9 +8,10 @@ interface ProductImportModalProps {
   onClose: () => void;
   onImportSuccess: () => void;
   categorias: any[];
+  productosExistentes: any[];
 }
 
-export default function ProductImportModal({ isOpen, onClose, onImportSuccess, categorias }: ProductImportModalProps) {
+export default function ProductImportModal({ isOpen, onClose, onImportSuccess, categorias, productosExistentes }: ProductImportModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -80,6 +81,7 @@ export default function ProductImportModal({ isOpen, onClose, onImportSuccess, c
       }
 
       return {
+        id: p.id || undefined,
         nombre: p.nombre || 'Producto sin nombre',
         descripcion: p.descripcion || '',
         precio: Number(p.precio) || 0,
@@ -118,27 +120,49 @@ export default function ProductImportModal({ isOpen, onClose, onImportSuccess, c
   };
 
   const downloadTemplate = () => {
-    const ws = xlsx.utils.json_to_sheet([
-      {
-        nombre: 'Pollo Entero',
-        precio: 5000,
-        categoria: 'Pollo Entero',
-        descripcion: 'Pollo fresco por kg',
-        tipoVenta: 'PESO',
-        stock: 50
-      },
-      {
-        nombre: 'Pata Muslo x 3kg',
-        precio: 12000,
-        categoria: 'Combos',
-        descripcion: 'Oferta 3kg',
-        tipoVenta: 'UNIDAD',
-        stock: ''
-      }
-    ]);
+    let dataParaExportar;
+
+    if (productosExistentes && productosExistentes.length > 0) {
+      dataParaExportar = productosExistentes.map((p) => {
+        // Encontrar nombre de la categoría en base al slug
+        const cat = categorias.find(c => c.slug === p.categoria);
+        return {
+          id: p.id,
+          nombre: p.nombre,
+          precio: p.precio,
+          categoria: cat ? cat.nombre : p.categoria,
+          descripcion: p.descripcion || '',
+          tipoVenta: p.tipoVenta,
+          stock: p.stock !== null ? p.stock : ''
+        };
+      });
+    } else {
+      dataParaExportar = [
+        {
+          id: '',
+          nombre: 'Pollo Entero',
+          precio: 5000,
+          categoria: 'Pollo Entero',
+          descripcion: 'Pollo fresco por kg',
+          tipoVenta: 'PESO',
+          stock: 50
+        },
+        {
+          id: '',
+          nombre: 'Pata Muslo x 3kg',
+          precio: 12000,
+          categoria: 'Combos',
+          descripcion: 'Oferta 3kg',
+          tipoVenta: 'UNIDAD',
+          stock: ''
+        }
+      ];
+    }
+
+    const ws = xlsx.utils.json_to_sheet(dataParaExportar);
     const wb = xlsx.utils.book_new();
     xlsx.utils.book_append_sheet(wb, ws, 'Productos');
-    xlsx.writeFile(wb, 'Plantilla_Productos.xlsx');
+    xlsx.writeFile(wb, 'Mis_Productos.xlsx');
   };
 
   return (
@@ -156,14 +180,14 @@ export default function ProductImportModal({ isOpen, onClose, onImportSuccess, c
         <div className="p-6 overflow-y-auto flex-1 bg-gray-50/50">
           <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
             <div>
-              <h3 className="text-gray-900 font-medium mb-1">1. Descarga la plantilla</h3>
-              <p className="text-sm text-gray-500">Usa este archivo como base para cargar tus productos.</p>
+              <h3 className="text-gray-900 font-medium mb-1">1. Descarga tus productos</h3>
+              <p className="text-sm text-gray-500">Usa este archivo para editar precios/stock o agregar nuevos.</p>
             </div>
             <button
               onClick={downloadTemplate}
               className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors whitespace-nowrap border border-gray-200"
             >
-              Descargar Plantilla
+              Descargar Excel
             </button>
           </div>
 

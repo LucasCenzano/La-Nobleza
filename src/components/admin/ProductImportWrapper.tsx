@@ -4,7 +4,7 @@ import { useState } from 'react';
 import ProductImportModal from './ProductImportModal';
 import { useRouter } from 'next/navigation';
 
-export default function ProductImportWrapper({ categorias }: { categorias: any[] }) {
+export default function ProductImportWrapper({ categorias, productos }: { categorias: any[], productos: any[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
 
@@ -24,6 +24,7 @@ export default function ProductImportWrapper({ categorias }: { categorias: any[]
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         categorias={categorias}
+        productosExistentes={productos}
         onImportSuccess={() => {
           router.refresh();
         }}

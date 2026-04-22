@@ -114,7 +114,7 @@ export default async function AdminProductosPage({ searchParams }: PageProps) {
             )}
           </div>
           <div className="flex items-center gap-3">
-            <ProductImportWrapper categorias={categorias} />
+            <ProductImportWrapper categorias={categorias} productos={todosProductosData} />
             <Link href="/admin/productos/nuevo" className="btn-primary">
               ➕ Nuevo Producto
             </Link>
