@@ -21,6 +21,38 @@ const DIAS: { key: string; label: string }[] = [
   { key: 'domingo',   label: 'Domingo'   },
 ];
 
+function TimeInput({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) {
+  return (
+    <div className="flex flex-col gap-0.5 flex-1 min-w-[70px]">
+      <input
+        type="text"
+        value={value || ''}
+        onChange={(e) => {
+          let val = e.target.value.replace(/[^0-9:]/g, '');
+          // Auto-insert colon
+          if (val.length === 2 && !val.includes(':') && (!value || !value.includes(':'))) {
+            val += ':';
+          }
+          if (val.length <= 5) onChange(val);
+        }}
+        onBlur={(e) => {
+           // Basic validation on blur: ensure HH:MM format
+           let val = e.target.value;
+           if (val && !val.includes(':') && val.length <= 2) val = val.padStart(2, '0') + ':00';
+           if (val && val.includes(':')) {
+              const [h, m] = val.split(':');
+              val = `${h.padStart(2, '0')}:${(m || '0').padEnd(2, '0')}`;
+           }
+           if (val && val.length === 5) onChange(val);
+        }}
+        placeholder="00:00"
+        className="input text-sm py-1.5 text-center font-mono focus:ring-1"
+        aria-label={label}
+      />
+    </div>
+  );
+}
+
 const DEFAULT_HORARIOS: Record<string, HorarioDia> = Object.fromEntries(
   DIAS.map(({ key }) => [
     key,
@@ -218,7 +250,7 @@ export default function ConfiguracionForm() {
           <div>
             <h2 className="font-display font-bold text-gray-900 text-lg">🕐 Horarios de atención</h2>
             <p className="text-sm text-gray-500 mt-0.5">
-              Se muestran en el catálogo para que los clientes sepan cuándo pueden comprar
+              Se muestran en el catálogo. <strong>Usar formato 24hs</strong> (ej: 14:00, 20:30).
             </p>
           </div>
           <label className="toggle">
@@ -261,20 +293,16 @@ export default function ConfiguracionForm() {
                 {h.activo ? (
                   <div className="flex flex-col gap-2 w-full sm:w-auto flex-1 pl-12 sm:pl-0">
                     <div className="flex items-center gap-2">
-                      <input
-                        type="time"
-                        value={h.abre}
-                        onChange={(e) => updateHorario(key, { abre: e.target.value })}
-                        className="input text-sm py-1.5 flex-1 p-0 text-center sm:text-left"
-                        aria-label={`${label} apertura`}
+                      <TimeInput 
+                        value={h.abre} 
+                        onChange={(v) => updateHorario(key, { abre: v })} 
+                        label={`${label} apertura`} 
                       />
-                      <span className="text-gray-400 text-sm flex-shrink-0">a</span>
-                      <input
-                        type="time"
-                        value={h.cierra}
-                        onChange={(e) => updateHorario(key, { cierra: e.target.value })}
-                        className="input text-sm py-1.5 flex-1 p-0 text-center sm:text-left"
-                        aria-label={`${label} cierre`}
+                      <span className="text-gray-400 text-xs font-bold flex-shrink-0">A</span>
+                      <TimeInput 
+                        value={h.cierra} 
+                        onChange={(v) => updateHorario(key, { cierra: v })} 
+                        label={`${label} cierre`} 
                       />
                       <label className="hidden sm:flex items-center gap-1.5 text-xs text-gray-500 font-medium ml-2 cursor-pointer">
                         <input
@@ -290,20 +318,16 @@ export default function ConfiguracionForm() {
                     {h.dobleTurno && (
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] bg-gray-100 px-2 py-1 rounded text-gray-500 font-bold uppercase tracking-wider self-center shrink-0">Turno 2</span>
-                        <input
-                          type="time"
-                          value={h.abre2 || '18:00'}
-                          onChange={(e) => updateHorario(key, { abre2: e.target.value })}
-                          className="input text-sm py-1.5 flex-1 p-0 text-center sm:text-left border-dashed"
-                          aria-label={`${label} apertura turno 2`}
+                        <TimeInput 
+                          value={h.abre2 || ''} 
+                          onChange={(v) => updateHorario(key, { abre2: v })} 
+                          label={`${label} apertura turno 2`} 
                         />
-                        <span className="text-gray-400 text-sm flex-shrink-0">a</span>
-                        <input
-                          type="time"
-                          value={h.cierra2 || '22:00'}
-                          onChange={(e) => updateHorario(key, { cierra2: e.target.value })}
-                          className="input text-sm py-1.5 flex-1 p-0 text-center sm:text-left border-dashed"
-                          aria-label={`${label} cierre turno 2`}
+                        <span className="text-gray-400 text-xs font-bold flex-shrink-0">A</span>
+                        <TimeInput 
+                          value={h.cierra2 || ''} 
+                          onChange={(v) => updateHorario(key, { cierra2: v })} 
+                          label={`${label} cierre turno 2`} 
                         />
                       </div>
                     )}
