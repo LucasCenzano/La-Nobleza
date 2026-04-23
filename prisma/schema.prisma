@@ -96,6 +96,9 @@ model ConfiguracionTienda {
   // Horarios de atención
   horariosActivos Boolean  @default(true)
   horarios        Json?    // { lunes: {activo, abre, cierra}, ... }
+  // Mensaje de WhatsApp personalizado
+  mensajeWhatsappIntro  String  @default("*¡Hola La Nobleza!* 👋\nQuiero hacer el siguiente pedido:\n\n")
+  mensajeWhatsappCierre String  @default("Avisame por favor cuándo lo puedo pasar a buscar. ¡Gracias!")
   updatedAt       DateTime @updatedAt
 
   @@map("configuracion_tienda")

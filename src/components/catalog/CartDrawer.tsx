@@ -1,7 +1,11 @@
 'use client';
 import { useCart, calculateItemTotal, CartItem } from './CartContext';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import { useLongPressQuantity } from '@/hooks/useLongPressQuantity';
+
+const DEFAULT_INTRO  = '*¡Hola La Nobleza!* 👋\nQuiero hacer el siguiente pedido:\n\n';
+const DEFAULT_CIERRE = 'Avisame por favor cuándo lo puedo pasar a buscar. ¡Gracias!';
 
 function CartItemQuantity({ item }: { item: CartItem }) {
   const { updateQuantity, removeItem } = useCart();
@@ -55,11 +59,23 @@ function CartItemQuantity({ item }: { item: CartItem }) {
 
 export default function CartDrawer() {
   const { isCartOpen, setIsCartOpen, items, removeItem, totalPrice } = useCart();
+  const [mensajeIntro,  setMensajeIntro]  = useState(DEFAULT_INTRO);
+  const [mensajeCierre, setMensajeCierre] = useState(DEFAULT_CIERRE);
+
+  useEffect(() => {
+    fetch('/api/public/configuracion')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.mensajeWhatsappIntro)  setMensajeIntro(data.mensajeWhatsappIntro);
+        if (data.mensajeWhatsappCierre) setMensajeCierre(data.mensajeWhatsappCierre);
+      })
+      .catch(() => {}); // usa defaults si falla
+  }, []);
 
   if (!isCartOpen) return null;
 
   const handleWhatsApp = () => {
-    let text = '*¡Hola La Nobleza!* 👋\nQuiero hacer el siguiente pedido:\n\n';
+    let text = mensajeIntro;
     
     items.forEach(item => {
       const isPeso = item.tipoVenta === 'PESO';
@@ -81,7 +97,7 @@ export default function CartDrawer() {
     });
 
     text += `\n*Total estimado:* $${totalPrice.toLocaleString('es-AR')}\n\n`;
-    text += 'Avisame por favor cuándo lo puedo pasar a buscar. ¡Gracias!';
+    text += mensajeCierre;
 
     const url = `https://wa.me/5493875875560?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');

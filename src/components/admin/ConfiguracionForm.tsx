@@ -42,22 +42,29 @@ const BANNER_TIPOS = [
   { value: 'CERRADO', label: '🔒 Cerrado',      bg: 'bg-gray-100',  text: 'text-gray-700',   border: 'border-gray-200' },
 ];
 
+const DEFAULT_MENSAJE_INTRO  = '*¡Hola La Nobleza!* 👋\nQuiero hacer el siguiente pedido:\n\n';
+const DEFAULT_MENSAJE_CIERRE = 'Avisame por favor cuándo lo puedo pasar a buscar. ¡Gracias!';
+
 interface Config {
-  bannerActivo:    boolean;
-  bannerTipo:      string;
-  bannerTexto:     string;
-  bannerColor:     string;
-  horariosActivos: boolean;
-  horarios:        Record<string, HorarioDia> | null;
+  bannerActivo:          boolean;
+  bannerTipo:            string;
+  bannerTexto:           string;
+  bannerColor:           string;
+  horariosActivos:       boolean;
+  horarios:              Record<string, HorarioDia> | null;
+  mensajeWhatsappIntro:  string;
+  mensajeWhatsappCierre: string;
 }
 
 const DEFAULT_CONFIG: Config = {
-  bannerActivo:    false,
-  bannerTipo:      'INFO',
-  bannerTexto:     '',
-  bannerColor:     '#f97316',
-  horariosActivos: true,
-  horarios:        DEFAULT_HORARIOS,
+  bannerActivo:          false,
+  bannerTipo:            'INFO',
+  bannerTexto:           '',
+  bannerColor:           '#f97316',
+  horariosActivos:       true,
+  horarios:              DEFAULT_HORARIOS,
+  mensajeWhatsappIntro:  DEFAULT_MENSAJE_INTRO,
+  mensajeWhatsappCierre: DEFAULT_MENSAJE_CIERRE,
 };
 
 export default function ConfiguracionForm() {
@@ -73,7 +80,9 @@ export default function ConfiguracionForm() {
         setConfig({
           ...DEFAULT_CONFIG,
           ...data,
-          horarios: data.horarios ?? DEFAULT_HORARIOS,
+          horarios:              data.horarios              ?? DEFAULT_HORARIOS,
+          mensajeWhatsappIntro:  data.mensajeWhatsappIntro  ?? DEFAULT_MENSAJE_INTRO,
+          mensajeWhatsappCierre: data.mensajeWhatsappCierre ?? DEFAULT_MENSAJE_CIERRE,
         });
         setLoading(false);
       })
@@ -339,6 +348,68 @@ export default function ConfiguracionForm() {
               )}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── Mensaje de WhatsApp ──────────────────────────────────── */}
+      <section className="card p-6 space-y-5">
+        <div>
+          <h2 className="font-display font-bold text-gray-900 text-lg">💬 Mensaje de WhatsApp</h2>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Personalizá el texto que se envía cuando un cliente hace un pedido por WhatsApp
+          </p>
+        </div>
+
+        {/* Intro */}
+        <div>
+          <label className="label">Texto de introducción <span className="text-xs text-gray-400 font-normal ml-1">(aparece antes de la lista de productos)</span></label>
+          <textarea
+            rows={3}
+            value={config.mensajeWhatsappIntro}
+            onChange={(e) => updateBanner({ mensajeWhatsappIntro: e.target.value })}
+            className="input resize-none font-mono text-xs"
+            placeholder={DEFAULT_MENSAJE_INTRO}
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Podés usar *negrita*, _cursiva_ y emojis. Los saltos de línea se respetan.
+          </p>
+        </div>
+
+        {/* Cierre */}
+        <div>
+          <label className="label">Texto de cierre <span className="text-xs text-gray-400 font-normal ml-1">(aparece después del total)</span></label>
+          <textarea
+            rows={2}
+            value={config.mensajeWhatsappCierre}
+            onChange={(e) => updateBanner({ mensajeWhatsappCierre: e.target.value })}
+            className="input resize-none font-mono text-xs"
+            placeholder={DEFAULT_MENSAJE_CIERRE}
+          />
+        </div>
+
+        {/* Botones de reset */}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => updateBanner({ mensajeWhatsappIntro: DEFAULT_MENSAJE_INTRO, mensajeWhatsappCierre: DEFAULT_MENSAJE_CIERRE })}
+            className="text-xs text-gray-500 hover:text-gray-700 underline"
+          >
+            ↩ Restaurar mensaje original
+          </button>
+        </div>
+
+        {/* Preview del mensaje completo */}
+        <div className="bg-[#f0fdf4] border border-green-200 rounded-xl p-4">
+          <p className="text-xs font-semibold text-green-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Vista previa del mensaje completo:
+          </p>
+          <pre className="whitespace-pre-wrap text-xs text-gray-700 font-mono leading-relaxed">{[
+            config.mensajeWhatsappIntro,
+            '• 1x *Pollo Entero*\n  _Subtotal: $3.500_\n• 500 gr *Alitas*\n  _📌 Nota: Bien cocidas_\n  _Subtotal: $1.200_ *(Combo Aplicado)*\n',
+            `\n*Total estimado:* $4.700\n\n`,
+            config.mensajeWhatsappCierre,
+          ].join('')}</pre>
         </div>
       </section>
     </div>

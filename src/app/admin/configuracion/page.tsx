@@ -19,7 +19,7 @@ export default async function AdminConfiguracionPage() {
             Configuración de la Tienda
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Administrá el banner del catálogo y los horarios de atención que se muestran a los clientes.
+            Administrá el banner del catálogo, los horarios de atención y el mensaje de WhatsApp que se envía con cada pedido.
           </p>
         </div>
         <ConfiguracionForm />

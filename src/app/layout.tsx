@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, DM_Serif_Display } from 'next/font/google';
 import './globals.css';
+import { Analytics } from "@vercel/analytics/next"
 
 // ── Optimized font loading via next/font (no render-blocking external requests) ──
 const inter = Inter({
@@ -44,6 +45,7 @@ export default function RootLayout({
         <CartProvider>
           {children}
           <CartDrawer />
+          <Analytics />
         </CartProvider>
       </body>
     </html>
