@@ -89,8 +89,14 @@ export default function CatalogClientWrapper({ initialProductos, categorias }: C
         {/* ── Product Grid ── */}
         {filtered.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
-            {filtered.map((p) => (
-              <ProductCard key={p.id} producto={p} categorias={categorias} />
+            {filtered.map((p, i) => (
+              <div 
+                key={p.id} 
+                className="animate-stagger-slide-up h-full"
+                style={{ animationDelay: `${Math.min(i * 35, 600)}ms` }}
+              >
+                <ProductCard producto={p} categorias={categorias} />
+              </div>
             ))}
           </div>
         ) : (
