@@ -34,6 +34,7 @@ function framingStyle(framing?: ImageFraming): React.CSSProperties {
 interface ProductCardProps {
   producto: Producto & { imagenesUrls?: string[]; etiquetas?: string[] };
   categorias?: CategoriaConfigType[];
+  animationIndex?: number;
 }
 
 const CAT_BG: Record<string, string> = {
@@ -55,11 +56,19 @@ const BADGE_STYLES: Record<string, { bg: string; text: string; label: string }> 
   DESTACADO: { bg: 'rgba(212,175,55,0.15)', text: '#92400e', label: '★ Destacado' },
 };
 
-export default function ProductCard({ producto, categorias }: ProductCardProps) {
+export default function ProductCard({ producto, categorias, animationIndex = 0 }: ProductCardProps) {
   const { addItem, setIsCartOpen } = useCart();
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [ripple, setRipple] = useState<{x: number; y: number} | null>(null);
+
+  function handleCardTap(e: React.MouseEvent<HTMLElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setRipple({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    setTimeout(() => setRipple(null), 500);
+    setIsDetailOpen(true);
+  }
 
   const {
     nombre, descripcion, precio, precioOferta,
@@ -171,8 +180,9 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
            PRODUCT CARD (Grid Item)
          ═══════════════════════════════════════════════════════════ */}
       <article 
-        onClick={() => setIsDetailOpen(true)}
-        className="card-product group flex flex-col h-full cursor-pointer"
+        onClick={handleCardTap}
+        className="card-product group flex flex-col h-full cursor-pointer animate-stagger-slide-up"
+        style={{ animationDelay: `${Math.min(animationIndex * 40, 700)}ms` }}
       >
         {/* ── Product Image ── */}
         <div
@@ -205,7 +215,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
           <div className="absolute top-2.5 left-2.5 flex flex-col items-start gap-1.5 z-10 pointer-events-none">
             {/* Discount badge */}
             {hasOfertaTag && descuento > 0 && (
-              <div className="card-product__badge-discount">
+              <div className="card-product__badge-discount animate-float-badge">
                 -{descuento}%
               </div>
             )}
@@ -237,6 +247,18 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
               </div>
             )}
           </div>
+
+          {/* Ripple effect on tap */}
+          {ripple && (
+            <span
+              className="pointer-events-none absolute rounded-full bg-black/10"
+              style={{
+                width: 120, height: 120,
+                top: ripple.y - 60, left: ripple.x - 60,
+                animation: 'ripple 0.5s ease-out forwards',
+              }}
+            />
+          )}
         </div>
 
         {/* ── Card Content ── */}
@@ -285,7 +307,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
             </div>
 
             {/* Quick-add button */}
-            <div className="flex w-8 h-8 rounded-full bg-[var(--black-charcoal)] items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 shadow-lg shrink-0">
+            <div className="card-quick-add flex w-8 h-8 rounded-full bg-[var(--black-charcoal)] items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 shadow-lg shrink-0">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M12 5v14M5 12h14"/>
               </svg>
@@ -304,7 +326,7 @@ export default function ProductCard({ producto, categorias }: ProductCardProps) 
             if (e.target === e.currentTarget) setIsDetailOpen(false);
           }}
         >
-          <div className="bg-white w-full sm:max-w-md max-h-[95vh] sm:max-h-[85vh] rounded-t-[2rem] sm:rounded-[2rem] overflow-hidden flex flex-col shadow-2xl relative animate-slide-up">
+          <div className="bg-white w-full sm:max-w-md max-h-[95vh] sm:max-h-[85vh] rounded-t-[2rem] sm:rounded-[2rem] overflow-hidden flex flex-col shadow-2xl relative animate-slide-up sm:animate-pop-in">
             
             {/* Header del modal (botón cerrar y drag pill) */}
             <div className="absolute top-0 w-full z-10 flex flex-col items-center pt-3 pb-2 bg-gradient-to-b from-black/20 to-transparent pointer-events-none">
