@@ -42,41 +42,67 @@ export default function SearchFilters({
         />
       </div>
 
-      <div className="px-4 mt-2">
-        {/* Selector de Categoría (Dropdown) */}
-        <div className="relative group">
-          <label htmlFor="category-select" className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-2 pl-1">
-            Explorar Categoría
-          </label>
-          <div className="relative">
-            <select
-              id="category-select"
-              value={categoria}
-              onChange={(e) => {
-                onCategoriaChange(e.target.value);
-                onEtiquetaChange('');
-              }}
-              className="w-full bg-white border border-gray-100 rounded-2xl py-3.5 px-5 appearance-none text-sm font-bold text-gray-800 shadow-sm focus:outline-none focus:ring-4 focus:ring-[var(--gold-main)]/10 focus:border-[var(--gold-main)] transition-all cursor-pointer"
-            >
-              <option value="">🛒 Todas las categorías</option>
-              {categorias.filter(c => c.slug !== '').map((cat) => (
-                <option key={cat.id} value={cat.slug}>
-                  {cat.emoji} {cat.nombre}
-                </option>
-              ))}
-            </select>
-            
-            {/* Flecha personalizada */}
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-              <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-          </div>
+      <div className="mt-1">
+        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-3 px-4">
+          Explorar por Categoría
+        </label>
+        <div className="flex gap-2.5 overflow-x-auto pb-4 scroll-x-hide px-4">
+          {/* Chip: Todas */}
+          <button
+            onClick={() => {
+              onCategoriaChange('');
+              onEtiquetaChange('');
+            }}
+            className={`
+              flex-shrink-0 flex items-center gap-2
+              px-4 py-2.5
+              rounded-2xl
+              text-[13px] font-bold
+              transition-all duration-200 active:scale-95
+              border-2
+              ${categoria === ''
+                ? 'bg-[var(--black-charcoal)] text-white border-[var(--black-charcoal)] shadow-lg shadow-black/10'
+                : 'bg-white text-gray-600 border-gray-100/80 hover:border-gray-200'
+              }
+            `}
+          >
+            <span className="text-sm">🛒</span>
+            <span>Todas</span>
+          </button>
+
+          {/* Category Chips */}
+          {categorias.filter(c => c.slug !== '').map((cat) => {
+            const isActive = categoria === cat.slug;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => {
+                  onCategoriaChange(cat.slug);
+                  onEtiquetaChange('');
+                }}
+                className={`
+                  flex-shrink-0 flex items-center gap-2
+                  px-4 py-2.5
+                  rounded-2xl
+                  text-[13px] font-bold
+                  transition-all duration-200 active:scale-95
+                  border-2
+                  ${isActive
+                    ? 'bg-[var(--gold-main)] text-white border-[var(--gold-main)] shadow-lg shadow-[var(--gold-main)]/20'
+                    : 'bg-white text-gray-600 border-gray-100/80 hover:border-gray-200'
+                  }
+                `}
+              >
+                <span className="text-base shrink-0">{cat.emoji}</span>
+                <span>{cat.nombre}</span>
+              </button>
+            );
+          })}
         </div>
+      </div>
 
         {/* Botones de Acceso Rápido (Ofertas, Destacados) */}
-        <div className="flex gap-2 mt-4 overflow-x-auto pb-2 scroll-x-hide">
+        <div className="flex gap-2.5 mt-1 overflow-x-auto pb-4 scroll-x-hide px-4">
           {['OFERTA', 'DESTACADO', 'NUEVO'].map((tag) => {
             const isActive = etiqueta === tag;
             const config: Record<string, { label: string; emoji: string }> = {
@@ -95,14 +121,14 @@ export default function SearchFilters({
                 }}
                 className={`
                   flex-shrink-0 flex items-center gap-2
-                  px-4 py-2
-                  rounded-xl
+                  px-4 py-2.5
+                  rounded-2xl
                   text-[13px] font-bold
                   transition-all duration-200 active:scale-95
-                  border
+                  border-2
                   ${isActive
                     ? 'bg-[#dc2626] text-white border-[#dc2626] shadow-lg shadow-red-200'
-                    : 'bg-red-50 text-red-700 border-red-100 hover:bg-red-100 hover:border-red-200'
+                    : 'bg-red-50 text-red-700 border-red-100/50 hover:bg-red-100 hover:border-red-200'
                   }
                 `}
               >
@@ -112,7 +138,6 @@ export default function SearchFilters({
             );
           })}
         </div>
-      </div>
     </div>
   );
 }
