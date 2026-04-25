@@ -275,16 +275,16 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
             </div>
           )}
 
-          {/* ── Price block (pushed to bottom) ── */}
-          <div className="mt-auto flex items-end justify-between pt-2.5">
-            <div className="flex flex-col">
+          {/* ── Price and Add block (pushed to bottom) ── */}
+          <div className="mt-auto flex items-center justify-between pt-3 gap-2">
+            <div className="flex flex-col min-w-0">
               {hasOferta ? (
                 <>
-                  <span className="text-[11px] line-through text-gray-400 font-medium leading-none">
+                  <span className="text-[10px] line-through text-gray-400 font-medium leading-none mb-1">
                     {formatPrecioSolo(precio)}
                   </span>
-                  <div className="flex items-baseline gap-0.5 mt-0.5">
-                    <span className="font-bold text-xl text-[#dc2626] leading-none tracking-tight">
+                  <div className="flex items-baseline gap-0.5">
+                    <span className="font-bold text-lg sm:text-xl text-[#dc2626] leading-none tracking-tight">
                       {formatPrecioSolo(precioOferta)}
                     </span>
                     <span className="text-[9px] text-gray-400 font-normal">
@@ -293,25 +293,46 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
                   </div>
                 </>
               ) : (
-                <>
-                  <div className="flex items-baseline gap-0.5">
-                    <span className="font-bold text-xl text-[var(--black-charcoal)] leading-none tracking-tight">
-                      {formatPrecioSolo(precio)}
-                    </span>
-                    <span className="text-[9px] text-gray-400 font-normal">
-                      {isPeso ? '/kg' : '/un'}
-                    </span>
-                  </div>
-                </>
+                <div className="flex items-baseline gap-0.5">
+                  <span className="font-bold text-lg sm:text-xl text-[var(--black-charcoal)] leading-none tracking-tight">
+                    {formatPrecioSolo(precio)}
+                  </span>
+                  <span className="text-[9px] text-gray-400 font-normal">
+                    {isPeso ? '/kg' : '/un'}
+                  </span>
+                </div>
               )}
             </div>
 
-            {/* Quick-add button */}
-            <div className="card-quick-add flex w-8 h-8 rounded-full bg-[var(--black-charcoal)] items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 shadow-lg shrink-0">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+            {/* Quick-add button - Larger touch target and functional */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (solicitaInstrucciones) {
+                  setIsDetailOpen(true);
+                } else {
+                  addItem({
+                    productoId: producto.id,
+                    nombre,
+                    precioFinal,
+                    tipoVenta,
+                    cantidad: initialQuantity,
+                    imagenUrl: cardImage,
+                    incrementoPeso,
+                    stock,
+                    promoCantidadRequerida,
+                    promoPrecioTotal
+                  });
+                  setIsCartOpen(true);
+                }
+              }}
+              className="card-quick-add flex w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[var(--black-charcoal)] items-center justify-center transition-all duration-200 shadow-xl shadow-black/10 shrink-0 active:scale-90 border-2 border-white/5"
+              aria-label="Agregar al carrito"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round">
                 <path d="M12 5v14M5 12h14"/>
               </svg>
-            </div>
+            </button>
           </div>
         </div>
       </article>
