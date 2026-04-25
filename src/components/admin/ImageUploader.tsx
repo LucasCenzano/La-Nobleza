@@ -412,6 +412,31 @@ export default function ImageUploader({ images, onChange, maxImages = 8 }: Props
 
   const canAddMore = images.length < maxImages;
 
+  const isValidImageUrl = (url: string) => {
+    const trimmed = url.trim();
+    return (
+      trimmed.startsWith('http') && 
+      (
+        /\.(jpg|jpeg|png|webp|gif|avif)($|\?|#)/i.test(trimmed) || 
+        trimmed.includes('images.unsplash.com') ||
+        trimmed.includes('cloudinary.com') ||
+        trimmed.includes('googleusercontent.com')
+      )
+    );
+  };
+
+  const addUrl = (url: string) => {
+    const trimmed = url.trim();
+    if (trimmed && trimmed.startsWith('http')) {
+      const newImg: UploadedImage = {
+        id: `ext-${crypto.randomUUID()}`,
+        url: trimmed,
+        uploaded: true,
+      };
+      onChange([...images, newImg]);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 p-2 rounded-2xl border-2 border-transparent">
       {/* ── Grid of images ─────────────────────── */}
@@ -469,43 +494,54 @@ export default function ImageUploader({ images, onChange, maxImages = 8 }: Props
       {/* External URL Input */}
       {canAddMore && (
         <div className="mt-2 flex items-center gap-2">
-          <input
-            type="url"
-            placeholder="Pegá una URL externa (ej: https://...)"
-            className="flex-1 text-sm rounded-xl border-gray-200 focus:ring-brand-500 focus:border-brand-500 py-3 px-4 shadow-sm"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
+          <div className="relative flex-1 group">
+            <input
+              type="url"
+              placeholder="Pegá una URL externa (ej: https://...)"
+              className="w-full text-sm rounded-xl border-gray-200 focus:ring-brand-500 focus:border-brand-500 py-3.5 px-4 pr-10 shadow-sm transition-all"
+              onPaste={(e) => {
+                const pastedText = e.clipboardData.getData('text').trim();
+                if (isValidImageUrl(pastedText)) {
+                  // If it looks like a clear image URL, add it immediately
+                  e.preventDefault();
+                  addUrl(pastedText);
+                }
+              }}
+              onInput={(e) => {
                 const val = e.currentTarget.value.trim();
-                if (val && val.startsWith('http')) {
-                  const newImg: UploadedImage = {
-                    id: `ext-${crypto.randomUUID()}`,
-                    url: val,
-                    uploaded: true,
-                  };
-                  onChange([...images, newImg]);
+                if (isValidImageUrl(val)) {
+                  addUrl(val);
                   e.currentTarget.value = '';
                 }
-              }
-            }}
-          />
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const val = e.currentTarget.value.trim();
+                  if (val) {
+                    addUrl(val);
+                    e.currentTarget.value = '';
+                  }
+                }
+              }}
+            />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-brand-500 transition-colors">
+              ✨
+            </div>
+          </div>
           <button
             type="button"
-            className="bg-[var(--black-charcoal)] hover:bg-black text-white font-bold px-5 py-3 rounded-xl whitespace-nowrap active:scale-95 transition-all shadow-md"
+            className="bg-brand-600 hover:bg-brand-700 text-white font-black px-6 py-3.5 rounded-xl whitespace-nowrap active:scale-95 transition-all shadow-lg shadow-brand-100 flex items-center gap-2 border-b-4 border-brand-800"
             onClick={(e) => {
-              const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+              const input = e.currentTarget.previousElementSibling?.querySelector('input') as HTMLInputElement;
               const val = input.value.trim();
-              if (val && val.startsWith('http')) {
-                const newImg: UploadedImage = {
-                  id: `ext-${crypto.randomUUID()}`,
-                  url: val,
-                  uploaded: true,
-                };
-                onChange([...images, newImg]);
+              if (val) {
+                addUrl(val);
                 input.value = '';
               }
             }}
           >
+            <span className="text-lg">＋</span>
             Añadir URL
           </button>
         </div>

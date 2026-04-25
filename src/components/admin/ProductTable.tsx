@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useTransition } from 'react';
+import { useTransition, useState } from 'react';
 import { Producto } from '@prisma/client';
 import { TIPO_VENTA_LABELS, formatPrecioSolo, getCategoriaLabel, CategoriaConfigType } from '@/lib/constants';
 import { TipoVenta } from '@prisma/client';
@@ -22,6 +22,10 @@ interface ProductTableProps {
 export default function ProductTable({ productos, categorias }: ProductTableProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkCategoryOpen, setIsBulkCategoryOpen] = useState(false);
+  const [isCompact, setIsCompact] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<{ ids: string[], nombre?: string } | null>(null);
 
   async function toggleActivo(id: string, currentValue: boolean) {
     await fetch(`/api/admin/productos/${id}`, {
@@ -32,10 +36,55 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
     startTransition(() => router.refresh());
   }
 
-  async function eliminarProducto(id: string, nombre: string) {
-    if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
-    await fetch(`/api/admin/productos/${id}`, { method: 'DELETE' });
+  async function handleBulkAction(action: 'ACTIVATE' | 'PAUSE' | 'DELETE' | 'CHANGE_CATEGORY', data?: any) {
+    if (selectedIds.length === 0) return;
+    
+    if (action === 'DELETE') {
+      setConfirmDelete({ ids: selectedIds });
+      return;
+    }
+
+    await fetch('/api/admin/productos/bulk-update', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: selectedIds, action, data }),
+    });
+
+    setSelectedIds([]);
+    setIsBulkCategoryOpen(false);
     startTransition(() => router.refresh());
+  }
+
+  async function executeDelete() {
+    if (!confirmDelete) return;
+    
+    await fetch('/api/admin/productos/bulk-update', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: confirmDelete.ids, action: 'DELETE' }),
+    });
+
+    setConfirmDelete(null);
+    setSelectedIds([]);
+    startTransition(() => router.refresh());
+  }
+
+  async function eliminarProducto(id: string, nombre: string) {
+    setConfirmDelete({ ids: [id], nombre });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.length === productos.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(productos.map(p => p.id));
+    }
+  }
+
+  function toggleSelectOne(id: string) {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
   }
 
   if (productos.length === 0) {
@@ -52,13 +101,29 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
       <table className="min-w-full divide-y divide-gray-100 text-sm">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Producto</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Categoría</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Stock</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Precio</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Etiquetas</th>
-            <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Activo</th>
-            <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Acciones</th>
+            <th className={`px-4 ${isCompact ? 'py-1.5' : 'py-3'} text-left w-10`}>
+              <input 
+                type="checkbox" 
+                checked={selectedIds.length === productos.length && productos.length > 0}
+                onChange={toggleSelectAll}
+                className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+              />
+            </th>
+            <th className={`px-4 ${isCompact ? 'py-1.5' : 'py-3'} text-left text-xs font-semibold text-gray-500 uppercase tracking-wide`}>Producto</th>
+            <th className={`px-4 ${isCompact ? 'py-1.5' : 'py-3'} text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell`}>Categoría</th>
+            <th className={`px-4 ${isCompact ? 'py-1.5' : 'py-3'} text-left text-xs font-semibold text-gray-500 uppercase tracking-wide`}>Stock</th>
+            <th className={`px-4 ${isCompact ? 'py-1.5' : 'py-3'} text-left text-xs font-semibold text-gray-500 uppercase tracking-wide`}>Precio</th>
+            <th className={`px-4 ${isCompact ? 'py-1.5' : 'py-3'} text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell`}>Etiquetas</th>
+            <th className={`px-4 ${isCompact ? 'py-1.5' : 'py-3'} text-center text-xs font-semibold text-gray-500 uppercase tracking-wide`}>Activo</th>
+            <th className={`px-4 ${isCompact ? 'py-1.5' : 'py-3'} text-right text-xs font-semibold text-gray-500 uppercase tracking-wide`}>
+              <button 
+                onClick={() => setIsCompact(!isCompact)}
+                className={`p-1 rounded-md transition-colors ${isCompact ? 'bg-brand-100 text-brand-600' : 'text-gray-400 hover:bg-gray-100'}`}
+                title={isCompact ? 'Vista normal' : 'Vista compacta'}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 8h16M4 16h16"/></svg>
+              </button>
+            </th>
           </tr>
         </thead>
 
@@ -73,75 +138,90 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
               <tr
                 key={p.id}
                 className={`transition-colors duration-150 ${
-                  !p.activo ? 'opacity-50 bg-gray-50' : 'hover:bg-cream-50'
+                  selectedIds.includes(p.id) ? 'bg-brand-50' : !p.activo ? 'opacity-50 bg-gray-50' : 'hover:bg-cream-50'
                 }`}
               >
+                {/* Checkbox */}
+                <td className={`px-4 ${isCompact ? 'py-1' : 'py-3'}`}>
+                  <input 
+                    type="checkbox" 
+                    checked={selectedIds.includes(p.id)}
+                    onChange={() => toggleSelectOne(p.id)}
+                    className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                  />
+                </td>
                 {/* Name + thumbnail */}
-                <td className="px-4 py-3">
+                <td className={`px-4 ${isCompact ? 'py-1' : 'py-3'}`}>
                   <div className="flex items-center gap-3">
                     {thumb ? (
-                      <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-cream-100">
+                      <div className={`relative ${isCompact ? 'w-8 h-8' : 'w-10 h-10'} rounded-lg overflow-hidden flex-shrink-0 bg-cream-100 transition-all`}>
                         <Image src={thumb} alt={p.nombre} fill loading="lazy"
                           className="object-cover" sizes="40px" />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 rounded-lg bg-cream-100 flex items-center justify-center flex-shrink-0">
-                        <span className="text-lg">🍗</span>
+                      <div className={`${isCompact ? 'w-8 h-8' : 'w-10 h-10'} rounded-lg bg-cream-100 flex items-center justify-center flex-shrink-0 transition-all`}>
+                        <span className={isCompact ? 'text-sm' : 'text-lg'}>🍗</span>
                       </div>
                     )}
-                    <span className="font-medium text-gray-900 leading-tight">{p.nombre}</span>
+                    <span className={`font-medium text-gray-900 leading-tight ${isCompact ? 'text-xs' : 'text-sm'}`}>{p.nombre}</span>
                   </div>
                 </td>
 
                 {/* Category */}
-                <td className="px-4 py-3 hidden sm:table-cell">
-                  <span className="badge-orange">{catLabel}</span>
+                <td className={`px-4 ${isCompact ? 'py-1' : 'py-3'} hidden sm:table-cell`}>
+                  <span className={`badge-orange ${isCompact ? 'px-1.5 py-0 text-[10px]' : ''}`}>{catLabel}</span>
                 </td>
 
                 {/* Stock */}
-                <td className="px-4 py-3">
+                <td className={`px-4 ${isCompact ? 'py-1' : 'py-3'}`}>
                   {p.stock !== null && p.stock !== undefined ? (
-                    <span className={`font-bold ${p.stock <= 0 ? 'text-red-500' : p.stock < 5 ? 'text-amber-600' : 'text-gray-700'}`}>
+                    <span className={`font-bold ${isCompact ? 'text-xs' : ''} ${p.stock <= 0 ? 'text-red-500' : p.stock < 5 ? 'text-amber-600' : 'text-gray-700'}`}>
                       {p.stock} {p.tipoVenta === 'PESO' ? 'kg' : 'un.'}
                     </span>
                   ) : (
-                    <span className="text-gray-400 italic">Ilimitado</span>
+                    <span className={`text-gray-400 italic ${isCompact ? 'text-[10px]' : 'text-xs'}`}>Ilimitado</span>
                   )}
                 </td>
 
                 {/* Price */}
-                <td className="px-4 py-3 whitespace-nowrap">
+                <td className={`px-4 ${isCompact ? 'py-1' : 'py-3'} whitespace-nowrap`}>
                   {hasOferta ? (
-                    <div>
-                      <p className="text-xs text-gray-400 line-through leading-none">
+                    <div className={isCompact ? 'flex items-center gap-2' : ''}>
+                      <p className={`text-gray-400 line-through leading-none ${isCompact ? 'text-[10px]' : 'text-xs mb-1'}`}>
                         {formatPrecioSolo(p.precio)}
                       </p>
-                      <p className="font-bold text-red-600 text-sm leading-tight">
+                      <p className={`font-bold text-red-600 leading-tight ${isCompact ? 'text-xs' : 'text-sm'}`}>
                         {formatPrecioSolo(p.precioOferta!)}
-                        <span className="ml-1 text-[10px] font-semibold bg-red-100 text-red-600 px-1 py-0.5 rounded">
-                          -{Math.round((1 - p.precioOferta! / p.precio) * 100)}%
-                        </span>
+                        {!isCompact && (
+                          <span className="ml-1 text-[10px] font-semibold bg-red-100 text-red-600 px-1 py-0.5 rounded">
+                            -{Math.round((1 - p.precioOferta! / p.precio) * 100)}%
+                          </span>
+                        )}
                       </p>
-                      <p className="text-[10px] text-gray-400">
-                        {TIPO_VENTA_LABELS[p.tipoVenta as TipoVenta]}
-                      </p>
+                      {!isCompact && (
+                        <p className="text-[10px] text-gray-400">
+                          {TIPO_VENTA_LABELS[p.tipoVenta as TipoVenta]}
+                        </p>
+                      )}
                     </div>
                   ) : (
-                    <span className="font-semibold text-brand-700">
+                    <span className={`font-semibold text-brand-700 ${isCompact ? 'text-xs' : ''}`}>
                       {formatPrecioSolo(p.precio)}
-                      <span className="ml-1 text-xs font-normal text-gray-400">
-                        {TIPO_VENTA_LABELS[p.tipoVenta as TipoVenta]}
-                      </span>
+                      {!isCompact && (
+                        <span className="ml-1 text-xs font-normal text-gray-400">
+                          {TIPO_VENTA_LABELS[p.tipoVenta as TipoVenta]}
+                        </span>
+                      )}
                     </span>
                   )}
                 </td>
 
                 {/* Etiquetas */}
-                <td className="px-4 py-3 hidden md:table-cell">
+                <td className={`px-4 ${isCompact ? 'py-1' : 'py-3'} hidden md:table-cell`}>
                   <div className="flex flex-wrap gap-1">
                     {(p.etiquetas ?? []).length > 0
                       ? (p.etiquetas ?? []).map((slug) => (
-                          <EtiquetaBadge key={slug} slug={slug} />
+                          <EtiquetaBadge key={slug} slug={slug} compact={isCompact} />
                         ))
                       : <span className="text-xs text-gray-300">—</span>
                     }
@@ -159,15 +239,15 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
                 </td>
 
                 {/* Actions */}
-                <td className="px-4 py-3 text-right">
+                <td className={`px-4 ${isCompact ? 'py-1' : 'py-3'} text-right`}>
                   <div className="flex items-center justify-end gap-2">
                     <a href={`/admin/productos/${p.id}/editar`}
-                      className="btn-secondary px-3 py-1.5 text-xs">
-                      ✏️ Editar
+                      className={`btn-secondary px-3 ${isCompact ? 'py-1' : 'py-1.5'} text-xs`}>
+                      ✏️ {!isCompact && 'Editar'}
                     </a>
                     <button
                       onClick={() => eliminarProducto(p.id, p.nombre)}
-                      className="btn-danger px-3 py-1.5 text-xs">
+                      className={`btn-danger px-3 ${isCompact ? 'py-1' : 'py-1.5'} text-xs`}>
                       🗑️
                     </button>
                   </div>
@@ -177,6 +257,102 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
           })}
         </tbody>
       </table>
+    </div>
+
+      {/* Floating Bulk Actions Bar */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] animate-slide-up">
+          <div className="bg-white border border-gray-200 shadow-2xl rounded-2xl p-3 flex items-center gap-4 min-w-[320px] sm:min-w-[450px]">
+            <div className="bg-brand-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2">
+              <span className="bg-white/20 w-5 h-5 flex items-center justify-center rounded-full text-[10px]">{selectedIds.length}</span>
+              Seleccionados
+            </div>
+            
+            <div className="h-6 w-px bg-gray-100 mx-1"></div>
+            
+            <div className="flex flex-1 items-center gap-2 overflow-x-auto scroll-x-hide pb-0.5">
+              <button 
+                onClick={() => handleBulkAction('ACTIVATE')}
+                className="btn-secondary py-1.5 px-3 text-xs whitespace-nowrap text-green-600 border-green-100 hover:bg-green-50"
+              >
+                ✅ Activar
+              </button>
+              <button 
+                onClick={() => handleBulkAction('PAUSE')}
+                className="btn-secondary py-1.5 px-3 text-xs whitespace-nowrap text-amber-600 border-amber-100 hover:bg-amber-50"
+              >
+                ⏸️ Pausar
+              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setIsBulkCategoryOpen(!isBulkCategoryOpen)}
+                  className="btn-secondary py-1.5 px-3 text-xs whitespace-nowrap"
+                >
+                  🏷️ Cambiar Cat.
+                </button>
+                {isBulkCategoryOpen && (
+                  <div className="absolute bottom-full mb-2 left-0 w-48 bg-white border border-gray-100 shadow-xl rounded-xl p-2 flex flex-col gap-1 max-h-60 overflow-y-auto">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase px-2 py-1">Seleccionar destino</p>
+                    {categorias.map(cat => (
+                      <button
+                        key={cat.id}
+                        onClick={() => handleBulkAction('CHANGE_CATEGORY', { categoria: cat.slug })}
+                        className="w-full text-left px-2 py-1.5 rounded-lg hover:bg-gray-50 text-xs text-gray-700 transition-colors"
+                      >
+                        {cat.emoji} {cat.nombre}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button 
+                onClick={() => handleBulkAction('DELETE')}
+                className="btn-secondary py-1.5 px-3 text-xs whitespace-nowrap text-red-600 border-red-100 hover:bg-red-50"
+              >
+                🗑️ Eliminar
+              </button>
+            </div>
+
+            <button 
+              onClick={() => setSelectedIds([])}
+              className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors ml-2"
+              title="Cancelar selección"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Confirmation Modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-[2rem] w-full max-w-sm p-8 shadow-2xl animate-pop-in">
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 text-center mb-2 leading-tight">
+              {confirmDelete.nombre ? `¿Eliminar "${confirmDelete.nombre}"?` : `¿Eliminar ${confirmDelete.ids.length} productos?`}
+            </h3>
+            <p className="text-sm text-gray-500 text-center mb-8">
+              Esta acción no se puede deshacer. Los productos seleccionados serán eliminados definitivamente del catálogo.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={executeDelete}
+                className="w-full bg-red-600 hover:bg-red-700 text-white h-12 rounded-xl font-bold transition-colors shadow-lg shadow-red-200"
+              >
+                Eliminar definitivamente
+              </button>
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="w-full h-12 rounded-xl text-gray-500 font-semibold hover:bg-gray-100 transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
