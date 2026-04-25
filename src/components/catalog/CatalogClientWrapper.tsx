@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import SearchFilters from './SearchFilters';
 import ProductCard from './ProductCard';
 import { CategoriaConfigType } from '@/lib/constants';
+import { useCart } from './CartContext';
 
 interface CatalogClientWrapperProps {
   initialProductos: any[];
@@ -51,9 +52,14 @@ export function CatalogSkeleton() {
 }
 
 export default function CatalogClientWrapper({ initialProductos, categorias }: CatalogClientWrapperProps) {
+  const { setAllProducts } = useCart();
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
   const [tag, setTag] = useState('');
+
+  useEffect(() => {
+    setAllProducts(initialProductos);
+  }, [initialProductos, setAllProducts]);
 
   const filtered = useMemo(() => {
     const normalizeString = (str: string) => 

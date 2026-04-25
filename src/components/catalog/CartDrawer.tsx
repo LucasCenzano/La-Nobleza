@@ -130,7 +130,7 @@ export default function CartDrawer() {
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-5 pb-40 bg-gray-50/50">
           {items.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-3">
+            <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-3 py-10">
               <span className="text-5xl opacity-40">🛍️</span>
               <p className="font-medium text-gray-500">Tu carrito está vacío</p>
             </div>
@@ -179,16 +179,77 @@ export default function CartDrawer() {
                   </div>
                 </div>
               ))}
-
-              {/* Botón para agregar más productos */}
-              <button 
-                onClick={() => setIsCartOpen(false)}
-                className="mt-2 mb-8 w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-amber-200 bg-amber-50/30 text-amber-700 font-bold text-sm hover:bg-amber-50 transition-all active:scale-95"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Seguir sumando productos
-              </button>
             </div>
+          )}
+
+          {/* Recomendaciones (Solo si hay productos cargados) */}
+          {(() => {
+            const { allProducts, addItem } = useCart();
+            const recommendations = allProducts
+              .filter(p => !items.some(i => i.productoId === p.id))
+              .filter(p => p.etiquetas?.includes('DESTACADO') || p.etiquetas?.includes('OFERTA'))
+              .slice(0, 8);
+
+            if (recommendations.length === 0) return null;
+
+            return (
+              <div className="mt-10 mb-4">
+                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-4">
+                  También te puede interesar
+                </h4>
+                <div className="flex gap-3 overflow-x-auto pb-4 scroll-x-hide -mx-1 px-1">
+                  {recommendations.map((p) => {
+                    const price = p.precioOferta && p.precioOferta > 0 ? p.precioOferta : p.precio;
+                    return (
+                      <div 
+                        key={p.id}
+                        className="flex-shrink-0 w-32 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col"
+                      >
+                        <div className="relative aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
+                          {p.imagenUrl ? (
+                            <Image src={p.imagenUrl} alt={p.nombre} fill className="object-cover" />
+                          ) : (
+                            <span className="text-xl opacity-20">🥩</span>
+                          )}
+                          <button 
+                            onClick={() => addItem({
+                              productoId: p.id,
+                              nombre: p.nombre,
+                              precioFinal: price,
+                              tipoVenta: p.tipoVenta,
+                              cantidad: 1,
+                              imagenUrl: p.imagenUrl,
+                              incrementoPeso: p.incrementoPeso,
+                              stock: p.stock,
+                              promoCantidadRequerida: p.promoCantidadRequerida,
+                              promoPrecioTotal: p.promoPrecioTotal
+                            })}
+                            className="absolute bottom-1.5 right-1.5 w-7 h-7 bg-[var(--black-charcoal)] text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                          </button>
+                        </div>
+                        <div className="p-2 flex flex-col gap-0.5">
+                          <p className="text-[11px] font-bold text-gray-800 line-clamp-1 leading-tight">{p.nombre}</p>
+                          <p className="text-[12px] font-black text-[var(--gold-dark)]">${Math.round(price).toLocaleString('es-AR')}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Botón para agregar más productos */}
+          {items.length > 0 && (
+            <button 
+              onClick={() => setIsCartOpen(false)}
+              className="mt-6 mb-8 w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-gray-200 text-gray-500 font-bold text-sm active:scale-95 transition-all"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Seguir sumando productos
+            </button>
           )}
         </div>
 

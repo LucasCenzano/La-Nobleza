@@ -42,12 +42,15 @@ interface CartContextType {
   clearCart: () => void;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
+  allProducts: any[];
+  setAllProducts: (products: any[]) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [allProducts, setAllProducts] = useState<any[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -133,7 +136,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   return (
     <CartContext.Provider value={{ 
       items, addItem, updateQuantity, removeItem, clearCart, 
-      totalItems, totalPrice, isCartOpen, setIsCartOpen 
+      totalItems, totalPrice, isCartOpen, setIsCartOpen,
+      allProducts, setAllProducts
     }}>
       {children}
     </CartContext.Provider>
