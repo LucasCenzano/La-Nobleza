@@ -384,20 +384,14 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
                       />
                     </div>
                     
-                    {allImages.length > 1 && (
-                      <div className="absolute bottom-3 right-3 bg-white/80 backdrop-blur text-gray-800 text-xs px-3 py-1.5 rounded-full font-bold shadow-sm flex items-center gap-1.5 pointer-events-none">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.29 7.04 12 12 20.71 7.04"></polyline><line x1="12" y1="22" x2="12" y2="12"></line></svg>
-                        {currentImageIndex + 1} / {allImages.length}
-                      </div>
-                    )}
-                    
+                    {/* Pagination dots (friendly indicator) */}
                     {allImages.length > 1 && (
                       <div className="absolute bottom-4 left-0 w-full flex justify-center gap-1.5 pointer-events-none">
                         {allImages.map((_: { url: string; framing?: ImageFraming }, idx: number) => (
                            <div 
                              key={idx} 
                              className={`h-1.5 rounded-full transition-all duration-300 ${
-                               idx === currentImageIndex ? 'w-4 bg-gray-800' : 'w-1.5 bg-gray-400'
+                               idx === currentImageIndex ? 'w-5 bg-white shadow-sm' : 'w-1.5 bg-white/50'
                              }`} 
                            />
                         ))}
