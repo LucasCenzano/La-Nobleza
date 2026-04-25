@@ -96,6 +96,10 @@ model ConfiguracionTienda {
   // Horarios de atención
   horariosActivos Boolean  @default(true)
   horarios        Json?    // { lunes: {activo, abre, cierra}, ... }
+  // Información de contacto
+  direccion       String   @default("Los Ceibos 19 B, A4400 Salta")
+  telefono        String   @default("5493875875560")
+  instagram       String   @default("pollerialanobleza")
   // Mensaje de WhatsApp personalizado
   mensajeWhatsappIntro  String  @default("*¡Hola La Nobleza!* 👋\nQuiero hacer el siguiente pedido:\n\n")
   mensajeWhatsappCierre String  @default("Avisame por favor cuándo lo puedo pasar a buscar. ¡Gracias!")

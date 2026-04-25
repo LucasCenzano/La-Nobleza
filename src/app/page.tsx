@@ -239,6 +239,11 @@ export default async function HomePage() {
         </div>
       )}
 
+      {/* Horarios dinámicos del local */}
+      <div className="w-full mt-2">
+        <CatalogHorarios config={catalogConfig} />
+      </div>
+
       {/* Suspense permite que el header se vea instantáneo y el catálogo cargue progresivamente */}
       <Suspense fallback={<CatalogSkeleton />}>
         <CatalogClientWrapper initialProductos={productos} categorias={categorias} />

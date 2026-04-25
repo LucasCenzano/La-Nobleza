@@ -84,6 +84,9 @@ interface Config {
   bannerColor:           string;
   horariosActivos:       boolean;
   horarios:              Record<string, HorarioDia> | null;
+  direccion:             string;
+  telefono:              string;
+  instagram:             string;
   mensajeWhatsappIntro:  string;
   mensajeWhatsappCierre: string;
 }
@@ -95,6 +98,9 @@ const DEFAULT_CONFIG: Config = {
   bannerColor:           '#f97316',
   horariosActivos:       true,
   horarios:              DEFAULT_HORARIOS,
+  direccion:             'Los Ceibos 19 B, A4400 Salta',
+  telefono:              '5493875875560',
+  instagram:             'pollerialanobleza',
   mensajeWhatsappIntro:  DEFAULT_MENSAJE_INTRO,
   mensajeWhatsappCierre: DEFAULT_MENSAJE_CIERRE,
 };
@@ -113,6 +119,9 @@ export default function ConfiguracionForm() {
           ...DEFAULT_CONFIG,
           ...data,
           horarios:              data.horarios              ?? DEFAULT_HORARIOS,
+          direccion:             data.direccion             ?? DEFAULT_CONFIG.direccion,
+          telefono:              data.telefono              ?? DEFAULT_CONFIG.telefono,
+          instagram:             data.instagram             ?? DEFAULT_CONFIG.instagram,
           mensajeWhatsappIntro:  data.mensajeWhatsappIntro  ?? DEFAULT_MENSAJE_INTRO,
           mensajeWhatsappCierre: data.mensajeWhatsappCierre ?? DEFAULT_MENSAJE_CIERRE,
         });
@@ -434,6 +443,52 @@ export default function ConfiguracionForm() {
             `\n*Total estimado:* $4.700\n\n`,
             config.mensajeWhatsappCierre,
           ].join('')}</pre>
+        </div>
+      </section>
+
+      {/* ── Contacto y Ubicación ─────────────────────────────────── */}
+      <section className="card p-6 space-y-5">
+        <div>
+          <h2 className="font-display font-bold text-gray-900 text-lg">📍 Contacto y Ubicación</h2>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Información que ven los clientes en la pestaña de ubicación y contacto
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="label">Dirección Local</label>
+            <input
+              type="text"
+              value={config.direccion}
+              onChange={(e) => updateBanner({ direccion: e.target.value })}
+              className="input"
+              placeholder="Ej: Av. Siempre Viva 123"
+            />
+          </div>
+          <div>
+            <label className="label">Teléfono / WhatsApp</label>
+            <input
+              type="text"
+              value={config.telefono}
+              onChange={(e) => updateBanner({ telefono: e.target.value })}
+              className="input"
+              placeholder="Ej: 5493875875560 (con código de país)"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="label">Instagram (usuario)</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">@</span>
+              <input
+                type="text"
+                value={config.instagram}
+                onChange={(e) => updateBanner({ instagram: e.target.value })}
+                className="input pl-8"
+                placeholder="pollerialanobleza"
+              />
+            </div>
+          </div>
         </div>
       </section>
     </div>
