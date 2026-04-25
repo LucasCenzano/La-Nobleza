@@ -571,9 +571,9 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
               <div className="flex items-center gap-3">
                 <button 
                   {...longPressMinus}
-                  className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700 active:bg-gray-200 transition-colors shadow-sm"
+                  className="w-10 h-10 rounded-xl bg-gray-200 flex items-center justify-center text-black active:bg-gray-300 transition-colors shadow-sm"
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14"/></svg>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12h14"/></svg>
                 </button>
                 <div className="w-14 text-center">
                   <span className="font-bold text-[18px] text-[var(--black-charcoal)] leading-none">
@@ -586,11 +586,11 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
                   disabled={stock !== null && stock !== undefined && quantity >= stock}
                   className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-sm ${
                     stock !== null && stock !== undefined && quantity >= stock 
-                      ? 'bg-gray-50 text-gray-300 cursor-not-allowed' 
-                      : 'bg-gray-100 text-gray-700 active:bg-gray-200'
+                      ? 'bg-gray-100 text-gray-300 cursor-not-allowed' 
+                      : 'bg-gray-200 text-black active:bg-gray-300'
                   }`}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 5v14M5 12h14"/></svg>
                 </button>
               </div>
 

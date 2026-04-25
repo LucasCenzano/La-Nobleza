@@ -34,12 +34,14 @@ function CartItemQuantity({ item }: { item: CartItem }) {
   const longPressMinus = useLongPressQuantity(decrement);
 
   return (
-    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
       <button 
         {...longPressMinus}
-        className="w-7 h-7 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 active:scale-95 transition-all"
-      >-</button>
-      <span className="text-[13px] font-bold w-[52px] text-center shrink-0">
+        className="w-8 h-8 flex items-center justify-center bg-gray-200 rounded-md shadow-sm text-black font-bold active:scale-95 transition-all"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round"><path d="M5 12h14"/></svg>
+      </button>
+      <span className="text-[13px] font-bold w-[54px] text-center shrink-0">
         {isPeso 
           ? (item.cantidad < 1 ? `${Math.round(item.cantidad * 1000)}gr` : `${item.cantidad.toFixed(3).replace(/\.?0+$/, '') || '0'}kg`) 
           : item.cantidad}
@@ -47,12 +49,14 @@ function CartItemQuantity({ item }: { item: CartItem }) {
       <button 
         {...longPressPlus}
         disabled={item.stock !== null && item.stock !== undefined && item.cantidad >= item.stock}
-        className={`w-7 h-7 flex items-center justify-center bg-white rounded-md shadow-sm transition-all ${
+        className={`w-8 h-8 flex items-center justify-center rounded-md shadow-sm transition-all ${
           item.stock !== null && item.stock !== undefined && item.cantidad >= item.stock
-            ? 'text-gray-300 cursor-not-allowed'
-            : 'text-gray-600 active:scale-95'
+            ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
+            : 'bg-gray-200 text-black font-bold active:scale-95'
         }`}
-      >+</button>
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
     </div>
   );
 }
