@@ -7,7 +7,7 @@ export const revalidate = 120;
 import CatalogHeader from '@/components/catalog/CatalogHeader';
 import CatalogClientWrapper, { CatalogSkeleton } from '@/components/catalog/CatalogClientWrapper';
 import BottomNav from '@/components/catalog/BottomNav';
-import { CatalogBanner, getCatalogConfig } from '@/components/catalog/CatalogInfo';
+import { CatalogBanner, getCatalogConfig, CatalogHorarios } from '@/components/catalog/CatalogInfo';
 import { CategoriaConfigType } from '@/lib/constants';
 
 interface HomePageProps {
