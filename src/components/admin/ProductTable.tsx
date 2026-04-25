@@ -26,6 +26,7 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
   const [isPending, startTransition] = useTransition();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkCategoryOpen, setIsBulkCategoryOpen] = useState(false);
+  const [isBulkPriceOpen, setIsBulkPriceOpen] = useState(false);
   const [isCompact, setIsCompact] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<{ ids: string[], nombre?: string } | null>(null);
   
@@ -44,7 +45,7 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
     });
   }
 
-  async function handleBulkAction(action: 'ACTIVATE' | 'PAUSE' | 'DELETE' | 'CHANGE_CATEGORY', data?: any) {
+  async function handleBulkAction(action: 'ACTIVATE' | 'PAUSE' | 'DELETE' | 'CHANGE_CATEGORY' | 'ADJUST_PRICE' | 'TOGGLE_OFFER', data?: any) {
     if (selectedIds.length === 0) return;
     
     if (action === 'DELETE') {
@@ -56,6 +57,29 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
     if (action === 'ACTIVATE') selectedIds.forEach(id => onUpdate(id, 'activo', true));
     if (action === 'PAUSE')    selectedIds.forEach(id => onUpdate(id, 'activo', false));
     if (action === 'CHANGE_CATEGORY') selectedIds.forEach(id => onUpdate(id, 'categoria', data.categoria));
+    
+    if (action === 'ADJUST_PRICE') {
+      const factor = 1 + (data.percentage / 100);
+      selectedIds.forEach(id => {
+        const p = productos.find(x => x.id === id);
+        if (p) {
+          onUpdate(id, 'precio', Math.round(p.precio * factor));
+          if (p.precioOferta) onUpdate(id, 'precioOferta', Math.round(p.precioOferta * factor));
+        }
+      });
+    }
+
+    if (action === 'TOGGLE_OFFER') {
+      selectedIds.forEach(id => {
+        const p = productos.find(x => x.id === id);
+        if (p) {
+          const hasOffer = !!p.precioOferta && p.precioOferta > 0;
+          // Si no tiene oferta, le ponemos una del -10% por defecto (pueden editarla después in-line)
+          // Si tiene oferta, se la quitamos (null)
+          onUpdate(id, 'precioOferta', hasOffer ? null : Math.round(p.precio * 0.9));
+        }
+      });
+    }
 
     await fetch('/api/admin/productos/bulk-update', {
       method: 'PATCH',
@@ -65,6 +89,7 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
 
     setSelectedIds([]);
     setIsBulkCategoryOpen(false);
+    setIsBulkPriceOpen(false);
   }
 
   async function executeDelete() {
@@ -440,6 +465,43 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
                   </div>
                 )}
               </div>
+
+              <div className="relative">
+                <button 
+                  onClick={() => setIsBulkPriceOpen(!isBulkPriceOpen)}
+                  className="btn-secondary py-1.5 px-3 text-xs whitespace-nowrap text-brand-700 border-brand-100 hover:bg-brand-50"
+                >
+                  💰 Ajustar %
+                </button>
+                {isBulkPriceOpen && (
+                  <div className="absolute bottom-full mb-2 left-0 w-48 bg-white border border-gray-100 shadow-xl rounded-xl p-3 flex flex-col gap-2">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase">Ajustar Precios</p>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        placeholder="+10"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleBulkAction('ADJUST_PRICE', { percentage: parseFloat((e.target as HTMLInputElement).value) });
+                          }
+                        }}
+                        className="input text-sm py-1.5"
+                      />
+                      <span className="text-sm font-bold text-gray-500">%</span>
+                    </div>
+                    <p className="text-[9px] text-gray-400 leading-tight">Usa valores positivos para aumentar o negativos para bajar.</p>
+                  </div>
+                )}
+              </div>
+
+              <button 
+                onClick={() => handleBulkAction('TOGGLE_OFFER')}
+                className="btn-secondary py-1.5 px-3 text-xs whitespace-nowrap text-red-600 border-red-100 hover:bg-red-50"
+              >
+                🔥 Oferta
+              </button>
+
               <button 
                 onClick={() => handleBulkAction('DELETE')}
                 className="btn-secondary py-1.5 px-3 text-xs whitespace-nowrap text-red-600 border-red-100 hover:bg-red-50"

@@ -69,7 +69,7 @@ export default function ProductManagerClient({ initialProductos, categorias }: P
     }
 
     return result;
-  }, [initialProductos, q, estado, categoria, etiqueta, sort]);
+  }, [allProductos, q, estado, categoria, etiqueta, sort]);
 
   // ─── Stats ─────────────────────────────────────────────────────
   const stats = useMemo(() => {

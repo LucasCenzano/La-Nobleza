@@ -46,6 +46,53 @@ export async function PATCH(req: Request) {
           data: { categoria: data.categoria },
         });
         break;
+
+      case 'ADJUST_PRICE':
+        if (data?.percentage === undefined) {
+          return NextResponse.json({ error: 'Porcentaje no especificado' }, { status: 400 });
+        }
+        const factor = 1 + (data.percentage / 100);
+        
+        // Necesitamos hacerlo uno por uno o con un loop porque el precio nuevo depende del anterior
+        const productsToAdjust = await prisma.producto.findMany({
+          where: { id: { in: ids } },
+          select: { id: true, precio: true, precioOferta: true }
+        });
+
+        const adjustPromises = productsToAdjust.map(p => {
+          const newData: any = { precio: Math.round(p.precio * factor) };
+          if (p.precioOferta) newData.precioOferta = Math.round(p.precioOferta * factor);
+          
+          return prisma.producto.update({
+            where: { id: p.id },
+            data: newData
+          });
+        });
+
+        await prisma.$transaction(adjustPromises);
+        result = { count: ids.length };
+        break;
+
+      case 'TOGGLE_OFFER':
+        const productsToToggle = await prisma.producto.findMany({
+          where: { id: { in: ids } },
+          select: { id: true, precio: true, precioOferta: true }
+        });
+
+        const togglePromises = productsToToggle.map(p => {
+          const hasOffer = !!p.precioOferta && p.precioOferta > 0;
+          return prisma.producto.update({
+            where: { id: p.id },
+            data: { 
+              precioOferta: hasOffer ? null : Math.round(p.precio * 0.9) 
+            }
+          });
+        });
+
+        await prisma.$transaction(togglePromises);
+        result = { count: ids.length };
+        break;
+
       default:
         return NextResponse.json({ error: 'Acción no válida' }, { status: 400 });
     }
