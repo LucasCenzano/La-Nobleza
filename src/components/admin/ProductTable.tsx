@@ -41,11 +41,18 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
     const nextValue = !currentValue;
     onUpdate(id, 'activo', nextValue);
 
-    await fetch(`/api/admin/productos/${id}`, {
-      method:  'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ activo: nextValue }),
-    });
+    try {
+      const res = await fetch(`/api/admin/productos/${id}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ activo: nextValue }),
+      });
+      if (!res.ok) throw new Error();
+    } catch (err) {
+      // Rollback
+      onUpdate(id, 'activo', currentValue);
+      alert('Error al actualizar el estado. Se ha revertido el cambio.');
+    }
   }
 
   async function handleBulkAction(action: 'ACTIVATE' | 'PAUSE' | 'DELETE' | 'CHANGE_CATEGORY' | 'ADJUST_PRICE' | 'TOGGLE_OFFER', data?: any) {
@@ -57,6 +64,8 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
     }
 
     // Optimistic update
+    const previousProducts = [...productos];
+
     if (action === 'ACTIVATE') selectedIds.forEach(id => onUpdate(id, 'activo', true));
     if (action === 'PAUSE')    selectedIds.forEach(id => onUpdate(id, 'activo', false));
     if (action === 'CHANGE_CATEGORY') selectedIds.forEach(id => onUpdate(id, 'categoria', data.categoria));
@@ -77,18 +86,23 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
         const p = productos.find(x => x.id === id);
         if (p) {
           const hasOffer = !!p.precioOferta && p.precioOferta > 0;
-          // Si no tiene oferta, le ponemos una del -10% por defecto (pueden editarla después in-line)
-          // Si tiene oferta, se la quitamos (null)
           onUpdate(id, 'precioOferta', hasOffer ? null : Math.round(p.precio * 0.9));
         }
       });
     }
 
-    await fetch('/api/admin/productos/bulk-update', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids: selectedIds, action, data }),
-    });
+    try {
+      const res = await fetch('/api/admin/productos/bulk-update', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedIds, action, data }),
+      });
+      if (!res.ok) throw new Error();
+    } catch (err) {
+      // Rollback would be complex here, usually we refresh or notify
+      alert('Hubo un problema con la acción masiva. Algunos cambios podrían no haberse guardado.');
+      router.refresh();
+    }
 
     setSelectedIds([]);
     setIsBulkCategoryOpen(false);
@@ -133,16 +147,23 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
     
     // Si el valor no cambió, no hacemos nada
     const p = productos.find(x => x.id === id);
-    if (p && (p as any)[field] === value) return;
+    if (!p || (p as any)[field] === value) return;
+    const previousValue = (p as any)[field];
 
     // Optimistic update
     onUpdate(id, field, value);
 
-    await fetch(`/api/admin/productos/${id}`, {
-      method:  'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ [field]: value }),
-    });
+    try {
+      const res = await fetch(`/api/admin/productos/${id}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ [field]: value }),
+      });
+      if (!res.ok) throw new Error();
+    } catch (err) {
+      onUpdate(id, field, previousValue);
+      alert('No se pudo guardar el cambio. Se ha revertido el valor.');
+    }
   }
 
   const startEditing = (id: string, field: string, value: any) => {

@@ -145,6 +145,7 @@ export default function ProductForm({ initialData, mode, onSuccess, onCancel }: 
 
     const payload = {
       ...form,
+      id:           initialData?.id,
       precio:       parseFloat(form.precio),
       precioOferta: (enOferta && form.precioOferta) ? parseFloat(form.precioOferta) : null,
       stock:        form.stock ? parseFloat(form.stock) : null,
@@ -160,6 +161,11 @@ export default function ProductForm({ initialData, mode, onSuccess, onCancel }: 
       promoPrecioTotal: form.promoPrecioTotal ? parseFloat(form.promoPrecioTotal) : null,
     };
 
+    // Optimistic Update: Notify parent immediately
+    if (onSuccess && mode === 'edit') {
+      onSuccess(payload);
+    }
+
     const url =
       mode === 'create'
         ? '/api/admin/productos'
@@ -173,13 +179,15 @@ export default function ProductForm({ initialData, mode, onSuccess, onCancel }: 
     });
 
     if (res.ok) {
-      const savedProduct = await res.json();
-      if (onSuccess) {
-        onSuccess(savedProduct);
-      } else {
-        router.push('/admin/productos');
-        router.refresh();
+      if (mode === 'create') {
+        const savedProduct = await res.json();
+        if (onSuccess) onSuccess(savedProduct);
+        else {
+          router.push('/admin/productos');
+          router.refresh();
+        }
       }
+      // If edit, onSuccess was already called optimistically
     } else {
       setLoading(false);
       const data = await res.json().catch(() => ({}));
