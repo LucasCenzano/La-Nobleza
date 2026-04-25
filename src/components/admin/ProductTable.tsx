@@ -584,8 +584,6 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
           </div>
         </div>
       )}
-        </div>
-      )}
 
       {/* Side Drawer Edit */}
       <ProductEditDrawer 
