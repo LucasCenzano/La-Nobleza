@@ -79,7 +79,7 @@ export default function BottomNav() {
           </button>
 
           {/* Carrito */}
-          <button
+          <button 
             id="bottom-nav-cart"
             onClick={() => setIsCartOpen(true)}
             className={`flex flex-col items-center justify-center w-full h-full text-[#C5A059] relative transition-all duration-300 ${isBouncing ? 'scale-[1.2] -translate-y-1' : 'scale-100'}`}
@@ -89,8 +89,13 @@ export default function BottomNav() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
               {totalItems > 0 && (
-                <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                  {totalItems}
+                <span 
+                  key={totalItems}
+                  className={`absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm overflow-hidden ${totalItems === 1 ? 'animate-pop-in' : ''}`}
+                >
+                  <span className={totalItems > 1 ? 'animate-scroll-number' : ''}>
+                    {totalItems}
+                  </span>
                 </span>
               )}
             </div>
