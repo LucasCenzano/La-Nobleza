@@ -1,12 +1,57 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from './CartContext';
+
+const DIAS_KEYS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+const DIAS_LABELS: Record<string, string> = {
+  lunes: 'Lunes',
+  martes: 'Martes',
+  miercoles: 'Miércoles',
+  jueves: 'Jueves',
+  viernes: 'Viernes',
+  sabado: 'Sábado',
+  domingo: 'Domingo'
+};
 
 export default function BottomNav() {
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
   const { totalItems, setIsCartOpen } = useCart();
+  const [config, setConfig] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('/api/public/configuracion')
+      .then(r => r.json())
+      .then(data => setConfig(data))
+      .catch(() => {});
+  }, []);
+
+  const renderHorarios = () => {
+    if (!config?.horariosActivos || !config?.horarios) return null;
+    const h = config.horarios;
+    const activeDays = DIAS_KEYS.filter(key => h[key]?.activo);
+    if (activeDays.length === 0) return null;
+
+    return (
+      <div className="mt-6 mb-2 py-4 border-y border-gray-100 bg-gray-50/30 -mx-6 px-6">
+        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 text-center">Horarios de Atención</p>
+        <div className="space-y-2">
+          {activeDays.map(key => {
+            const d = h[key];
+            return (
+              <div key={key} className="flex justify-between items-center text-[13px]">
+                <span className="font-bold text-gray-700">{DIAS_LABELS[key]}</span>
+                <div className="text-gray-500 font-medium">
+                  {d.abre}–{d.cierra}{d.dobleTurno ? <span className="mx-1 text-gray-300">|</span> : ''}{d.dobleTurno ? `${d.abre2}–${d.cierra2}` : ''}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -126,8 +171,10 @@ export default function BottomNav() {
                   Abrir en Google Maps 
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                 </a>
+                {renderHorarios()}
+                
                 <p className="text-xs text-center text-gray-400 mt-4 leading-relaxed">
-                  Podés retirar tus pedidos en nuestro local físico de Lunes a Sábados.
+                  Podés retirar tus pedidos en nuestro local físico de {DIAS_KEYS.filter(k => config?.horarios?.[k]?.activo).length > 5 ? 'Lunes a Sábados' : 'nuestros días de atención'}.
                 </p>
               </div>
             </div>
