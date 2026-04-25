@@ -122,6 +122,7 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
   const detailImage = detailImageData?.url || null;
   const detailFraming = detailImageData?.framing;
   const [instrucciones, setInstrucciones] = useState('');
+  const [isAdded, setIsAdded] = useState(false);
   
   const hasOferta     = !!precioOferta && precioOferta > 0 && precioOferta < precio;
   const descuento     = hasOferta ? Math.round((1 - precioOferta / precio) * 100) : 0;
@@ -609,30 +610,45 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
                     promoCantidadRequerida,
                     promoPrecioTotal
                   });
-                  setIsDetailOpen(false);
-                  setIsCartOpen(true);
+                  
+                  // Feedback de éxito
+                  setIsAdded(true);
+                  setTimeout(() => {
+                    setIsAdded(false);
+                    setIsDetailOpen(false);
+                    setIsCartOpen(true);
+                  }, 1500);
                 }}
-                disabled={stock !== null && stock !== undefined && stock <= 0}
-                className={`flex-1 ml-4 text-white font-bold h-12 rounded-[1rem] flex items-center justify-center gap-2 shadow-xl shadow-black/20 active:scale-[0.98] transition-all whitespace-nowrap ${
-                  stock !== null && stock !== undefined && stock <= 0
+                disabled={isAdded || (stock !== null && stock !== undefined && stock <= 0)}
+                className={`flex-1 ml-4 text-white font-bold h-12 rounded-[1rem] flex items-center justify-center gap-2 shadow-xl active:scale-[0.98] transition-all whitespace-nowrap duration-300 ${
+                  isAdded
+                    ? 'bg-[#25D366] shadow-[#25D366]/30'
+                    : stock !== null && stock !== undefined && stock <= 0
                     ? 'bg-gray-400 cursor-not-allowed shadow-none'
-                    : 'bg-[var(--black-charcoal)]'
+                    : 'bg-[var(--black-charcoal)] shadow-black/20'
                 }`}
               >
-                {stock !== null && stock !== undefined && stock <= 0 ? (
-                  'Sin Stock'
+                {isAdded ? (
+                  <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span>¡Listo!</span>
+                  </div>
                 ) : (
-                  (() => {
-                    const { total, promoActiva } = calcPromoTotal(quantity);
-                    return (
-                      <>
-                        {promoActiva && <span className="text-[11px] opacity-80">🔥</span>}
-                        Agregar
-                        <span className="opacity-80 font-normal">|</span>
-                        ${total.toLocaleString('es-AR')}
-                      </>
-                    );
-                  })()
+                  stock !== null && stock !== undefined && stock <= 0 ? (
+                    'Sin Stock'
+                  ) : (
+                    (() => {
+                      const { total, promoActiva } = calcPromoTotal(quantity);
+                      return (
+                        <>
+                          {promoActiva && <span className="text-[11px] opacity-80">🔥</span>}
+                          Agregar
+                          <span className="opacity-80 font-normal">|</span>
+                          ${total.toLocaleString('es-AR')}
+                        </>
+                      );
+                    })()
+                  )
                 )}
               </button>
             </div>
