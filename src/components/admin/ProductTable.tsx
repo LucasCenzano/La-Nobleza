@@ -188,7 +188,8 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
                       <div className={`${isCompact ? 'w-8 h-8' : 'w-10 h-10'} rounded-lg bg-cream-100 flex items-center justify-center flex-shrink-0 transition-all`}>
                         <span className={isCompact ? 'text-sm' : 'text-lg'}>🍗</span>
                       </div>
-                                 {editing?.id === p.id && editing?.field === 'nombre' ? (
+                    )}
+                    {editing?.id === p.id && editing?.field === 'nombre' ? (
                       <input
                         autoFocus
                         type="text"
