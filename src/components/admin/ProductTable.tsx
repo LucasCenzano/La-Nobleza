@@ -7,6 +7,7 @@ import { TIPO_VENTA_LABELS, formatPrecioSolo, getCategoriaLabel, CategoriaConfig
 import { TipoVenta } from '@prisma/client';
 import Image from 'next/image';
 import EtiquetaBadge from '@/components/admin/EtiquetaBadge';
+import ProductEditDrawer from '@/components/admin/ProductEditDrawer';
 
 type ProductoExtended = Producto & {
   imagenesUrls?: string[];
@@ -34,6 +35,7 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
   // In-line editing state
   const [editing, setEditing] = useState<{ id: string, field: string } | null>(null);
   const [tempValue, setTempValue] = useState<any>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductoExtended | null>(null);
 
   async function toggleActivo(id: string, currentValue: boolean) {
     const nextValue = !currentValue;
@@ -147,6 +149,13 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
     setEditing({ id, field });
     setTempValue(value);
   };
+
+  function handleFullUpdate(id: string, updated: any) {
+    // We iterate over the keys of the updated object and call onUpdate for each
+    Object.keys(updated).forEach(key => {
+      onUpdate(id, key, (updated as any)[key]);
+    });
+  }
 
   if (productos.length === 0) {
     return (
@@ -402,10 +411,11 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
                 {/* Actions */}
                 <td className={`px-4 ${isCompact ? 'py-1' : 'py-3'} text-right`}>
                   <div className="flex items-center justify-end gap-2">
-                    <a href={`/admin/productos/${p.id}/editar`}
+                    <button
+                      onClick={() => setEditingProduct(p)}
                       className={`btn-secondary px-3 ${isCompact ? 'py-1' : 'py-1.5'} text-xs`}>
                       ✏️ {!isCompact && 'Editar'}
-                    </a>
+                    </button>
                     <button
                       onClick={() => eliminarProducto(p.id, p.nombre)}
                       className={`btn-danger px-3 ${isCompact ? 'py-1' : 'py-1.5'} text-xs`}>
@@ -574,6 +584,16 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
           </div>
         </div>
       )}
+        </div>
+      )}
+
+      {/* Side Drawer Edit */}
+      <ProductEditDrawer 
+        producto={editingProduct}
+        isOpen={!!editingProduct}
+        onClose={() => setEditingProduct(null)}
+        onUpdate={handleFullUpdate}
+      />
     </>
   );
 }

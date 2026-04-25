@@ -10,6 +10,8 @@ import ProductCard from '@/components/catalog/ProductCard';
 interface ProductFormProps {
   initialData?: Partial<Producto & { imagenesUrls?: string[]; etiquetas?: string[] }>;
   mode: 'create' | 'edit';
+  onSuccess?: (updatedProduct: any) => void;
+  onCancel?: () => void;
 }
 
 const TIPOS_VENTA = Object.entries(TIPO_VENTA_LABELS) as [TipoVenta, string][];
@@ -171,8 +173,13 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
     });
 
     if (res.ok) {
-      router.push('/admin/productos');
-      router.refresh();
+      const savedProduct = await res.json();
+      if (onSuccess) {
+        onSuccess(savedProduct);
+      } else {
+        router.push('/admin/productos');
+        router.refresh();
+      }
     } else {
       setLoading(false);
       const data = await res.json().catch(() => ({}));
@@ -605,7 +612,7 @@ export default function ProductForm({ initialData, mode }: ProductFormProps) {
               👁️
             </button>
             <button type="button"
-              onClick={() => router.push('/admin/productos')}
+              onClick={() => onCancel ? onCancel() : router.push('/admin/productos')}
               className="hidden sm:inline-flex px-6 py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 active:scale-95 transition-all text-sm items-center">
               Cancelar
             </button>
