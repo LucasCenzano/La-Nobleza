@@ -19,6 +19,16 @@ export default function BottomNav() {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const { totalItems, setIsCartOpen } = useCart();
   const [config, setConfig] = useState<any>(null);
+  const [isBouncing, setIsBouncing] = useState(false);
+
+  useEffect(() => {
+    const handleCartAdded = () => {
+      setIsBouncing(true);
+      setTimeout(() => setIsBouncing(false), 300);
+    };
+    window.addEventListener('cart-added', handleCartAdded);
+    return () => window.removeEventListener('cart-added', handleCartAdded);
+  }, []);
 
   useEffect(() => {
     fetch('/api/public/configuracion')
@@ -70,8 +80,9 @@ export default function BottomNav() {
 
           {/* Carrito */}
           <button 
+            id="bottom-nav-cart"
             onClick={() => setIsCartOpen(true)}
-            className="flex flex-col items-center justify-center w-full h-full text-[#C5A059] relative transition-colors"
+            className={`flex flex-col items-center justify-center w-full h-full text-[#C5A059] relative transition-all duration-300 ${isBouncing ? 'scale-[1.2] -translate-y-1' : 'scale-100'}`}
           >
             <div className="relative">
               <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -231,7 +242,7 @@ export default function BottomNav() {
                   href="https://www.instagram.com/pollerialanobleza" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-3 bg-[#E1306C] text-white py-3.5 rounded-xl font-bold text-[15px] shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
+                  className="w-full flex items-center justify-center gap-3 bg-[#833AB4] text-white py-3.5 rounded-xl font-bold text-[15px] shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
                 >
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
                   Instagram

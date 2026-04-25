@@ -324,7 +324,40 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
                     promoCantidadRequerida,
                     promoPrecioTotal
                   });
-                  setIsCartOpen(true);
+                  
+                  // --- Salto al Carrito (Efecto Parábola) ---
+                  const btn = e.currentTarget;
+                  const rect = btn.getBoundingClientRect();
+                  const cartBtn = document.getElementById('bottom-nav-cart');
+                  const cartRect = cartBtn?.getBoundingClientRect();
+
+                  if (cartRect) {
+                    const projectile = document.createElement('div');
+                    projectile.className = 'fixed z-[100] w-10 h-10 rounded-full border-2 border-white shadow-xl pointer-events-none overflow-hidden bg-white';
+                    projectile.style.left = `${rect.left}px`;
+                    projectile.style.top = `${rect.top}px`;
+                    projectile.style.transition = 'all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    
+                    if (cardImage) {
+                      projectile.innerHTML = `<img src="${cardImage}" style="width: 100%; height: 100%; object-fit: cover;" />`;
+                    } else {
+                      projectile.style.backgroundColor = 'var(--gold-main)';
+                    }
+
+                    document.body.appendChild(projectile);
+                    projectile.getBoundingClientRect(); // Reflow
+
+                    const targetX = cartRect.left + cartRect.width / 2 - 20;
+                    const targetY = cartRect.top - 10;
+
+                    projectile.style.transform = `translate(${targetX - rect.left}px, ${targetY - rect.top}px) scale(0.3)`;
+                    projectile.style.opacity = '0.7';
+
+                    setTimeout(() => {
+                      projectile.remove();
+                      window.dispatchEvent(new CustomEvent('cart-added'));
+                    }, 800);
+                  }
                 }
               }}
               className="card-quick-add flex w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[var(--black-charcoal)] items-center justify-center transition-all duration-200 shadow-xl shadow-black/10 shrink-0 active:scale-90 border-2 border-white/5"
