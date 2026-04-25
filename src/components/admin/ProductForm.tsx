@@ -41,7 +41,7 @@ function urlsToImages(urls: string[]): UploadedImage[] {
   });
 }
 
-export default function ProductForm({ initialData, mode }: ProductFormProps) {
+export default function ProductForm({ initialData, mode, onSuccess, onCancel }: ProductFormProps) {
   const router = useRouter();
 
   const seedUrls: string[] = initialData?.imagenesUrls?.length
