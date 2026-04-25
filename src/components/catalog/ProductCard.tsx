@@ -406,11 +406,11 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
                   </h2>
                   
                   {promoPersonalizada && (
-                    <div className="mb-3 flex items-center gap-2 text-[12px] font-black px-3 py-1.5 rounded-lg tracking-wide w-fit"
+                    <div className="mb-3 flex items-center gap-2 text-[12px] font-black px-3 py-1.5 rounded-lg tracking-wide w-fit shadow-sm"
                       style={{
-                        background: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
+                        background: 'linear-gradient(135deg, #fef3c7, #fcd34d)',
                         color: '#92400e',
-                        border: '1px solid rgba(212,175,55,0.3)',
+                        border: '1.5px solid #f59e0b',
                       }}
                     >
                       🔥 <span className="uppercase">{promoPersonalizada}</span>
@@ -474,16 +474,16 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
 
                     if (promoActiva) {
                       return (
-                        <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold animate-fade-in"
-                          style={{ background: 'linear-gradient(135deg,#fef3c7,#fde68a)', color: '#92400e', border: '1.5px solid rgba(212,175,55,0.4)' }}>
+                        <div className="mt-3 flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-black animate-fade-in shadow-md"
+                          style={{ background: 'linear-gradient(135deg, #fef3c7, #fbbf24)', color: '#92400e', border: '1.5px solid #f59e0b' }}>
                           <span className="text-base">🔥</span>
                           <span>¡Combo aplicado! ${Number(promoPrecioTotal).toLocaleString('es-AR')} por {req}{unidad}</span>
                         </div>
                       );
                     }
                     return (
-                      <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium"
-                        style={{ background: '#f9fafb', color: '#6b7280', border: '1.5px dashed #d1d5db' }}>
+                      <div className="mt-3 flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold"
+                        style={{ background: '#fff7ed', color: '#ea580c', border: '1.5px dashed #fdba74' }}>
                         <span className="text-base">💡</span>
                         <span>Llevando {faltan > 0 ? `${faltan} ${unidad} más` : `${req}${unidad}`} pagás solo <strong>${Number(promoPrecioTotal).toLocaleString('es-AR')}</strong></span>
                       </div>
