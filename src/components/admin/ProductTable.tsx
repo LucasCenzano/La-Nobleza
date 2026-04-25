@@ -475,28 +475,12 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
               >
                 ⏸️ Pausar
               </button>
-              <div className="relative">
-                <button 
-                  onClick={() => setIsBulkCategoryOpen(!isBulkCategoryOpen)}
-                  className="btn-secondary py-1.5 px-3 text-xs whitespace-nowrap"
-                >
-                  🏷️ Cambiar Cat.
-                </button>
-                {isBulkCategoryOpen && (
-                  <div className="absolute bottom-full mb-2 left-0 w-48 bg-white border border-gray-100 shadow-xl rounded-xl p-2 flex flex-col gap-1 max-h-60 overflow-y-auto">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase px-2 py-1">Seleccionar destino</p>
-                    {categorias.map(cat => (
-                      <button
-                        key={cat.id}
-                        onClick={() => handleBulkAction('CHANGE_CATEGORY', { categoria: cat.slug })}
-                        className="w-full text-left px-2 py-1.5 rounded-lg hover:bg-gray-50 text-xs text-gray-700 transition-colors"
-                      >
-                        {cat.emoji} {cat.nombre}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <button 
+                onClick={() => setIsBulkCategoryOpen(true)}
+                className="btn-secondary py-1.5 px-3 text-xs whitespace-nowrap"
+              >
+                🏷️ Cambiar Cat.
+              </button>
 
               <button 
                 onClick={() => setIsBulkPriceOpen(true)}
@@ -613,6 +597,45 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
         onClose={() => setEditingProduct(null)}
         onUpdate={handleFullUpdate}
       />
+
+      {/* Bulk Category Selection Modal */}
+      {isBulkCategoryOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-[2rem] w-full max-w-md p-8 shadow-2xl animate-pop-in">
+            <div className="w-16 h-16 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">
+              🏷️
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 text-center mb-2 leading-tight">
+              Mover a Categoría
+            </h3>
+            <p className="text-sm text-gray-500 text-center mb-8">
+              Seleccioná la categoría de destino para los {selectedIds.length} productos.
+            </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+              {categorias.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => handleBulkAction('CHANGE_CATEGORY', { categoria: cat.slug })}
+                  className="flex items-center gap-3 p-4 rounded-2xl border-2 border-gray-50 hover:border-brand-200 hover:bg-brand-50 transition-all text-left group"
+                >
+                  <span className="text-2xl group-hover:scale-125 transition-transform">{cat.emoji}</span>
+                  <span className="text-sm font-bold text-gray-700">{cat.nombre}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-8">
+              <button
+                onClick={() => setIsBulkCategoryOpen(false)}
+                className="w-full h-12 rounded-xl text-gray-500 font-semibold hover:bg-gray-100 transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
