@@ -17,9 +17,11 @@ type ProductoExtended = Producto & {
 interface ProductTableProps {
   productos:  ProductoExtended[];
   categorias: CategoriaConfigType[];
+  onUpdate:   (id: string, field: string, value: any) => void;
+  onRemove:   (ids: string[]) => void;
 }
 
-export default function ProductTable({ productos, categorias }: ProductTableProps) {
+export default function ProductTable({ productos, categorias, onUpdate, onRemove }: ProductTableProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -32,12 +34,14 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
   const [tempValue, setTempValue] = useState<any>(null);
 
   async function toggleActivo(id: string, currentValue: boolean) {
+    const nextValue = !currentValue;
+    onUpdate(id, 'activo', nextValue);
+
     await fetch(`/api/admin/productos/${id}`, {
       method:  'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ activo: !currentValue }),
+      body:    JSON.stringify({ activo: nextValue }),
     });
-    startTransition(() => router.refresh());
   }
 
   async function handleBulkAction(action: 'ACTIVATE' | 'PAUSE' | 'DELETE' | 'CHANGE_CATEGORY', data?: any) {
@@ -48,6 +52,11 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
       return;
     }
 
+    // Optimistic update
+    if (action === 'ACTIVATE') selectedIds.forEach(id => onUpdate(id, 'activo', true));
+    if (action === 'PAUSE')    selectedIds.forEach(id => onUpdate(id, 'activo', false));
+    if (action === 'CHANGE_CATEGORY') selectedIds.forEach(id => onUpdate(id, 'categoria', data.categoria));
+
     await fetch('/api/admin/productos/bulk-update', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -56,12 +65,13 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
 
     setSelectedIds([]);
     setIsBulkCategoryOpen(false);
-    startTransition(() => router.refresh());
   }
 
   async function executeDelete() {
     if (!confirmDelete) return;
     
+    onRemove(confirmDelete.ids);
+
     await fetch('/api/admin/productos/bulk-update', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -70,7 +80,6 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
 
     setConfirmDelete(null);
     setSelectedIds([]);
-    startTransition(() => router.refresh());
   }
 
   async function eliminarProducto(id: string, nombre: string) {
@@ -98,13 +107,14 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
     const p = productos.find(x => x.id === id);
     if (p && (p as any)[field] === value) return;
 
+    // Optimistic update
+    onUpdate(id, field, value);
+
     await fetch(`/api/admin/productos/${id}`, {
       method:  'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ [field]: value }),
     });
-    
-    startTransition(() => router.refresh());
   }
 
   const startEditing = (id: string, field: string, value: any) => {

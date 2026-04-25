@@ -20,6 +20,7 @@ interface Props {
 }
 
 export default function ProductManagerClient({ initialProductos, categorias }: Props) {
+  const [allProductos, setAllProductos] = useState<ProductoExtended[]>(initialProductos);
   // ─── Filter State ──────────────────────────────────────────────
   const [q, setQ] = useState('');
   const [estado, setEstado] = useState('');
@@ -29,7 +30,7 @@ export default function ProductManagerClient({ initialProductos, categorias }: P
 
   // ─── Computed Filtering ────────────────────────────────────────
   const filteredProductos = useMemo(() => {
-    let result = [...initialProductos];
+    let result = [...allProductos];
 
     if (q) {
       const search = q.toLowerCase();
@@ -73,13 +74,21 @@ export default function ProductManagerClient({ initialProductos, categorias }: P
   // ─── Stats ─────────────────────────────────────────────────────
   const stats = useMemo(() => {
     return {
-      total:    initialProductos.length,
-      activos:  initialProductos.filter(p => p.activo).length,
-      pausados: initialProductos.filter(p => !p.activo).length,
-      sinFoto:  initialProductos.filter(p => !p.imagenUrl && (!p.imagenesUrls || p.imagenesUrls.length === 0)).length,
-      enOferta: initialProductos.filter(p => !!p.precioOferta && p.precioOferta > 0).length,
+      total:    allProductos.length,
+      activos:  allProductos.filter(p => p.activo).length,
+      pausados: allProductos.filter(p => !p.activo).length,
+      sinFoto:  allProductos.filter(p => !p.imagenUrl && (!p.imagenesUrls || p.imagenesUrls.length === 0)).length,
+      enOferta: allProductos.filter(p => !!p.precioOferta && p.precioOferta > 0).length,
     };
-  }, [initialProductos]);
+  }, [allProductos]);
+
+  function onUpdateProduct(id: string, field: string, value: any) {
+    setAllProductos(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
+  }
+
+  function onRemoveProducts(ids: string[]) {
+    setAllProductos(prev => prev.filter(p => !ids.includes(p.id)));
+  }
 
   const isFiltered = !!(q || estado || categoria || etiqueta);
 
@@ -111,7 +120,7 @@ export default function ProductManagerClient({ initialProductos, categorias }: P
           )}
         </div>
         <div className="flex items-center gap-3">
-          <ProductImportWrapper categorias={categorias} productos={initialProductos} />
+          <ProductImportWrapper categorias={categorias} productos={allProductos} />
           <Link href="/admin/productos/nuevo" className="btn-primary">
             ➕ Nuevo Producto
           </Link>
@@ -150,7 +159,12 @@ export default function ProductManagerClient({ initialProductos, categorias }: P
       />
 
       {/* Table */}
-      <ProductTable productos={filteredProductos as any} categorias={categorias} />
+      <ProductTable 
+        productos={filteredProductos as any} 
+        categorias={categorias} 
+        onUpdate={onUpdateProduct}
+        onRemove={onRemoveProducts}
+      />
     </main>
   );
 }
