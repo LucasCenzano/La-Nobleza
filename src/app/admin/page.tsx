@@ -172,7 +172,9 @@ export default async function AdminDashboardPage() {
                         {thumb ? (
                           <Image src={thumb} alt={p.nombre} fill className="object-cover" sizes="40px" />
                         ) : (
-                          <span className="w-full h-full flex items-center justify-center text-lg">🍗</span>
+                          <span className="w-full h-full flex items-center justify-center text-lg">
+                            {catMap[p.categoria]?.emoji || '📦'}
+                          </span>
                         )}
                       </div>
 
