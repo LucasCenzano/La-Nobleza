@@ -97,8 +97,9 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
-      <table className="min-w-full divide-y divide-gray-100 text-sm">
+    <>
+      <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
+        <table className="min-w-full divide-y divide-gray-100 text-sm">
         <thead className="bg-gray-50">
           <tr>
             <th className={`px-4 ${isCompact ? 'py-1.5' : 'py-3'} text-left w-10`}>
@@ -353,6 +354,6 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
