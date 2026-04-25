@@ -27,6 +27,7 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkCategoryOpen, setIsBulkCategoryOpen] = useState(false);
   const [isBulkPriceOpen, setIsBulkPriceOpen] = useState(false);
+  const [bulkPriceValue, setBulkPriceValue] = useState<string>('');
   const [isCompact, setIsCompact] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<{ ids: string[], nombre?: string } | null>(null);
   
@@ -466,34 +467,12 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
                 )}
               </div>
 
-              <div className="relative">
-                <button 
-                  onClick={() => setIsBulkPriceOpen(!isBulkPriceOpen)}
-                  className="btn-secondary py-1.5 px-3 text-xs whitespace-nowrap text-brand-700 border-brand-100 hover:bg-brand-50"
-                >
-                  💰 Ajustar %
-                </button>
-                {isBulkPriceOpen && (
-                  <div className="absolute bottom-full mb-2 left-0 w-48 bg-white border border-gray-100 shadow-xl rounded-xl p-3 flex flex-col gap-2">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase">Ajustar Precios</p>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="number" 
-                        placeholder="+10"
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleBulkAction('ADJUST_PRICE', { percentage: parseFloat((e.target as HTMLInputElement).value) });
-                          }
-                        }}
-                        className="input text-sm py-1.5"
-                      />
-                      <span className="text-sm font-bold text-gray-500">%</span>
-                    </div>
-                    <p className="text-[9px] text-gray-400 leading-tight">Usa valores positivos para aumentar o negativos para bajar.</p>
-                  </div>
-                )}
-              </div>
+              <button 
+                onClick={() => setIsBulkPriceOpen(true)}
+                className="btn-secondary py-1.5 px-3 text-xs whitespace-nowrap text-brand-700 border-brand-100 hover:bg-brand-50"
+              >
+                💰 Ajustar %
+              </button>
 
               <button 
                 onClick={() => handleBulkAction('TOGGLE_OFFER')}
@@ -542,6 +521,51 @@ export default function ProductTable({ productos, categorias, onUpdate, onRemove
               </button>
               <button
                 onClick={() => setConfirmDelete(null)}
+                className="w-full h-12 rounded-xl text-gray-500 font-semibold hover:bg-gray-100 transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Price Adjustment Modal */}
+      {isBulkPriceOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-[2rem] w-full max-w-sm p-8 shadow-2xl animate-pop-in">
+            <div className="w-16 h-16 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">
+              💰
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 text-center mb-2 leading-tight">
+              Ajustar Precios
+            </h3>
+            <p className="text-sm text-gray-500 text-center mb-6">
+              Se aplicará un cambio porcentual a los {selectedIds.length} productos seleccionados.
+            </p>
+            
+            <div className="relative mb-8">
+              <input
+                autoFocus
+                type="number"
+                placeholder="+10"
+                value={bulkPriceValue}
+                onChange={(e) => setBulkPriceValue(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleBulkAction('ADJUST_PRICE', { percentage: parseFloat(bulkPriceValue) })}
+                className="w-full h-14 bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 text-center text-2xl font-bold focus:border-brand-500 focus:bg-white outline-none transition-all"
+              />
+              <span className="absolute right-6 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-300 pointer-events-none">%</span>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => handleBulkAction('ADJUST_PRICE', { percentage: parseFloat(bulkPriceValue) })}
+                disabled={!bulkPriceValue}
+                className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed text-white h-12 rounded-xl font-bold transition-colors shadow-lg shadow-brand-200"
+              >
+                Aplicar ajuste
+              </button>
+              <button
+                onClick={() => { setIsBulkPriceOpen(false); setBulkPriceValue(''); }}
                 className="w-full h-12 rounded-xl text-gray-500 font-semibold hover:bg-gray-100 transition-colors"
               >
                 Cancelar
