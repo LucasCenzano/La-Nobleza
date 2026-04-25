@@ -26,6 +26,10 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
   const [isBulkCategoryOpen, setIsBulkCategoryOpen] = useState(false);
   const [isCompact, setIsCompact] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<{ ids: string[], nombre?: string } | null>(null);
+  
+  // In-line editing state
+  const [editing, setEditing] = useState<{ id: string, field: string } | null>(null);
+  const [tempValue, setTempValue] = useState<any>(null);
 
   async function toggleActivo(id: string, currentValue: boolean) {
     await fetch(`/api/admin/productos/${id}`, {
@@ -86,6 +90,27 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   }
+
+  async function saveInLine(id: string, field: string, value: any) {
+    setEditing(null);
+    
+    // Si el valor no cambió, no hacemos nada
+    const p = productos.find(x => x.id === id);
+    if (p && (p as any)[field] === value) return;
+
+    await fetch(`/api/admin/productos/${id}`, {
+      method:  'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ [field]: value }),
+    });
+    
+    startTransition(() => router.refresh());
+  }
+
+  const startEditing = (id: string, field: string, value: any) => {
+    setEditing({ id, field });
+    setTempValue(value);
+  };
 
   if (productos.length === 0) {
     return (
@@ -163,69 +188,167 @@ export default function ProductTable({ productos, categorias }: ProductTableProp
                       <div className={`${isCompact ? 'w-8 h-8' : 'w-10 h-10'} rounded-lg bg-cream-100 flex items-center justify-center flex-shrink-0 transition-all`}>
                         <span className={isCompact ? 'text-sm' : 'text-lg'}>🍗</span>
                       </div>
+                                 {editing?.id === p.id && editing?.field === 'nombre' ? (
+                      <input
+                        autoFocus
+                        type="text"
+                        value={tempValue}
+                        onChange={(e) => setTempValue(e.target.value)}
+                        onBlur={() => saveInLine(p.id, 'nombre', tempValue)}
+                        onKeyDown={(e) => e.key === 'Enter' && saveInLine(p.id, 'nombre', tempValue)}
+                        className="flex-1 bg-white border-2 border-brand-500 rounded-md px-2 py-1 text-sm outline-none shadow-inner"
+                      />
+                    ) : (
+                      <span 
+                        onDoubleClick={() => startEditing(p.id, 'nombre', p.nombre)}
+                        className={`font-medium text-gray-900 leading-tight cursor-edit hover:text-brand-600 transition-colors ${isCompact ? 'text-xs' : 'text-sm'}`}
+                        title="Doble clic para editar"
+                      >
+                        {p.nombre}
+                      </span>
                     )}
-                    <span className={`font-medium text-gray-900 leading-tight ${isCompact ? 'text-xs' : 'text-sm'}`}>{p.nombre}</span>
                   </div>
                 </td>
 
                 {/* Category */}
                 <td className={`px-4 ${isCompact ? 'py-1' : 'py-3'} hidden sm:table-cell`}>
-                  <span className={`badge-orange ${isCompact ? 'px-1.5 py-0 text-[10px]' : ''}`}>{catLabel}</span>
+                  {editing?.id === p.id && editing?.field === 'categoria' ? (
+                    <select
+                      autoFocus
+                      value={tempValue}
+                      onChange={(e) => { setTempValue(e.target.value); saveInLine(p.id, 'categoria', e.target.value); }}
+                      onBlur={() => setEditing(null)}
+                      className="bg-white border-2 border-brand-500 rounded-md px-1 py-1 text-xs outline-none"
+                    >
+                      {categorias.map(c => (
+                        <option key={c.slug} value={c.slug}>{c.emoji} {c.nombre}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span 
+                      onDoubleClick={() => startEditing(p.id, 'categoria', p.categoria)}
+                      className={`badge-orange cursor-edit hover:bg-orange-200 transition-all ${isCompact ? 'px-1.5 py-0 text-[10px]' : ''}`}
+                      title="Doble clic para cambiar categoría"
+                    >
+                      {catLabel}
+                    </span>
+                  )}
                 </td>
 
                 {/* Stock */}
                 <td className={`px-4 ${isCompact ? 'py-1' : 'py-3'}`}>
-                  {p.stock !== null && p.stock !== undefined ? (
-                    <span className={`font-bold ${isCompact ? 'text-xs' : ''} ${p.stock <= 0 ? 'text-red-500' : p.stock < 5 ? 'text-amber-600' : 'text-gray-700'}`}>
-                      {p.stock} {p.tipoVenta === 'PESO' ? 'kg' : 'un.'}
-                    </span>
+                  {editing?.id === p.id && editing?.field === 'stock' ? (
+                    <input
+                      autoFocus
+                      type="number"
+                      value={tempValue ?? ''}
+                      onChange={(e) => setTempValue(e.target.value === '' ? null : parseFloat(e.target.value))}
+                      onBlur={() => saveInLine(p.id, 'stock', tempValue)}
+                      onKeyDown={(e) => e.key === 'Enter' && saveInLine(p.id, 'stock', tempValue)}
+                      className="w-20 bg-white border-2 border-brand-500 rounded-md px-2 py-1 text-xs font-bold outline-none"
+                    />
                   ) : (
-                    <span className={`text-gray-400 italic ${isCompact ? 'text-[10px]' : 'text-xs'}`}>Ilimitado</span>
+                    <div onDoubleClick={() => startEditing(p.id, 'stock', p.stock)}>
+                      {p.stock !== null && p.stock !== undefined ? (
+                        <span className={`font-bold cursor-edit hover:text-brand-600 transition-colors ${isCompact ? 'text-xs' : ''} ${p.stock <= 0 ? 'text-red-500' : p.stock < 5 ? 'text-amber-600' : 'text-gray-700'}`}>
+                          {p.stock} {p.tipoVenta === 'PESO' ? 'kg' : 'un.'}
+                        </span>
+                      ) : (
+                        <span className={`text-gray-400 italic cursor-edit hover:text-brand-600 ${isCompact ? 'text-[10px]' : 'text-xs'}`}>Ilimitado</span>
+                      )}
+                    </div>
                   )}
                 </td>
 
                 {/* Price */}
                 <td className={`px-4 ${isCompact ? 'py-1' : 'py-3'} whitespace-nowrap`}>
-                  {hasOferta ? (
-                    <div className={isCompact ? 'flex items-center gap-2' : ''}>
-                      <p className={`text-gray-400 line-through leading-none ${isCompact ? 'text-[10px]' : 'text-xs mb-1'}`}>
-                        {formatPrecioSolo(p.precio)}
-                      </p>
-                      <p className={`font-bold text-red-600 leading-tight ${isCompact ? 'text-xs' : 'text-sm'}`}>
-                        {formatPrecioSolo(p.precioOferta!)}
-                        {!isCompact && (
-                          <span className="ml-1 text-[10px] font-semibold bg-red-100 text-red-600 px-1 py-0.5 rounded">
-                            -{Math.round((1 - p.precioOferta! / p.precio) * 100)}%
-                          </span>
-                        )}
-                      </p>
-                      {!isCompact && (
-                        <p className="text-[10px] text-gray-400">
-                          {TIPO_VENTA_LABELS[p.tipoVenta as TipoVenta]}
-                        </p>
-                      )}
+                  {editing?.id === p.id && editing?.field === 'precio' ? (
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-400">$</span>
+                        <input
+                          autoFocus
+                          type="number"
+                          value={tempValue}
+                          onChange={(e) => setTempValue(parseFloat(e.target.value))}
+                          onBlur={() => saveInLine(p.id, 'precio', tempValue)}
+                          onKeyDown={(e) => e.key === 'Enter' && saveInLine(p.id, 'precio', tempValue)}
+                          className="w-24 bg-white border-2 border-brand-500 rounded-md px-2 py-1 text-sm font-bold outline-none"
+                        />
+                      </div>
                     </div>
                   ) : (
-                    <span className={`font-semibold text-brand-700 ${isCompact ? 'text-xs' : ''}`}>
-                      {formatPrecioSolo(p.precio)}
-                      {!isCompact && (
-                        <span className="ml-1 text-xs font-normal text-gray-400">
-                          {TIPO_VENTA_LABELS[p.tipoVenta as TipoVenta]}
+                    <div onDoubleClick={() => startEditing(p.id, 'precio', p.precio)}>
+                      {hasOferta ? (
+                        <div className={isCompact ? 'flex items-center gap-2' : ''}>
+                          <p className={`text-gray-400 line-through leading-none cursor-edit ${isCompact ? 'text-[10px]' : 'text-xs mb-1'}`}>
+                            {formatPrecioSolo(p.precio)}
+                          </p>
+                          <p className={`font-bold text-red-600 leading-tight cursor-edit ${isCompact ? 'text-xs' : 'text-sm'}`}>
+                            {formatPrecioSolo(p.precioOferta!)}
+                            {!isCompact && (
+                              <span className="ml-1 text-[10px] font-semibold bg-red-100 text-red-600 px-1 py-0.5 rounded">
+                                -{Math.round((1 - p.precioOferta! / p.precio) * 100)}%
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      ) : (
+                        <span className={`font-semibold text-brand-700 cursor-edit hover:text-brand-900 transition-colors ${isCompact ? 'text-xs' : ''}`}>
+                          {formatPrecioSolo(p.precio)}
+                          {!isCompact && (
+                            <span className="ml-1 text-xs font-normal text-gray-400">
+                              {TIPO_VENTA_LABELS[p.tipoVenta as TipoVenta]}
+                            </span>
+                          )}
                         </span>
                       )}
-                    </span>
+                    </div>
                   )}
                 </td>
 
                 {/* Etiquetas */}
                 <td className={`px-4 ${isCompact ? 'py-1' : 'py-3'} hidden md:table-cell`}>
-                  <div className="flex flex-wrap gap-1">
-                    {(p.etiquetas ?? []).length > 0
-                      ? (p.etiquetas ?? []).map((slug) => (
-                          <EtiquetaBadge key={slug} slug={slug} compact={isCompact} />
-                        ))
-                      : <span className="text-xs text-gray-300">—</span>
-                    }
+                  <div 
+                    className="flex flex-wrap gap-1 cursor-edit min-h-[20px] min-w-[50px] hover:bg-gray-50 rounded p-1 transition-colors"
+                    onDoubleClick={() => startEditing(p.id, 'etiquetas', p.etiquetas ?? [])}
+                  >
+                    {editing?.id === p.id && editing?.field === 'etiquetas' ? (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20" onClick={() => saveInLine(p.id, 'etiquetas', tempValue)}>
+                        <div className="bg-white p-4 rounded-2xl shadow-2xl flex flex-col gap-3 min-w-[200px]" onClick={e => e.stopPropagation()}>
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Etiquetas</p>
+                          <div className="flex flex-col gap-1">
+                            {['NUEVO', 'DESTACADO', 'OFERTA', 'SIN_STOCK'].map(slug => {
+                              const active = tempValue.includes(slug);
+                              return (
+                                <button
+                                  key={slug}
+                                  onClick={() => {
+                                    const next = active ? tempValue.filter((s: string) => s !== slug) : [...tempValue, slug];
+                                    setTempValue(next);
+                                  }}
+                                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all ${active ? 'bg-brand-600 text-white shadow-md' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}
+                                >
+                                  {active ? '✅' : '⬜'} {slug}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <button 
+                            onClick={() => saveInLine(p.id, 'etiquetas', tempValue)}
+                            className="btn-primary py-2 text-xs"
+                          >
+                            Listo
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      (p.etiquetas ?? []).length > 0
+                        ? (p.etiquetas ?? []).map((slug) => (
+                            <EtiquetaBadge key={slug} slug={slug} compact={isCompact} />
+                          ))
+                        : <span className="text-xs text-gray-300">—</span>
+                    )}
                   </div>
                 </td>
 
