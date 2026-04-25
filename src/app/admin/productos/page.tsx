@@ -43,24 +43,9 @@ function buildTitle(estado?: string, categoria?: string, etiqueta?: string): str
   return 'Gestión de Productos';
 }
 
-export default async function AdminProductosPage({ searchParams }: PageProps) {
+export default async function AdminProductosPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect('/admin/login');
-
-  const { q, estado, categoria, etiqueta, sort } = searchParams;
-
-  // ─── Build Prisma WHERE ────────────────────────────────────────
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const where: any = { eliminado: false };
-
-  if (q)         where.nombre    = { contains: q, mode: 'insensitive' };
-  if (categoria) where.categoria = categoria;
-  if (etiqueta)  where.etiquetas = { has: etiqueta };
-
-  if (estado === 'activos')   where.activo = true;
-  if (estado === 'pausados')  where.activo = false;
-  if (estado === 'en_oferta') where.precioOferta = { not: null };
-  // 'sin_foto' is handled post-fetch (array filter)
 
   const PRODUCT_SELECT = {
     id: true, nombre: true, descripcion: true, precio: true, precioOferta: true,
@@ -71,86 +56,25 @@ export default async function AdminProductosPage({ searchParams }: PageProps) {
     imagenUrl: true, imagenesUrls: true, imagenesFraming: true
   };
 
-  const [todosProductosData, categorias] = await Promise.all([
+  const [productos, categorias] = await Promise.all([
     prisma.producto.findMany({
-      where,
-      orderBy: buildOrderBy(sort),
+      where: { eliminado: false },
+      orderBy: [{ orden: 'asc' }, { nombre: 'asc' }],
       select: PRODUCT_SELECT,
     }),
     prisma.categoriaConfig.findMany({ orderBy: [{ orden: 'asc' }] }),
   ]);
 
-  const todosProductos = todosProductosData;
-
-  // Post-fetch filter for sin_foto
-  const productos = estado === 'sin_foto'
-    ? todosProductos.filter((p) => !p.imagenUrl && (!p.imagenesUrls?.length))
-    : todosProductos;
-
-  // Global counts (using select to avoid payload size)
-  const allProductosData = await prisma.producto.findMany({ where: { eliminado: false }, select: { id: true, activo: true, precioOferta: true, imagenUrl: true, imagenesUrls: true } });
-  const totalAll  = allProductosData.length;
-  const activos   = allProductosData.filter((p) => p.activo).length;
-  const pausados  = allProductosData.filter((p) => !p.activo).length;
-  const sinFoto   = allProductosData.filter((p) => !p.imagenUrl && (!p.imagenesUrls?.length)).length;
-  const enOferta  = allProductosData.filter((p) => !!(p as any).precioOferta).length;
-
-  const isFiltered = !!(q || estado || categoria || etiqueta);
-  const pageTitle  = buildTitle(estado, categoria, etiqueta);
-
   return (
     <>
       <AdminNav />
-      <main className="max-w-6xl mx-auto px-4 py-8">
-
-        {/* ── Page header ─────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="font-display text-2xl font-bold text-gray-900">{pageTitle}</h1>
-            {isFiltered && (
-              <p className="text-sm text-gray-500 mt-0.5">
-                Mostrando {productos.length} de {totalAll} productos
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            <ProductImportWrapper categorias={categorias} productos={todosProductosData} />
-            <Link href="/admin/productos/nuevo" className="btn-primary">
-              ➕ Nuevo Producto
-            </Link>
-          </div>
-        </div>
-
-        {/* ── Mini stat chips (always visible) ────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-6">
-          {[
-            { label: 'Total',     value: totalAll, href: '/admin/productos',                 color: 'bg-gray-100 text-gray-700',   active: !isFiltered && !estado },
-            { label: 'Activos',   value: activos,  href: '/admin/productos?estado=activos',  color: 'bg-green-100 text-green-700', active: estado === 'activos'  },
-            { label: 'Pausados',  value: pausados, href: '/admin/productos?estado=pausados', color: 'bg-amber-100 text-amber-700', active: estado === 'pausados' },
-            { label: 'Sin foto',  value: sinFoto,  href: '/admin/productos?estado=sin_foto', color: 'bg-blue-100 text-blue-700',   active: estado === 'sin_foto' },
-            { label: 'En oferta', value: enOferta, href: '/admin/productos?estado=en_oferta',color: 'bg-red-100 text-red-700',     active: estado === 'en_oferta'},
-          ].map((chip) => (
-            <Link
-              key={chip.label}
-              href={chip.href}
-              className={`${chip.color} rounded-xl px-3 py-2 text-center transition-all hover:shadow-sm hover:-translate-y-0.5 ${
-                chip.active ? 'ring-2 ring-offset-1 ring-current shadow-sm' : ''
-              }`}
-            >
-              <p className="text-xl font-bold tabular-nums">{chip.value}</p>
-              <p className="text-[10px] font-semibold opacity-80">{chip.label}</p>
-            </Link>
-          ))}
-        </div>
-
-        {/* ── Filters bar ─────────────────────────────────────── */}
-        <Suspense fallback={<div className="h-28 rounded-2xl bg-gray-50 animate-pulse mb-6" />}>
-          <ProductFilters categorias={categorias} totalCount={productos.length} />
-        </Suspense>
-
-        {/* ── Table ───────────────────────────────────────────── */}
-        <ProductTable productos={productos as any} categorias={categorias} />
-      </main>
+      <ProductManagerClient 
+        initialProductos={productos as any} 
+        categorias={categorias} 
+      />
     </>
   );
 }
+
+// ─── Simple Client Manager ──────────────────────────────────────────
+import ProductManagerClient from '@/components/admin/ProductManagerClient';
