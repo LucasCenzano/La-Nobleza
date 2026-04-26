@@ -179,6 +179,8 @@
 
   .input-search::placeholder {
     color: #888888;
+    font-size: 14px;
+    letter-spacing: -0.01em;
   }
 }
 

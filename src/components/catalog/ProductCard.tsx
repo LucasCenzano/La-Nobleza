@@ -306,9 +306,9 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
 
               {/* Promo info integrada debajo del precio (Solo Desktop) */}
               {promoPersonalizada && (
-                <div className="hidden sm:flex items-center gap-2 mt-2 py-2 px-3.5 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 shadow-sm">
+                <div className="hidden sm:flex items-center gap-2.5 mt-2.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 shadow-sm">
                   <span className="text-amber-600 text-xs animate-pulse">🔥</span>
-                  <span className="text-[11px] font-black text-amber-950 leading-tight uppercase tracking-tighter">
+                  <span className="text-[11.5px] font-black text-amber-950 leading-tight uppercase tracking-tighter">
                     {promoPersonalizada}
                   </span>
                 </div>

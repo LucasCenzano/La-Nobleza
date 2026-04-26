@@ -79,7 +79,7 @@ export default function CatalogClientWrapper({ initialProductos, categorias }: C
 
   return (
     <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start w-full relative pb-16 md:pb-8">
-      <aside className="w-full md:w-[260px] lg:w-[280px] shrink-0 md:sticky md:top-[88px] z-30 md:pt-6">
+      <aside className="w-full md:w-[280px] lg:w-[300px] shrink-0 md:sticky md:top-[88px] z-30 md:pt-6">
         <SearchFilters 
           query={q} onQueryChange={setQ}
           categoria={cat} onCategoriaChange={setCat}
