@@ -59,9 +59,6 @@ export function CatalogBanner({ config }: { config: BannerData | null }) {
 export function CatalogHorarios({ config }: { config: BannerData | null }) {
   if (!config?.horariosActivos || !config.horarios) return null;
 
-  const dias = Object.entries(config.horarios);
-  const abiertos  = dias.filter(([, h]) => h.activo);
-
   const today = new Date().getDay();
   const dayKeyMap: Record<number, string> = {
     1: 'lunes', 2: 'martes', 3: 'miercoles',
@@ -70,6 +67,40 @@ export function CatalogHorarios({ config }: { config: BannerData | null }) {
   const todayKey     = dayKeyMap[today];
   const todayHorario = config.horarios[todayKey];
   const isOpenToday  = todayHorario?.activo;
+
+  // ── Agrupar días consecutivos con el mismo horario ──
+  const ORDERED_KEYS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+
+  function scheduleKey(h: HorarioDia): string {
+    if (!h.activo) return '__CLOSED__';
+    return `${h.abre}-${h.cierra}${h.dobleTurno ? `|${h.abre2 || '18:00'}-${h.cierra2 || '22:00'}` : ''}`;
+  }
+
+  function formatSchedule(h: HorarioDia): string {
+    return `${h.abre}–${h.cierra}${h.dobleTurno ? ` y ${h.abre2 || '18:00'}–${h.cierra2 || '22:00'}` : ''}`;
+  }
+
+  // Build groups of consecutive days with same schedule
+  const groups: { days: string[]; schedule: string; closed: boolean }[] = [];
+  for (const key of ORDERED_KEYS) {
+    const h = config.horarios[key];
+    if (!h) continue;
+    const sKey = scheduleKey(h);
+    const last = groups[groups.length - 1];
+    if (last && scheduleKey(config.horarios[last.days[last.days.length - 1]] as HorarioDia) === sKey) {
+      last.days.push(key);
+    } else {
+      groups.push({ days: [key], schedule: h.activo ? formatSchedule(h) : '', closed: !h.activo });
+    }
+  }
+
+  // Filter out closed groups (we only show open ones)
+  const openGroups = groups.filter(g => !g.closed);
+
+  function groupLabel(days: string[]): string {
+    if (days.length === 1) return DIAS_LABEL[days[0]] ?? days[0];
+    return `${DIAS_LABEL[days[0]]} a ${DIAS_LABEL[days[days.length - 1]]}`;
+  }
 
   return (
     <div
@@ -87,10 +118,10 @@ export function CatalogHorarios({ config }: { config: BannerData | null }) {
             : 'Hoy cerrado'}
         </span>
 
-        {abiertos.map(([key, h]) => (
-          <span key={key} style={{ color: 'rgba(90,60,30,0.6)' }}>
-            <strong style={{ color: 'rgba(90,60,30,0.85)' }}>{DIAS_LABEL[key] ?? key}:</strong>{' '}
-            {h.abre}–{h.cierra}{h.dobleTurno ? ` y ${h.abre2 || '18:00'}–${h.cierra2 || '22:00'}` : ''}
+        {openGroups.map((g, i) => (
+          <span key={i} style={{ color: 'rgba(90,60,30,0.6)' }}>
+            <strong style={{ color: 'rgba(90,60,30,0.85)' }}>{groupLabel(g.days)}:</strong>{' '}
+            {g.schedule}
           </span>
         ))}
       </div>
