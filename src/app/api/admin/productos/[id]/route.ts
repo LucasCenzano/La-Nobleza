@@ -67,16 +67,41 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const body = await req.json();
 
     // ── SEGURIDAD: Whitelist de campos permitidos via PATCH ────────────────
-    // Solo se permiten activo y orden — los únicos campos que el frontend
-    // actualiza por esta vía (toggle rápido y reordenamiento).
-    // Tipado explícito para compatibilidad con Prisma.
-    const safeData: { activo?: boolean; orden?: number } = {};
+    // Campos que el frontend actualiza inline desde la tabla de productos.
+    const safeData: {
+      activo?: boolean;
+      orden?: number;
+      nombre?: string;
+      categoria?: string;
+      stock?: number | null;
+      precio?: number;
+      precioOferta?: number | null;
+      etiquetas?: string[];
+    } = {};
 
     if ('activo' in body && typeof body.activo === 'boolean') {
       safeData.activo = body.activo;
     }
     if ('orden' in body && typeof body.orden === 'number') {
       safeData.orden = body.orden;
+    }
+    if ('nombre' in body && typeof body.nombre === 'string' && body.nombre.trim()) {
+      safeData.nombre = body.nombre.trim();
+    }
+    if ('categoria' in body && typeof body.categoria === 'string') {
+      safeData.categoria = body.categoria;
+    }
+    if ('stock' in body) {
+      safeData.stock = body.stock !== null && body.stock !== undefined ? Number(body.stock) : null;
+    }
+    if ('precio' in body && typeof body.precio === 'number' && body.precio >= 0) {
+      safeData.precio = body.precio;
+    }
+    if ('precioOferta' in body) {
+      safeData.precioOferta = body.precioOferta !== null && body.precioOferta !== undefined ? Number(body.precioOferta) : null;
+    }
+    if ('etiquetas' in body && Array.isArray(body.etiquetas)) {
+      safeData.etiquetas = body.etiquetas;
     }
 
     if (Object.keys(safeData).length === 0) {
