@@ -64,9 +64,27 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   try {
     const body = await req.json();
+
+    // ── SEGURIDAD: Whitelist de campos permitidos via PATCH ────────────────
+    // Solo se permiten los campos que el frontend realmente actualiza por esta vía.
+    // Cualquier otro campo del body es ignorado para evitar sobrescrituras no previstas.
+    const ALLOWED_PATCH_FIELDS = ['activo', 'orden'] as const;
+    type AllowedField = typeof ALLOWED_PATCH_FIELDS[number];
+
+    const safeData: Partial<Record<AllowedField, unknown>> = {};
+    for (const field of ALLOWED_PATCH_FIELDS) {
+      if (field in body) {
+        safeData[field] = body[field];
+      }
+    }
+
+    if (Object.keys(safeData).length === 0) {
+      return NextResponse.json({ message: 'No hay campos válidos para actualizar.' }, { status: 400 });
+    }
+
     const producto = await prisma.producto.update({
       where: { id: params.id },
-      data: body,
+      data: safeData,
     });
     return NextResponse.json(producto);
   } catch (err) {
@@ -74,6 +92,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ message: 'Error al actualizar.' }, { status: 500 });
   }
 }
+
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const session = await getServerSession(authOptions);

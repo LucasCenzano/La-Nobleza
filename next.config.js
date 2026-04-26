@@ -1,13 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    // SEGURIDAD: Solo se permite HTTPS. HTTP fue eliminado para evitar
+    // imágenes sin cifrar. El wildcard '**' es necesario porque el admin
+    // puede cargar URLs de cualquier CDN externo (Cloudinary, ImgBB, etc.).
+    // Si en el futuro las imágenes vienen de un único CDN, restringir aquí.
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**',
-      },
-      {
-        protocol: 'http',
         hostname: '**',
       },
     ],
