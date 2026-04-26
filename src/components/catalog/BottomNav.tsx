@@ -96,7 +96,7 @@ export default function BottomNav() {
                 <span className="text-[10px] font-medium">Inicio</span>
               </>
             )}
-          </button>button>
+          </button>
 
           {/* Carrito */}
           <button 
