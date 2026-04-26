@@ -265,7 +265,7 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
         {/* ── Card Content ── */}
         <div className="flex flex-col gap-0.5 px-3 pt-2.5 pb-3 sm:px-3.5 sm:pt-3 sm:pb-3.5 flex-1 bg-white">
           {/* Product name */}
-          <h3 className="font-sans font-semibold text-sm sm:text-[15px] leading-snug line-clamp-1 sm:line-clamp-2 text-[var(--black-charcoal)] min-h-[1.4em] sm:min-h-[2.8em]">
+          <h3 className="font-sans font-semibold text-sm sm:text-[13.5px] leading-snug sm:leading-tight line-clamp-1 sm:line-clamp-2 text-[var(--black-charcoal)] min-h-[1.4em] sm:min-h-[2.5em] tracking-tight">
             {nombre}
           </h3>
 
@@ -306,9 +306,9 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
 
               {/* Promo info integrada debajo del precio (Solo Desktop) */}
               {promoPersonalizada && (
-                <div className="hidden sm:flex items-center gap-1.5 mt-2 py-1.5 px-3 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50 shadow-sm">
+                <div className="hidden sm:flex items-center gap-2 mt-2 py-2 px-3.5 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 shadow-sm">
                   <span className="text-amber-600 text-xs animate-pulse">🔥</span>
-                  <span className="text-[12px] font-bold text-amber-900 leading-tight">
+                  <span className="text-[11px] font-black text-amber-950 leading-tight uppercase tracking-tighter">
                     {promoPersonalizada}
                   </span>
                 </div>
