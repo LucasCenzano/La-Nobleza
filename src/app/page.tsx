@@ -172,7 +172,7 @@ async function getData() {
     // to prevent massive network transfer from Neon Postgres.
     const PRODUCT_SELECT = {
       id: true, nombre: true, descripcion: true, precio: true, precioOferta: true,
-      categoria: true, tipoVenta: true, stock: true, incrementoPeso: true,
+      categoria: true, tipoVenta: true, pesoEstimado: true, stock: true, incrementoPeso: true,
       etiquetas: true, solicitaInstrucciones: true, opcionesTitulo: true,
       opcionesValores: true, promoPersonalizada: true, promoCantidadRequerida: true,
       promoPrecioTotal: true, activo: true, orden: true, createdAt: true, updatedAt: true,

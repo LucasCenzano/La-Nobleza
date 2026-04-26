@@ -29,6 +29,7 @@ export async function POST(req: Request) {
         precio: Number(p.precio) || 0,
         categoria: p.categoria || 'OTROS',
         tipoVenta: p.tipoVenta === 'PESO' ? TipoVenta.PESO : TipoVenta.UNIDAD,
+        pesoEstimado: p.pesoEstimado !== undefined && p.pesoEstimado !== null && p.pesoEstimado !== '' ? Number(p.pesoEstimado) : null,
         stock: p.stock !== undefined && p.stock !== null && p.stock !== '' ? Number(p.stock) : null,
         activo: p.activo !== undefined ? Boolean(p.activo) : true,
       };

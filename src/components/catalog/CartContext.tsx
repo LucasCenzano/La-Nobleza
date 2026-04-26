@@ -70,6 +70,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items, mounted]);
 
   const addItem = (newItem: CartItem) => {
+    // ── Validación: UNIDAD siempre entero ──
+    if (newItem.tipoVenta === 'UNIDAD') {
+      newItem = { ...newItem, cantidad: Math.max(1, Math.round(newItem.cantidad)) };
+    }
+
     setItems((prev) => {
       // Find item with same ID AND same instrucciones
       const existing = prev.find(i => i.productoId === newItem.productoId && i.instrucciones === newItem.instrucciones);
@@ -77,6 +82,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return prev.map(i => {
           if (i.productoId === newItem.productoId && i.instrucciones === newItem.instrucciones) {
             let nextCantidad = i.cantidad + newItem.cantidad;
+            // Enforce integer for UNIDAD
+            if (newItem.tipoVenta === 'UNIDAD') nextCantidad = Math.round(nextCantidad);
             // Cap at stock if it exists
             if (newItem.stock !== null && newItem.stock !== undefined) {
               nextCantidad = Math.min(nextCantidad, newItem.stock);
@@ -114,6 +121,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems(prev => prev.map(i => {
       if (i.productoId === productoId && i.instrucciones === instrucciones) {
         let nextCantidad = cantidad;
+        // Enforce integer for UNIDAD
+        if (i.tipoVenta === 'UNIDAD') nextCantidad = Math.max(1, Math.round(nextCantidad));
         if (i.stock !== null && i.stock !== undefined) {
           nextCantidad = Math.min(nextCantidad, i.stock);
         }

@@ -55,6 +55,7 @@ export default function ProductForm({ initialData, mode, onSuccess, onCancel }: 
     precioOferta: (initialData as any)?.precioOferta?.toString() ?? '',
     stock:        (initialData as any)?.stock?.toString() ?? '',
     incrementoPeso: (initialData as any)?.incrementoPeso?.toString() ?? (initialData?.tipoVenta === 'PESO' ? '0.100' : ''),
+    pesoEstimado: (initialData as any)?.pesoEstimado?.toString() ?? '',
     categoria:    (initialData as any)?.categoria       ?? '',
     tipoVenta:    initialData?.tipoVenta    ?? 'UNIDAD',
     solicitaInstrucciones: (initialData as any)?.solicitaInstrucciones ?? false,
@@ -150,6 +151,7 @@ export default function ProductForm({ initialData, mode, onSuccess, onCancel }: 
       precioOferta: (enOferta && form.precioOferta) ? parseFloat(form.precioOferta) : null,
       stock:        form.stock ? parseFloat(form.stock) : null,
       incrementoPeso: form.incrementoPeso ? parseFloat(form.incrementoPeso) : null,
+      pesoEstimado: form.pesoEstimado ? parseFloat(form.pesoEstimado) : null,
       imagenesUrls,
       imagenUrl:    imagenesUrls[0] ?? null,
       etiquetas:    finalEtiquetas,
@@ -214,6 +216,7 @@ export default function ProductForm({ initialData, mode, onSuccess, onCancel }: 
     precioOferta: hasOferta ? parseFloat(form.precioOferta) : null,
     categoria: form.categoria || 'OTROS',
     tipoVenta: form.tipoVenta,
+    pesoEstimado: form.pesoEstimado ? parseFloat(form.pesoEstimado) : null,
     stock: form.stock ? parseFloat(form.stock) : null,
     incrementoPeso: form.incrementoPeso ? parseFloat(form.incrementoPeso) : null,
     solicitaInstrucciones: form.solicitaInstrucciones,
@@ -411,6 +414,19 @@ export default function ProductForm({ initialData, mode, onSuccess, onCancel }: 
                       className="input mt-1.5 bg-white border-amber-200 focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] placeholder-gray-400" placeholder="Ej: 0.100" />
                     <p className="text-[11px] text-amber-700 font-medium mt-2 leading-tight">
                       Incremento que puede elegir el cliente al agregar al carrito.
+                    </p>
+                  </div>
+                )}
+
+                {form.tipoVenta === 'UNIDAD' && (
+                  <div className="animate-fade-in bg-blue-50/50 p-4 rounded-xl border border-blue-200/50 -mt-2">
+                    <label htmlFor="pesoEstimado" className="label font-bold text-blue-900">Peso Estimado por Unidad (Kg)</label>
+                    <input id="pesoEstimado" name="pesoEstimado" type="number"
+                      min={0} step={0.01}
+                      value={form.pesoEstimado} onChange={handleChange}
+                      className="input mt-1.5 bg-white border-blue-200 focus:ring-2 focus:ring-[var(--gold-main)] focus:border-[var(--gold-main)] placeholder-gray-400" placeholder="Ej: 2.5" />
+                    <p className="text-[11px] text-blue-700 font-medium mt-2 leading-tight">
+                      Opcional. Si lo completás, el cliente verá una leyenda "Peso aprox. por unidad: Xkg". Útil para productos como pollos enteros.
                     </p>
                   </div>
                 )}

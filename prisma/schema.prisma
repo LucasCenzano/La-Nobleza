@@ -32,6 +32,7 @@ model Producto {
   precioOferta Float?             // null = sin oferta activa
   categoria    String             // slug dinámico — ref a CategoriaConfig.slug
   tipoVenta    TipoVenta @default(UNIDAD)
+  pesoEstimado Float?             // peso aprox. por unidad (solo para UNIDAD, ej: 2.5kg)
   stock        Float?             // null = sin control de stock
   incrementoPeso Float?           // paso en kilos o gramos
   imagenUrl    String?            // legado — portada (primer elemento de imagenesUrls)

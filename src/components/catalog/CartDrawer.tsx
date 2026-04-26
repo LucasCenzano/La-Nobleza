@@ -44,7 +44,7 @@ function CartItemQuantity({ item }: { item: CartItem }) {
       <span className="text-[13px] font-bold w-[54px] text-center shrink-0">
         {isPeso 
           ? (item.cantidad < 1 ? `${Math.round(item.cantidad * 1000)}gr` : `${item.cantidad.toFixed(3).replace(/\.?0+$/, '') || '0'}kg`) 
-          : item.cantidad}
+          : `${item.cantidad} un.`}
       </span>
       <button 
         {...longPressPlus}
@@ -83,18 +83,19 @@ export default function CartDrawer() {
     
     items.forEach(item => {
       const isPeso = item.tipoVenta === 'PESO';
-      let cantStr = `${item.cantidad}x`;
+      let cantStr: string;
       if (isPeso) {
         cantStr = item.cantidad < 1 
-          ? `${Math.round(item.cantidad * 1000)} gr` 
-          : `${item.cantidad.toFixed(3).replace(/\.?0+$/, '') || '0'} Kg`;
+          ? `${Math.round(item.cantidad * 1000)}gr de` 
+          : `${item.cantidad.toFixed(3).replace(/\.?0+$/, '') || '0'}kg de`;
+      } else {
+        cantStr = `${item.cantidad}x`;
       }
-      const cant = cantStr;
       const sub = calculateItemTotal(item);
       const subOriginal = Math.round(item.cantidad * item.precioFinal);
       const hasCombo = sub < subOriginal;
       
-      let line = `• ${cant} *${item.nombre}*`;
+      let line = `• ${cantStr} *${item.nombre}*`;
       if (item.instrucciones) line += `\n  _📌 Nota: ${item.instrucciones}_`;
       line += `\n  _Subtotal: $${sub.toLocaleString('es-AR')}_${hasCombo ? ' *(Combo Aplicado)*' : ''}\n`;
       text += line;

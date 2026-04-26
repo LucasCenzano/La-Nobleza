@@ -87,6 +87,10 @@ export default function ProductImportModal({ isOpen, onClose, onImportSuccess, c
         precio: Number(p.precio) || 0,
         categoria: categoriaSlug,
         tipoVenta: String(p.tipoventa || p['tipo de venta'] || p.unidad || '').toUpperCase() === 'PESO' ? 'PESO' : 'UNIDAD',
+        pesoEstimado: (() => {
+          const val = p.pesoestimado ?? p['peso estimado'];
+          return val !== undefined && val !== '' ? Number(val) || null : null;
+        })(),
         stock: p.stock !== undefined && p.stock !== '' ? Number(p.stock) : null,
         activo: true,
       };
@@ -133,6 +137,7 @@ export default function ProductImportModal({ isOpen, onClose, onImportSuccess, c
           categoria: cat ? cat.nombre : p.categoria,
           descripcion: p.descripcion || '',
           tipoVenta: p.tipoVenta,
+          pesoEstimado: p.pesoEstimado !== null ? p.pesoEstimado : '',
           stock: p.stock !== null ? p.stock : ''
         };
       });

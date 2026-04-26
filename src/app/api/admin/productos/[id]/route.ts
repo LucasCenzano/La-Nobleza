@@ -21,7 +21,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
   try {
     const {
       nombre, descripcion, precio, precioOferta,
-      categoria, tipoVenta, stock, incrementoPeso, imagenUrl, imagenesUrls, imagenesFraming,
+      categoria, tipoVenta, pesoEstimado, stock, incrementoPeso, imagenUrl, imagenesUrls, imagenesFraming,
       etiquetas, activo, solicitaInstrucciones, opcionesTitulo, opcionesValores,
       promoPersonalizada, promoCantidadRequerida, promoPrecioTotal,
     } = await req.json();
@@ -35,6 +35,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
         precioOferta: precioOferta ? Number(precioOferta) : null,
         categoria,
         tipoVenta,
+        pesoEstimado: pesoEstimado !== undefined && pesoEstimado !== null ? Number(pesoEstimado) : null,
         stock:        stock !== undefined && stock !== null ? Number(stock) : null,
         incrementoPeso: incrementoPeso !== undefined && incrementoPeso !== null ? Number(incrementoPeso) : null,
         imagenUrl:    imagenUrl    || null,

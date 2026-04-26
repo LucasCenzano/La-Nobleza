@@ -6,6 +6,11 @@ export const TIPO_VENTA_LABELS: Record<TipoVenta, string> = {
   PESO:   'x Kg',
 };
 
+export const TIPO_VENTA_SUFFIX: Record<TipoVenta, string> = {
+  UNIDAD: '/un',
+  PESO:   '/kg',
+};
+
 export function formatPrecio(precio: number, tipoVenta: TipoVenta): string {
   const fmt = new Intl.NumberFormat('es-AR', {
     style:                 'currency',

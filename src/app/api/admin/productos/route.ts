@@ -9,7 +9,7 @@ export async function GET() {
 
   const PRODUCT_SELECT = {
     id: true, nombre: true, descripcion: true, precio: true, precioOferta: true,
-    categoria: true, tipoVenta: true, stock: true, incrementoPeso: true,
+    categoria: true, tipoVenta: true, pesoEstimado: true, stock: true, incrementoPeso: true,
     etiquetas: true, solicitaInstrucciones: true, opcionesTitulo: true,
     opcionesValores: true, promoPersonalizada: true, promoCantidadRequerida: true,
     promoPrecioTotal: true, activo: true, orden: true, createdAt: true, updatedAt: true,
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       nombre, descripcion, precio, precioOferta,
-      categoria, tipoVenta, stock, incrementoPeso, imagenUrl, imagenesUrls, imagenesFraming,
+      categoria, tipoVenta, pesoEstimado, stock, incrementoPeso, imagenUrl, imagenesUrls, imagenesFraming,
       etiquetas, activo,
       solicitaInstrucciones, opcionesTitulo, opcionesValores,
       promoPersonalizada,
@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
         precioOferta: precioOferta ? Number(precioOferta) : null,
         categoria,
         tipoVenta,
+        pesoEstimado: pesoEstimado !== undefined && pesoEstimado !== null ? Number(pesoEstimado) : null,
         stock:        stock !== undefined && stock !== null ? Number(stock) : null,
         incrementoPeso: incrementoPeso !== undefined && incrementoPeso !== null ? Number(incrementoPeso) : null,
         imagenUrl:    imagenUrl    || null,
