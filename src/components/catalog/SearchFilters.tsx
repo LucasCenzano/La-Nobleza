@@ -34,7 +34,7 @@ export default function SearchFilters({
         <input
           id="catalog-search"
           type="search"
-          placeholder="Buscar producto"
+          placeholder="Buscá milanesas, huevos o especias..."
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           className="input-search"
