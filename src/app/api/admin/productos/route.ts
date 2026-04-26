@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
         precioOferta: precioOferta ? Number(precioOferta) : null,
         categoria,
         tipoVenta,
-        pesoEstimado: pesoEstimado !== undefined && pesoEstimado !== null ? Number(pesoEstimado) : null,
+        pesoEstimado: pesoEstimado !== undefined && pesoEstimado !== null ? Math.round(Number(pesoEstimado) * 100) / 100 : null,
         stock:        stock !== undefined && stock !== null ? Number(stock) : null,
         incrementoPeso: incrementoPeso !== undefined && incrementoPeso !== null ? Number(incrementoPeso) : null,
         imagenUrl:    imagenUrl    || null,
