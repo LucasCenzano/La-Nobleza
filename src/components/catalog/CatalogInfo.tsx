@@ -134,5 +134,6 @@ export function CatalogHorarios({ config }: { config: BannerData | null }) {
         ))}
       </div>
     </div>
+    </>
   );
 }
