@@ -66,16 +66,16 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const body = await req.json();
 
     // ── SEGURIDAD: Whitelist de campos permitidos via PATCH ────────────────
-    // Solo se permiten los campos que el frontend realmente actualiza por esta vía.
-    // Cualquier otro campo del body es ignorado para evitar sobrescrituras no previstas.
-    const ALLOWED_PATCH_FIELDS = ['activo', 'orden'] as const;
-    type AllowedField = typeof ALLOWED_PATCH_FIELDS[number];
+    // Solo se permiten activo y orden — los únicos campos que el frontend
+    // actualiza por esta vía (toggle rápido y reordenamiento).
+    // Tipado explícito para compatibilidad con Prisma.
+    const safeData: { activo?: boolean; orden?: number } = {};
 
-    const safeData: Partial<Record<AllowedField, unknown>> = {};
-    for (const field of ALLOWED_PATCH_FIELDS) {
-      if (field in body) {
-        safeData[field] = body[field];
-      }
+    if ('activo' in body && typeof body.activo === 'boolean') {
+      safeData.activo = body.activo;
+    }
+    if ('orden' in body && typeof body.orden === 'number') {
+      safeData.orden = body.orden;
     }
 
     if (Object.keys(safeData).length === 0) {
