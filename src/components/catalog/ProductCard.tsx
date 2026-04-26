@@ -265,7 +265,7 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
         {/* ── Card Content ── */}
         <div className="flex flex-col gap-0.5 px-3 pt-2.5 pb-3 sm:px-3.5 sm:pt-3 sm:pb-3.5 flex-1 bg-white">
           {/* Product name */}
-          <h3 className="font-sans font-semibold text-sm sm:text-[13.5px] leading-snug sm:leading-tight line-clamp-1 sm:line-clamp-2 text-[var(--black-charcoal)] min-h-[1.4em] sm:min-h-[2.5em] tracking-tight">
+          <h3 className="font-sans font-semibold text-sm sm:text-[13.5px] leading-snug sm:leading-tight line-clamp-2 text-[var(--black-charcoal)] min-h-[2.8em] sm:min-h-[2.5em] tracking-tight">
             {nombre}
           </h3>
 
