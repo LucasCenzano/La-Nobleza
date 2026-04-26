@@ -370,7 +370,7 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
                   }
                 }
               }}
-              className="card-quick-add flex w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[var(--black-charcoal)] items-center justify-center transition-all duration-200 shadow-xl shadow-black/10 shrink-0 active:scale-90 border-2 border-white/5"
+              className="card-quick-add flex w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[var(--black-charcoal)] items-center justify-center transition-all duration-300 shadow-xl shadow-black/10 shrink-0 active:scale-95 border-2 border-white/5 md:hover:scale-110 md:hover:bg-[var(--gold-dark)] md:hover:shadow-2xl md:hover:shadow-black/20"
               aria-label="Agregar al carrito"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round">

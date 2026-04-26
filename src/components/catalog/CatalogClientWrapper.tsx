@@ -14,14 +14,18 @@ interface CatalogClientWrapperProps {
 // ── Skeleton card para mostrar mientras carga ───────────────────
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 animate-pulse">
+    <div className="bg-white rounded-[20px] overflow-hidden border border-gray-100/50 shadow-sm animate-pulse">
       {/* Image placeholder */}
-      <div className="w-full bg-gray-100" style={{ aspectRatio: '1 / 1' }} />
+      <div className="w-full bg-gray-100" style={{ aspectRatio: '4 / 3' }} />
       {/* Content placeholder */}
-      <div className="p-3 flex flex-col gap-2">
-        <div className="h-3 bg-gray-100 rounded w-3/4" />
-        <div className="h-3 bg-gray-100 rounded w-1/2" />
-        <div className="h-5 bg-gray-100 rounded w-1/3 mt-1" />
+      <div className="p-3.5 flex flex-col gap-2.5">
+        <div className="h-4 bg-gray-100 rounded-md w-11/12" />
+        <div className="h-4 bg-gray-100 rounded-md w-2/3 md:hidden" />
+        <div className="hidden md:block h-4 bg-gray-100 rounded-md w-1/2" />
+        <div className="flex justify-between items-center mt-2">
+          <div className="h-6 bg-gray-100 rounded-md w-1/3" />
+          <div className="h-10 w-10 bg-gray-100 rounded-2xl" />
+        </div>
       </div>
     </div>
   );
