@@ -265,13 +265,13 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
         {/* ── Card Content ── */}
         <div className="flex flex-col gap-0.5 px-3 pt-2.5 pb-3 sm:px-3.5 sm:pt-3 sm:pb-3.5 flex-1 bg-white">
           {/* Product name */}
-          <h3 className="font-sans font-semibold text-sm leading-snug line-clamp-1 text-[var(--black-charcoal)]">
+          <h3 className="font-sans font-semibold text-sm sm:text-[15px] leading-snug line-clamp-1 sm:line-clamp-2 text-[var(--black-charcoal)] min-h-[1.4em] sm:min-h-[2.8em]">
             {nombre}
           </h3>
 
-          {/* Promo badge */}
+          {/* Promo badge (Visible en móvil, se oculta en desktop para integrarlo abajo) */}
           {promoPersonalizada && (
-            <div className="card-product__promo mt-1">
+            <div className="card-product__promo mt-1 sm:hidden">
               🔥 {promoPersonalizada}
             </div>
           )}
@@ -300,6 +300,16 @@ export default function ProductCard({ producto, categorias, animationIndex = 0 }
                   </span>
                   <span className="text-[9px] text-gray-400 font-normal">
                     {isPeso ? '/kg' : '/un'}
+                  </span>
+                </div>
+              )}
+
+              {/* Promo info integrada debajo del precio (Solo Desktop) */}
+              {promoPersonalizada && (
+                <div className="hidden sm:flex items-center gap-1.5 mt-2 py-1.5 px-3 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50 shadow-sm">
+                  <span className="text-amber-600 text-xs animate-pulse">🔥</span>
+                  <span className="text-[12px] font-bold text-amber-900 leading-tight">
+                    {promoPersonalizada}
                   </span>
                 </div>
               )}
