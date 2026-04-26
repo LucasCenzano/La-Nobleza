@@ -8,28 +8,6 @@ export default function CatalogHeader() {
   const { totalItems, setIsCartOpen } = useCart();
 
   return (
-    <header className="sticky top-0 z-40 bg-[var(--bg-cream)]/95 backdrop-blur-md pt-4 pb-2 md:pt-4 md:pb-4 px-4 flex items-center justify-between md:px-8 border-b border-transparent md:border-gray-200/50 shadow-sm md:shadow-none">
-      <div className="flex items-center gap-3 w-full md:w-auto justify-center md:justify-start pt-1 md:pt-0">
-        {/* Logo */}
-        <div className="w-10 h-10 md:w-11 md:h-11 rounded-full overflow-hidden flex-shrink-0"
-             style={{
-               boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-               border: '1px solid rgba(212,175,55,0.3)',
-             }}>
-          <Image
-            src="/logo.jpg"
-            alt="La Nobleza Logo"
-            width={44}
-            height={44}
-            className="w-full h-full object-cover"
-            priority
-          />
-        </div>
-        {/* Título de la marca */}
-        <h1 className="text-2xl md:text-[28px] font-bold text-[var(--black-charcoal)] m-0 leading-none" style={{ fontFamily: 'var(--font-dm-serif)' }}>
-          La Nobleza
-        </h1>
-      </div>
 
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center gap-5 lg:gap-6 pt-1">
@@ -47,10 +25,11 @@ export default function CatalogHeader() {
         
         <button 
           onClick={() => setIsCartOpen(true)} 
-          className="flex items-center gap-2 text-[var(--gold-dark)] font-bold bg-[var(--gold-primary)]/10 px-5 py-2.5 rounded-full hover:bg-[var(--gold-primary)]/20 hover:scale-105 active:scale-95 transition-all shadow-sm"
+          className="flex items-center gap-2 text-white font-bold bg-[var(--black-charcoal)] px-6 py-2.5 rounded-full hover:opacity-90 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-black/10"
         >
-          🛒 Mi Pedido
-          {totalItems > 0 && <span className="bg-red-500 text-white text-[11px] px-2 py-0.5 rounded-full shadow-sm">{totalItems}</span>}
+          <span className="text-lg">🛒</span>
+          Mi Pedido
+          {totalItems > 0 && <span className="bg-white text-[var(--black-charcoal)] text-[11px] font-black px-2 py-0.5 rounded-full shadow-sm">{totalItems}</span>}
         </button>
       </div>
     </header>

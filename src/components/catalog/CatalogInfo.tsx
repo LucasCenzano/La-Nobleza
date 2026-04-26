@@ -103,20 +103,28 @@ export function CatalogHorarios({ config }: { config: BannerData | null }) {
   }
 
   return (
-    <div
-      className="border-b"
-      style={{ background: 'linear-gradient(90deg,#fdf9f3,#f9f0e3)', borderColor: 'rgba(210,175,120,0.25)' }}
-    >
-      <div className="max-w-2xl mx-auto px-4 py-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
-        <span
-          className="font-semibold flex items-center gap-1"
-          style={{ color: isOpenToday ? '#15803d' : '#dc2626' }}
-        >
-          <span>{isOpenToday ? '🟢' : '🔴'}</span>
-          {isOpenToday
-            ? `Hoy abierto: ${todayHorario.abre}–${todayHorario.cierra}${todayHorario.dobleTurno ? ` y ${todayHorario.abre2 || '18:00'}–${todayHorario.cierra2 || '22:00'}` : ''}`
-            : 'Hoy cerrado'}
-        </span>
+    <>
+      {/* Banner amigable para Desktop cuando está cerrado */}
+      {!isOpenToday && (
+        <div className="hidden md:block bg-[var(--black-charcoal)] text-white py-2 text-center text-[13px] font-medium tracking-wide animate-fade-in">
+          ✨ Estamos descansando, pero podés armar tu pedido para mañana.
+        </div>
+      )}
+
+      <div
+        className="border-b"
+        style={{ background: 'linear-gradient(90deg,#fdf9f3,#f9f0e3)', borderColor: 'rgba(210,175,120,0.25)' }}
+      >
+        <div className="max-w-2xl mx-auto px-4 py-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
+          <span
+            className="font-semibold flex items-center gap-1"
+            style={{ color: isOpenToday ? '#15803d' : '#92400e' }}
+          >
+            <span>{isOpenToday ? '🟢' : '😴'}</span>
+            {isOpenToday
+              ? `Hoy abierto: ${todayHorario.abre}–${todayHorario.cierra}${todayHorario.dobleTurno ? ` y ${todayHorario.abre2 || '18:00'}–${todayHorario.cierra2 || '22:00'}` : ''}`
+              : 'Hoy descansamos (podés armar tu pedido p/ mañana)'}
+          </span>
 
         {openGroups.map((g, i) => (
           <span key={i} style={{ color: 'rgba(90,60,30,0.6)' }}>
